@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.39 2003/01/24 08:39:41 ejohnst Exp $
+ * $Id: exif.c,v 1.40 2003/01/25 00:55:48 ejohnst Exp $
  */
 
 /*
@@ -149,8 +149,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	/* Print some debugging info about the property. */
 
 	if (debug) {
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[j].name, prop->count, prop->value);
+		dumpprop(prop);
 
 		printf("      ");
 		hexprint(afield->tag, 2);
