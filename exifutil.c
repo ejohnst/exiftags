@@ -29,11 +29,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.9 2002/10/07 00:55:04 ejohnst Exp $
+ * $Id: exifutil.c,v 1.10 2002/10/15 02:58:02 ejohnst Exp $
  */
 
 /*
  * Utilities for dealing with Exif data.
+ *
  */
 
 #include <stdlib.h>
@@ -56,25 +57,25 @@ const char *progname;
 /*
  * Logging and error functions.
  */
-
 void
 exifdie(const char *msg)
 {
+
 	fprintf(stderr, "%s: %s\n", progname, msg);
 	exit(1);
 }
 
-
 void
 exifwarn(const char *msg)
 {
+
 	fprintf(stderr, "%s: %s\n", progname, msg);
 }
-
 
 void
 exifwarn2(const char *msg1, const char *msg2)
 {
+
 	fprintf(stderr, "%s: %s (%s)\n", progname, msg1, msg2);
 }
 
@@ -169,7 +170,7 @@ newprop(void)
 
 /*
  * Given a parent, create a new child Exif property.  These are typically
- * used by maker note modules when a single tab may contain multiple
+ * used by maker note modules when a single tag may contain multiple
  * items of interest.
  */
 struct exifprop *
