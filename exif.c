@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.36 2003/01/11 06:27:00 ejohnst Exp $
+ * $Id: exif.c,v 1.37 2003/01/20 21:42:04 ejohnst Exp $
  */
 
 /*
@@ -97,7 +97,8 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	prop->tag = exif2byte(afield->tag, t->tifforder);
 	prop->type = exif2byte(afield->type, t->tifforder);
 	prop->count = exif4byte(afield->count, t->tifforder);
-	if (prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT)
+	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
+	    prop->count <= 1)
 		prop->value = exif2byte(afield->value, t->tifforder);
 	else
 		prop->value = exif4byte(afield->value, t->tifforder);
@@ -410,7 +411,7 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 static int
 parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 {
-	int i;
+	int i, len;
 	u_int16_t v = (u_int16_t)prop->value;
 	u_int32_t un, ud, denom;
 	int32_t sn, sd;
@@ -618,6 +619,38 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			denom = gcd(abs(sn), abs(sd));
 			fixfract(sn, sd, (int32_t)denom);
 		}
+		return (TRUE);
+	}
+
+	/*
+	 * Multiple short values.
+	 */
+
+	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
+	    prop->count > 1) {
+
+		/* TransferFunction is huge.  Let's just ignore it. */
+		if (prop->tag == EXIF_T_XFERFUNC)
+			return (TRUE);
+
+		len = 8 * prop->count + 1;
+		if (!(prop->str = (char *)malloc(len)))
+			exifdie((const char *)strerror(errno));
+		prop->str[0] = '\0';
+
+		for (i = 0; i < prop->count; i++) {
+			if (prop->type == TIFF_SHORT)
+				snprintf(prop->str + strlen(prop->str),
+				    len - strlen(prop->str) - 1, "%d, ",
+				    exif2byte(t->btiff + prop->value +
+				    (i * 2), t->tifforder));
+			else
+				snprintf(prop->str + strlen(prop->str),
+				    len - strlen(prop->str) - 1, "%d, ",
+				    exif2sbyte(t->btiff + prop->value +
+				    (i * 2), t->tifforder));
+		}
+		prop->str[strlen(prop->str) - 2] = '\0';
 		return (TRUE);
 	}
 	return (TRUE);
