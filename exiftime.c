@@ -29,11 +29,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.3 2004/04/08 07:29:08 ejohnst Exp $
+ * $Id: exiftime.c,v 1.4 2004/04/10 07:44:47 ejohnst Exp $
  */
 
 /*
- * exiftime: display or change date & time Exif tags.
+ * exiftime: display or adjust date & time Exif tags; list files
+ * ordered by time.
  *
  */
 
@@ -58,13 +59,14 @@ int getopt(int, char * const [], const char *);
 
 
 struct linfo {
-	char *fn;
+	const char *fn;
 	time_t ts;
 };
 
-static const char *version = "0.98";
-static int fnum, iflag, lflag, nflag, wflag, ttags;
+static const char *version = "0.99";
+static int iflag, lflag, qflag, wflag, ttags;
 static const char *delim = ": ";
+static const char *fname;
 static struct vary *v;
 static struct linfo *lorder;
 
@@ -91,7 +93,9 @@ void usage()
 	fprintf(stderr, "  -i\tConfirm overwrites (default).\n");
 	fprintf(stderr, "  -l\tList files ordered by image created timestamp; "
 	    "overrides -t, -v, -w.\n");
-	fprintf(stderr, "  -n\tAnswer 'no' to any confirmation prompts.\n");
+	fprintf(stderr, "  -q\tBe quiet when writing timestamps.\n");
+	fprintf(stderr, "  -s\tSet delimiter to provided string "
+	    "(default: \": \").\n");
 	fprintf(stderr, "  -t[acdg]\n\tDisplay/adjust specified timestamp(s), "
 	    "if they exist:\n");
 	fprintf(stderr, "\t  a: All timestamps (default);\n\t  c: Image "
@@ -99,8 +103,6 @@ void usage()
 	fprintf(stderr, "  -v[+|-]val[ymwdHMS]\n\tAdjust the timestamp(s) by "
 	    "the given amount.\n");
 	fprintf(stderr, "  -w\tWrite adjusted timestamp(s).\n");
-	fprintf(stderr, "  -s\tSet delimiter to provided string "
-	    "(default: \": \").\n");
 
 	vary_destroy(v);
 	exit(1);
@@ -143,7 +145,7 @@ etstrptm(const char *buf, struct tm *tp)
 
 
 /*
- * Grab the timestamps for listing.  Doesn't touch file.
+ * Grab the timestamps for listing.  Doesn't modify the file.
  */
 static int
 listts(struct exiftags *t, struct linfo *li)
@@ -208,39 +210,33 @@ ettime(char *b, struct exifprop *p)
 
 
 /*
- * Overwrite a timestamp with an adjusted value (in nt).  Note that we
- * rely on buf being good and EXIFTIMELEN bytes long (including ending zero).
- * XXX Whew -- too many parameters!
+ * Overwrite a timestamp with the adjusted value.
  */
 static int
-writets(FILE *fp, const char *fname, long pos, struct exiftags *t,
-    struct exifprop *p, const unsigned char *buf, const char *ttype,
-    const char *nt)
+writets(FILE *fp, long pos, struct exiftags *t, struct exifprop *p,
+    const unsigned char *buf, const char *ttype, const char *nts)
 {
 	int ch, checkch;
 	long psave;
 
 	/* Some sanity checking. */
 
-	if (strlen(nt) != EXIFTIMELEN - 1) {
-		fprintf(stderr, "%s: invalid %s timestamp (%s)\n",
-		    fname, ttype, nt);
+	if (strlen(nts) != EXIFTIMELEN - 1) {
+		fprintf(stderr, "%s: invalid timestamp -- %s\n", fname, nts);
 		return (1);
 	}
 
-	if (!strcmp(nt, p->str)) {
-		fprintf(stderr, "%s: new %s timestamp (%s) identical to old\n",
-		    nt, ttype, fname);
-		return (0);
+	if (!strcmp(nts, p->str)) {
+		fprintf(stderr, "%s: new %s timestamp identical to old\n",
+		    fname, ttype);
+		return (1);
 	}
 
 	/* Prompt user, if desired. */
 
 	if (iflag) {
-		if (nflag)
-			return (1);
-		fprintf(stderr, "change time %s in %s from %s to %s? "
-		    "(y/n [n]) ", ttype, fname, p->str, nt);
+		fprintf(stderr, "adjust time %s in %s from\n  %s to %s? "
+		    "(y/n [n]) ", ttype, fname, p->str, nts);
 		checkch = ch = getchar();
 		while (ch != '\n' && ch != EOF)
 			ch = getchar();
@@ -258,7 +254,7 @@ writets(FILE *fp, const char *fname, long pos, struct exiftags *t,
 
 	/* Write the new timestamp. */
 
-	if (fwrite(nt, EXIFTIMELEN, 1, fp) != 1)
+	if (fwrite(nts, EXIFTIMELEN, 1, fp) != 1)
 		exifdie((const char *)strerror(errno));
 
 	/* Restore the file pointer. */
@@ -266,81 +262,76 @@ writets(FILE *fp, const char *fname, long pos, struct exiftags *t,
 	if (fseek(fp, psave, SEEK_SET))
 		exifdie((const char *)strerror(errno));
 
+	if (!qflag)
+		printf("%s%s%s -> %s\n", p->descr, delim, p->str, nts);
 	return (0);
 }
 
 
 /*
- * Process the timestamps.
+ * Process a timestamp.
  */
 static int
-procts(FILE *fp, const char *fname, long pos, struct exiftags *t,
-    const unsigned char *buf)
+procts(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf,
+    u_int32_t tag, const char *ttype)
 {
-	int found, r, rc;
-	char nt[EXIFTIMELEN];
+	int rc;
+	char nts[EXIFTIMELEN];
 	struct exifprop *p;
 
-	found = rc = 0;
+	p = findprop(t->props, tags, tag);
+	rc = ettime(nts, p);
 
 	/*
-	 * If ttags = 0, print them all or an error if there are none.
-	 * If it's != 0, then the user explicitly requested the timestamp(s),
-	 * so print an error for each one that doesn't exist.
+	 * If ttags != 0, then the user explicitly requested the timestamp,
+	 * so print an error if it doesn't exist.
+	 */
+	if (rc && ttags) {
+		fprintf(stderr, "%s: image %s time not available\n",
+		    fname, ttype);
+		return (2);
+	}
+
+
+	if (wflag)
+		rc = writets(fp, pos, t, p, buf, ttype, nts);
+	else {
+		printf("%s%s%s\n", p->descr, delim, nts);
+		rc = 0;
+	}
+
+	return (rc);
+}
+
+
+/*
+ * Process the file's timestamps according to the options chosen.
+ */
+static int
+procall(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf)
+{
+	int r, rc, found;
+
+	/*
+	 * If ttags = 0, process them all or an error if there are none.
 	 */
 
 	if (ttags & ET_CREATE || !ttags) {
-		p = findprop(t->props, tags, EXIF_T_DATETIME);
-		r = ettime(nt, p);
-
-		if (r && ttags) {
-			fprintf(stderr, "%s: image created time not "
-			    "available\n", fname);
-			rc = 1;
-		}
-		if (!r) {
-			found++;
-			if (wflag)
-				rc = (writets(fp, fname, pos, t, p, buf,
-				    "created", nt) || rc);
-			printf("%s%s%s\n", p->descr, delim, nt);
-		}
+		r = procts(fp, pos, t, buf, EXIF_T_DATETIME, "created");
+		if (r < 2) found++;
+		if (r) rc = 1;
 	}
 
 	if (ttags & ET_GEN || !ttags) {
-		p = findprop(t->props, tags, EXIF_T_DATETIMEORIG);
-		r = ettime(nt, p);
-
-		if (r && ttags) {
-			fprintf(stderr, "%s: image generated time not "
-			    "available\n", fname);
-			rc = 1;
-		}
-		if (!r) {
-			found++;
-			if (wflag)
-				rc = (writets(fp, fname, pos, t, p, buf,
-				    "generated", nt) || rc);
-			printf("%s%s%s\n", p->descr, delim, nt);
-		}
+		r = procts(fp, pos, t, buf, EXIF_T_DATETIMEORIG, "generated");
+		if (r < 2) found++;
+		if (r) rc = 1;
 	}
 
 	if (ttags & ET_DIGI || !ttags) {
-		p = findprop(t->props, tags, EXIF_T_DATETIMEDIGI);
-		r = ettime(nt, p);
-
-		if (r && ttags) {
-			fprintf(stderr, "%s: image digitized time not "
-			    "available\n", fname);
-			rc = 1;
-		}
-		if (!r) {
-			found++;
-			if (wflag)
-				rc = (writets(fp, fname, pos, t, p, buf,
-				    "digitized", nt) || rc);
-			printf("%s%s%s\n", p->descr, delim, nt);
-		}
+		r = procts(fp, pos, t, buf, EXIF_T_DATETIMEDIGI, "digitized");
+		if (r < 2) found++;
+		if (r) rc = 1;
 	}
 
 	/* No timestamp tags. */
@@ -358,7 +349,7 @@ procts(FILE *fp, const char *fname, long pos, struct exiftags *t,
  * Scan the JPEG file for Exif data and parse it.
  */
 static int
-doit(FILE *fp, const char *fname, int n)
+doit(FILE *fp, int n)
 {
 	int mark, gotapp1, first, rc;
 	unsigned int len, rlen;
@@ -399,7 +390,7 @@ doit(FILE *fp, const char *fname, int n)
 			if (lflag)
 				rc = listts(t, &lorder[n]);
 			else
-				rc = procts(fp, fname, app1, t, exifbuf);
+				rc = procall(fp, app1, t, exifbuf);
 		}
 		exiffree(t);
 		free(exifbuf);
@@ -418,14 +409,14 @@ int
 main(int argc, char **argv)
 {
 	register int ch;
-	int eval;
+	int eval, fnum, wantall;
 	char *rmode, *wmode;
 	FILE *fp;
 
 	progname = argv[0];
 	debug = FALSE;
-	ttags = eval = 0;
-	lflag = nflag = wflag = FALSE;
+	ttags = wantall = eval = 0;
+	lflag = qflag = wflag = FALSE;
 	iflag = TRUE;
 	v = NULL;
 #ifdef WIN32
@@ -436,7 +427,7 @@ main(int argc, char **argv)
 	wmode = "r+";
 #endif
 
-	while ((ch = getopt(argc, argv, "filnt:v:ws:")) != -1)
+	while ((ch = getopt(argc, argv, "filqs:t:v:w")) != -1)
 		switch (ch) {
 		case 'f':
 			iflag = FALSE;
@@ -447,26 +438,39 @@ main(int argc, char **argv)
 		case 'l':
 			lflag = TRUE;
 			break;
-		case 'n':
-			iflag = nflag = TRUE;
+		case 'q':
+			qflag = TRUE;
+			break;
+		case 's':
+			delim = optarg;
 			break;
 		case 't':
-			if (strchr(optarg, 'c'))
-				ttags |= ET_CREATE;
-			if (strchr(optarg, 'd'))
-				ttags |= ET_DIGI;
-			if (strchr(optarg, 'g'))
-				ttags |= ET_GEN;
-			/* XXX Do we care if an invalid option given? */
+			while (*optarg) {
+				switch (*optarg) {
+				case 'c':
+					ttags |= ET_CREATE;
+					break;
+				case 'd':
+					ttags |= ET_DIGI;
+					break;
+				case 'g':
+					ttags |= ET_GEN;
+					break;
+				case 'a':
+					wantall = 1;
+					break;
+				default:
+					usage();
+				}
+				optarg++;
+			}
+			if (wantall) ttags = 0;
 			break;
 		case 'v':
 			v = vary_append(v, optarg);
 			break;
 		case 'w':
 			wflag = TRUE;
-			break;
-		case 's':
-			delim = optarg;
 			break;
 		case '?':
 		default:
@@ -478,7 +482,12 @@ main(int argc, char **argv)
 	if (!*argv)
 		usage();
 
-	/* Prepare an array for sorting... */
+	/* Don't be quiet if we're not writing. */
+
+	if (qflag && !wflag)
+		qflag = FALSE;
+
+	/* Prepare an array for sorting. */
 
 	if (lflag) {
 		wflag = 0;
@@ -487,7 +496,11 @@ main(int argc, char **argv)
 			exifdie((const char *)strerror(errno));
 	}
 
+	/* Run through the files... */
+
 	for (fnum = 0; *argv; ++argv, fnum++) {
+
+		fname = *argv;
 
 		/* Only open for read+write if we need to. */
 
@@ -499,13 +512,13 @@ main(int argc, char **argv)
 
 		/* Print filenames if more than one. */
 
-		if (argc > 1 && !wflag && !lflag)
+		if (argc > 1 && !lflag && !qflag)
 			printf("%s%s:\n", fnum == 0 ? "" : "\n", *argv);
 
 		if (lflag)
-			lorder[fnum].fn = *argv;
+			lorder[fnum].fn = fname;
 
-		if (doit(fp, *argv, fnum))
+		if (doit(fp, fnum))
 			eval = 1;
 		fclose(fp);
 	}
