@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.42 2004/08/20 22:29:45 ejohnst Exp $
+ * $Id: canon.c,v 1.43 2004/08/21 20:27:10 ejohnst Exp $
  */
 
 /*
@@ -45,6 +45,30 @@
 #include <string.h>
 
 #include "makers.h"
+
+
+/*
+ * Calculate and format an exposure value ("-n.nn EV").
+ * 1/3 and 2/3 values seem to be a bit off.  We make a slight adjustment
+ * to bring them in line with what we expect.
+ */
+static float
+calcev(char **c, int16_t v)
+{
+	int16_t n;
+
+	n = (abs(v) - 32) * (v & 0x8000 ? -1 : 1);
+	if (n == 20 || n == -12) v++;
+	else if (n == -20 || n == 12) v--;
+
+	exifstralloc(c, 10);
+	if (abs(v) > 64) {
+		sprintf(*c, "Unknown");
+		return (0.0);
+	}
+	snprintf(*c, 9, "%.2f EV", (float)v / 32);
+	return ((float)v / 32);
+}
 
 
 /* Macro mode. */
@@ -91,30 +115,6 @@ static struct descrip canon_flash[] = {
 	{ 6,	"Red-Eye Reduction (On)" },
 	{ 16,	"External Flash" },
 	{ -1,	"Unknown" },
-};
-
-
-/* Flash bias.  Is this ever something other than 0? */
-
-static struct descrip canon_fbias[] = {
-	{ 0x0000,	"0 EV" },
-	{ 0x000c,	"0.33 EV" },
-	{ 0x0010,	"0.50 EV" },
-	{ 0x0014,	"0.67 EV" },
-	{ 0x0020,	"1 EV" },
-	{ 0x002c,	"1.33 EV" },
-	{ 0x0030,	"1.50 EV" },
-	{ 0x0034,	"1.67 EV" },
-	{ 0x0040,	"2 EV" },
-	{ 0xffc0,	"-2 EV" },
-	{ 0xffcc,	"-1.67 EV" },
-	{ 0xffd0,	"-1.50 EV" },
-	{ 0xffd4,	"-1.33 EV" },
-	{ 0xffe0,	"-1 EV" },
-	{ 0xffec,	"-0.67 EV" },
-	{ 0xfff0,	"-0.50 EV" },
-	{ 0xfff4,	"-0.33 EV" },
-	{ -1,		"Unknown" },
 };
 
 
@@ -344,8 +344,8 @@ static struct exiftag canon_tags04[] = {
 	  "Sequence Number", NULL },
 	{ 14, TIFF_SHORT, 0, ED_UNK, "CanonAFPoint2",
 	  "Autofocus Point", NULL },
-	{ 15, TIFF_SHORT, 0, ED_VRB, "CanonFlashBias",
-	  "Flash Bias", canon_fbias },
+	{ 15, TIFF_SHORT, 0, ED_IMG, "CanonFlashBias",
+	  "Flash Bias", NULL },
 	{ 19, TIFF_SHORT, 0, ED_IMG, "CanonSubjDst",
 	  "Subject Distance", NULL },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "Canon04Unknown",
@@ -861,6 +861,10 @@ canon_prop04(struct exifprop *aprop, struct exifprop *prop,
 		break;
 	case 9:
 		aprop->lvl = v ? ED_IMG : ED_VRB;
+		break;
+	case 15:
+		if (calcev(&aprop->str, (int16_t)v) == 0.0)
+			aprop->lvl = ED_VRB;
 		break;
 
 	/*
