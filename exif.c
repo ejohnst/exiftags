@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.10 2002/07/11 04:04:55 ejohnst Exp $
+ * $Id: exif.c,v 1.11 2002/07/11 07:15:19 ejohnst Exp $
  */
 
 /*
@@ -58,6 +58,7 @@
 #include "makers.h"
 
 #define OLYMPUS_BUGS		/* Work around Olympus stupidity. */
+#define FUJI_BUGS		/* Work around Fuji stupidity. */
 #define WINXP_BUGS		/* Work around Windows XP stupidity. */
 
 
@@ -141,10 +142,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
 	if (!ftypes[j].type)
 		exifdie("unknown TIFF field type");
 
-	/*
-	 * Ignore sanity checking on maker note tags -- we'll get to them
-	 * later.
-	 */
+	/* Skip sanity checking on maker note tags; we'll get to them later. */
 
 	if (prop->ifdtag != EXIF_T_MAKERNOTE) {
 		/*
@@ -207,11 +205,21 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
  * the count here.  Root IFDs (0 and 1) are processed first (along with any
  * other "root" IFDs we find), then any nested IFDs in the order they're
  * encountered.
+ *
+ * XXX To work around some Fuji braindeadness, if we're dealing with the
+ * maker note we set our byte order to little endian.
  */
 static void
 readtags(struct ifd *dir, int seq, struct exiftags *t)
 {
 	int i;
+#ifdef FUJI_BUGS
+	enum order tmporder;
+
+	tmporder = t->tifforder;
+	if (dir->tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
+		t->tifforder = LITTLE;
+#endif
 
 	if (debug) {
 		if (dir->tag != EXIF_T_UNKNOWN) {
@@ -226,6 +234,11 @@ readtags(struct ifd *dir, int seq, struct exiftags *t)
 
 	for (i = 0; i < dir->num; i++)
 		readtag(&(dir->fields[i]), seq, dir, t);
+
+#ifdef FUJI_BUGS
+	if (dir->tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
+		t->tifforder = tmporder;
+#endif
 	if (debug)
 		printf("\n");
 }
@@ -246,13 +259,9 @@ postprop(struct exifprop *prop, struct exiftags *t)
 
 	/* Process maker note tags specially... */
 
-	if (prop->ifdtag == EXIF_T_MAKERNOTE) {
-		if (makers[t->mkrval].propfun) {
-			makers[t->mkrval].propfun(prop, t);
-			return;
-		} else
-			exifwarn2("no maker note support for",
-			    t->btiff + prop->value);
+	if (prop->ifdtag == EXIF_T_MAKERNOTE && makers[t->mkrval].propfun) {
+		makers[t->mkrval].propfun(prop, t);
+		return;
 	}
 
 	switch (prop->tag) {
@@ -413,10 +422,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 			dir = dir->next;
 
 		/*
-		 * Try to process maker note IFDs.  If we have a special
-		 * function for reading them, use it.  Otherwise, read it
-		 * normally.  If we don't get anything, just process the
-		 * tag like any other.
+		 * Try to process maker note IFDs using the function
+		 * specified for the maker.
 		 *
 		 * XXX Note that for this to work right, we have to see
 		 * the manufacturer tag first to figure out makerifd().
@@ -425,7 +432,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 		if (makers[t->mkrval].ifdfun)
 			dir->next = makers[t->mkrval].ifdfun(prop->value, t);
 		else
-			dir->next = readifds(prop->value, t);
+			exifwarn("maker note not supported");
 
 		if (!dir->next)
 			break;
