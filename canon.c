@@ -29,13 +29,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.40 2004/04/08 04:12:29 ejohnst Exp $
+ * $Id: canon.c,v 1.41 2004/05/07 05:46:06 ejohnst Exp $
  */
 
 /*
  * Exif tag definitions for Canon maker notes.
  * Developed from http://www.burren.cx/david/canon.html.
- * EOS 1D and 1Ds contributions from Stan Jirman <stanj@mac.com>.
+ * EOS 1D and 1Ds contributions from Stan Jirman <stanj@phototrek.org>.
  * EOS 10D contributions from Jason Montojo <jason.montojo@rogers.com>.
  *
  */
@@ -264,6 +264,8 @@ static struct exiftag canon_tags[] = {
 	  "Custom Function", NULL },
 	{ 0x0090, TIFF_SHORT, 0,  ED_UNK, "CustomFunc",
 	  "Custom Function", NULL },
+	{ 0x0093, TIFF_SHORT, 0,  ED_UNK, "Canon93Tag",
+	  "Canon Tag93 Offset", NULL },
 	{ 0x00a0, TIFF_SHORT, 0,  ED_UNK, "CanonA0Tag",
 	  "Canon TagA0 Offset", NULL },
 	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "CanonUnknown",
@@ -352,12 +354,28 @@ static struct exiftag canon_tags04[] = {
 /* Fields under tag 0x00a0 (EOS 1D, 1Ds). */
 
 static struct exiftag canon_tagsA0[] = {
+	{ 0,  TIFF_SHORT, 0, ED_VRB, "CanonA0Len",
+	  "Canon TagA0 Length", NULL },
 	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonColorTemp",
 	  "Color Temperature", NULL },
 	{ 10, TIFF_SHORT, 0, ED_IMG, "CanonColorMatrix",
 	  "Color Matrix", NULL },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonA0Unknown",
 	  "Canon TagA0 Unknown", NULL },
+};
+
+
+/* Fields under tag 0x0093 (counter on EOS 1D, 1Ds). */
+
+static struct exiftag canon_tags93[] = {
+	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon93Len",
+	  "Canon Tag93 Length", NULL },
+	{ 1,  TIFF_SHORT, 0, ED_VRB, "CanonActuateMult",
+	  "Actuation Multiplier", NULL },
+	{ 2,  TIFF_SHORT, 0, ED_VRB, "CanonActuateCount",
+	  "Actuation Counter", NULL },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "Canon93Unknown",
+	  "Canon Tag93 Unknown", NULL },
 };
 
 
@@ -1059,6 +1077,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 {
 	unsigned char *offset;
 	u_int16_t flmin = 0, flmax = 0, flunit = 0;
+	u_int32_t v;
 	struct exifprop *tmpprop;
 
 	switch (prop->tag) {
@@ -1115,6 +1134,31 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			if (tmpprop->value != 9) {
 				if ((tmpprop = findprop(prop, canon_tagsA0, 9)))
 					tmpprop->lvl = ED_BAD;
+		}
+		break;
+
+	case 0x0093:
+		if (!canon_subval(prop, t, canon_tags93, NULL))
+			break;
+		v = 0;
+
+		/* Number of acuations is in two shorts... */
+
+		if ((tmpprop = findprop(t->props, canon_tags93, 1))) {
+			v = tmpprop->value * 65536;
+
+			if ((tmpprop = findprop(prop, canon_tags93, 2)))
+				v += tmpprop->value;
+			else
+				v = 0;
+		}
+
+		if (v) {
+			tmpprop = childprop(prop);
+			tmpprop->name = "CanonActuations";
+			tmpprop->descr = "Camera Actuations";
+			tmpprop->lvl = ED_IMG;
+			tmpprop->value = v;
 		}
 		break;
 
