@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.24 2004/12/28 20:42:16 ejohnst Exp $
+ * $Id: nikon.c,v 1.25 2005/01/04 20:43:59 ejohnst Exp $
  */
 
 /*
@@ -600,7 +600,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 			    strlen(prop->str + 4) + 1);
 
 		/* Remove leading whitespace. */
-		for (c1 = prop->str; *c1 && *c1 == ' '; c1++);
+		for (c1 = prop->str; *c1 && *c1 == (unsigned char)' '; c1++);
 		if (*c1 && c1 > prop->str)
 			memmove(prop->str, c1, strlen(c1) + 1);
 		break;

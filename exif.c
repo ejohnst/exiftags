@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.71 2005/01/03 21:49:30 ejohnst Exp $
+ * $Id: exif.c,v 1.72 2005/01/04 20:43:59 ejohnst Exp $
  */
 
 /*
@@ -419,7 +419,8 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 	if (prop->type == TIFF_ASCII &&
 	    (prop->lvl & (ED_CAM | ED_IMG | ED_PAS))) {
 		c = prop->str;
-		while (c && *c && (isspace((int)*c) || *c < ' ')) c++;
+		while (c && *c && (isspace((int)*c) ||
+		    (unsigned char)*c < ' ')) c++;
 		if (!c || !*c)
 			prop->lvl = ED_VRB;
 	}
@@ -433,7 +434,8 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 	if (prop->str && prop->type == TIFF_ASCII) {
 		c = prop->str;
 		while (*c) {
-			if (*c < ' ')
+			/* Catch those pesky chars > 127. */
+			if ((unsigned char)*c < ' ')
 				*c = '_';
 			c++;
 		}

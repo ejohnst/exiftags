@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sigma.c,v 1.4 2004/12/29 20:35:35 ejohnst Exp $
+ * $Id: sigma.c,v 1.5 2005/01/04 20:44:00 ejohnst Exp $
  */
 
 /*
@@ -132,7 +132,7 @@ sigma_prop(struct exifprop *prop, struct exiftags *t)
 	 */
 	if (prop->type == TIFF_ASCII && prop->count)
 		for (i = 0; i < (prop->count - 1); i++)
-			if (prop->str[i] < ' ') {
+			if ((unsigned char)prop->str[i] < ' ') {
 				prop->lvl = ED_VRB;
 				return;
 			}
