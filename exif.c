@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.48 2003/02/11 15:32:19 ejohnst Exp $
+ * $Id: exif.c,v 1.49 2003/06/22 03:43:55 ejohnst Exp $
  */
 
 /*
@@ -59,6 +59,7 @@
 #define OLYMPUS_BUGS		/* Work around Olympus stupidity. */
 #define FUJI_BUGS		/* Work around Fuji stupidity. */
 #define WINXP_BUGS		/* Work around Windows XP stupidity. */
+#define UNCREDITED_BUGS		/* Work around uncredited stupidity. */
 
 
 /* Function prototypes. */
@@ -106,8 +107,21 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	/* Lookup and check the field type. */
 
 	for (j = 0; ftypes[j].type && ftypes[j].type != prop->type; j++);
-	if (!ftypes[j].type)
-		exifdie("unknown TIFF field type");
+	if (!ftypes[j].type) {
+		/*
+		 * XXX It seems that some editing program mangles the TIFF
+		 * data type in the Interoperability IFD.  We'll let this
+		 * slide (noisily) if the tag is unknown anyway.
+		 */
+
+#ifdef UNCREDITED_BUGS
+		if (prop->lvl == ED_UNK) {
+			prop->type = TIFF_UNKN;
+			exifwarn("unknown TIFF field type");
+		} else
+#endif
+			exifdie("unknown TIFF field type");
+	}
 
 	/* Skip sanity checking on maker note tags; we'll get to them later. */
 
@@ -344,6 +358,16 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		snprintf(prop->str, 15, "%d mm", prop->value);
 		prop->str[15] = '\0';
 		break;
+
+	/*
+	 * XXX This really should be in parsetag() to guarantee that it's
+	 * done before we process the maker notes.  However, I haven't seen
+	 * model not come first, so it should be safe (and more convenient).
+	 */
+
+	case EXIF_T_MODEL:
+		t->model = prop->str;
+		break;
 	}
 }
 
@@ -515,6 +539,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	case EXIF_T_USERCOMMENT:
+
+		if (prop->count < 8)
+			break;
 
 		/* Ignore the 'comments' WinXP creates when rotating. */
 #ifdef WINXP_BUGS
