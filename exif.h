@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.1 2002/01/20 23:39:32 ejohnst Exp $
+ * $Id: exif.h,v 1.2 2002/01/20 23:59:08 ejohnst Exp $
  */
 
 /*
@@ -39,7 +39,7 @@
 #define _EXIF_H
 
 #include <stdlib.h>
-#include <stdint.h>
+#include <sys/types.h>
 
 
 /* TIFF types. */
@@ -113,9 +113,9 @@ extern unsigned char *etiff;	/* End of TIFF. */
 /* Tag lookup table (opaque). */
 
 struct exiftag {
-	uint16_t tag;		/* Tag ID. */
-	uint16_t type;		/* Expected type. */
-	uint16_t count;		/* Expected count. */
+	u_int16_t tag;		/* Tag ID. */
+	u_int16_t type;		/* Expected type. */
+	u_int16_t count;	/* Expected count. */
 	unsigned short lvl;	/* Output level. */
 	const char *name;
 	const char *descr;
@@ -133,7 +133,7 @@ struct descrip {
 /* IFD field types (opaque). */
 
 struct fieldtype {
-	uint16_t type;
+	u_int16_t type;
 	const char *name;
 	size_t size;
 };
@@ -152,8 +152,8 @@ struct field {
 /* IFD entry (opaque). */
 
 struct ifd {
-	uint16_t tag;		/* Associated tag. */
-	uint16_t num;		/* Number of fields. */
+	u_int16_t tag;		/* Associated tag. */
+	u_int16_t num;		/* Number of fields. */
 	struct field *fields;	/* Array of fields. */
 	struct ifd *next;
 };
@@ -162,16 +162,16 @@ struct ifd {
 /* Exif property returned by exifscan.  (Note: descr can be NULL.) */
 
 struct exifprop {
-	uint16_t tag;		/* The Exif tag. */
-	uint16_t type;
-	uint32_t count;
-	uint32_t value;
+	u_int16_t tag;		/* The Exif tag. */
+	u_int16_t type;
+	u_int32_t count;
+	u_int32_t value;
 	const char *name;
 	const char *descr;
 	char *str;		/* String representation of value (dynamic). */
 	unsigned short lvl;	/* Verbosity level. */
 	int ifdseq;		/* Sequence number of parent IFD. */
-	uint16_t ifdtag;	/* Parent IFD tag association. */
+	u_int16_t ifdtag;	/* Parent IFD tag association. */
 	struct exifprop *next;
 };
 
@@ -222,10 +222,10 @@ extern struct descrip scenetypes[];
 
 /* Utility functions from exifutil.c. */
 
-extern uint16_t exif2byte(unsigned char *b);
-extern uint32_t exif4byte(unsigned char *b);
+extern u_int16_t exif2byte(unsigned char *b);
+extern u_int32_t exif4byte(unsigned char *b);
 extern int32_t exif4sbyte(unsigned char *b);
-extern char *finddescr(struct descrip *table, uint16_t val);
+extern char *finddescr(struct descrip *table, u_int16_t val);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
 

@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.1 2002/01/20 23:39:32 ejohnst Exp $
+ * $Id: exifutil.c,v 1.2 2002/01/20 23:59:09 ejohnst Exp $
  */
 
 /*
@@ -41,7 +41,7 @@
 /*
  * Read an unsigned 2-byte int from the buffer.
  */
-uint16_t
+u_int16_t
 exif2byte(unsigned char *b)
 {
 	if (tifforder == BIG)
@@ -54,7 +54,7 @@ exif2byte(unsigned char *b)
 /*
  * Read an unsigned 4-byte int from the buffer.  (XXX Endian test...)
  */
-uint32_t
+u_int32_t
 exif4byte(unsigned char *b)
 {
 	if (tifforder == BIG)
@@ -81,7 +81,7 @@ exif4sbyte(unsigned char *b)
  * Lookup description for a value.
  */
 char *
-finddescr(struct descrip *table, uint16_t val)
+finddescr(struct descrip *table, u_int16_t val)
 {
 	int i;
 	char *c;

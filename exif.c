@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.1 2002/01/20 23:39:32 ejohnst Exp $
+ * $Id: exif.c,v 1.2 2002/01/20 23:59:08 ejohnst Exp $
  */
 
 /*
@@ -70,7 +70,7 @@ static int parsetag(struct exifprop *prop, struct ifd *dir);
  * Lookup a property entry.
  */
 static struct exifprop *
-findprop(uint16_t tag)
+findprop(u_int16_t tag)
 {
 	struct exifprop *curprop;
 
@@ -184,10 +184,10 @@ readtags(struct ifd *dir)
  * Allocate and read an individual IFD.  Takes the beginning and end of the
  * Exif buffer, returns the IFD and an offset to the next IFD.
  */
-static uint32_t
+static u_int32_t
 readifd(unsigned char *b, struct ifd **dir)
 {
-	uint32_t ifdsize;
+	u_int32_t ifdsize;
 
 	*dir = (struct ifd *)malloc(sizeof(struct ifd));
 	if (!*dir)
@@ -226,7 +226,7 @@ readifd(unsigned char *b, struct ifd **dir)
  * node in a chain of IFDs.  Can return NULL (from readifd()).
  */
 static struct ifd *
-readifds(uint32_t offset)
+readifds(u_int32_t offset)
 {
 	struct ifd *firstifd, *curifd;
 
@@ -252,7 +252,7 @@ static void
 postprop(struct exifprop *prop)
 {
 	struct exifprop *tmpprop;
-	uint32_t val;
+	u_int32_t val;
 	float fval;
 	char slop[16];
 
@@ -372,7 +372,7 @@ static int
 parsetag(struct exifprop *prop, struct ifd *dir)
 {
 	int i;
-	uint16_t v = (uint16_t)prop->value;
+	u_int16_t v = (u_int16_t)prop->value;
 
 	switch (prop->tag) {
 
@@ -474,7 +474,7 @@ parsetag(struct exifprop *prop, struct ifd *dir)
 	 */
 
 	if (prop->type == TIFF_ASCII &&
-	    (prop->value + prop->count < (uint32_t)(etiff - btiff))) {
+	    (prop->value + prop->count < (u_int32_t)(etiff - btiff))) {
 		if (!(prop->str = (char *)malloc(prop->count + 1)))
 			exifdie((const char *)strerror(errno));
 		strncpy(prop->str, btiff + prop->value, prop->count);
@@ -485,7 +485,7 @@ parsetag(struct exifprop *prop, struct ifd *dir)
 	/* Rational types.  (Note that we'll redo some in our later pass.) */
 
 	if ((prop->type == TIFF_RTNL || prop->type == TIFF_SRTNL) &&
-	    (prop->value + prop->count * 8 <= (uint32_t)(etiff - btiff))) {
+	    (prop->value + prop->count * 8 <= (u_int32_t)(etiff - btiff))) {
 		if (!(prop->str = (char *)malloc(32)))
 			exifdie((const char *)strerror(errno));
 
@@ -528,7 +528,7 @@ exiffree(struct exifprop *list)
 struct exifprop *
 exifscan(unsigned char *b, int len)
 {
-	uint32_t ifdoff;
+	u_int32_t ifdoff;
 	struct ifd *ifd0, *curifd, *tmpifd;
 	struct exifprop *curprop;
 
@@ -542,9 +542,9 @@ exifscan(unsigned char *b, int len)
 
 	/* Determine endianness of the TIFF data. */
 
-	if (*((uint16_t *)b) == 0x4d4d)
+	if (*((u_int16_t *)b) == 0x4d4d)
 		tifforder = BIG;
-	else if (*((uint16_t *)b) == 0x4949)
+	else if (*((u_int16_t *)b) == 0x4949)
 		tifforder = LITTLE;
 	else
 		exifdie("invalid TIFF header");

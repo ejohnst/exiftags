@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.1 2002/01/20 23:39:32 ejohnst Exp $
+ * $Id: canon.c,v 1.2 2002/01/20 23:59:08 ejohnst Exp $
  */
 
 /*
@@ -214,14 +214,14 @@ static void
 canon_prop1(struct exifprop *prop, char *off)
 {
 	int i, j;
-	uint16_t v;
+	u_int16_t v;
 	struct exifprop *aprop;
 
 	for (i = 0; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2);
 
 		aprop = childprop(prop);
-		aprop->value = (uint32_t)v;
+		aprop->value = (u_int32_t)v;
 
 		/* Lookup property name and description. */
 
@@ -311,14 +311,14 @@ static void
 canon_prop4(struct exifprop *prop, char *off)
 {
 	int i, j;
-	uint16_t v;
+	u_int16_t v;
 	struct exifprop *aprop;
 
 	for (i = 0; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2);
 
 		aprop = childprop(prop);
-		aprop->value = (uint32_t)v;
+		aprop->value = (u_int32_t)v;
 
 		/* Lookup property name and description. */
 
