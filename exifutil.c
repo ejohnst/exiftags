@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.18 2003/08/03 01:34:02 ejohnst Exp $
+ * $Id: exifutil.c,v 1.19 2003/08/03 04:47:08 ejohnst Exp $
  */
 
 /*
@@ -154,7 +154,7 @@ exif4sbyte(unsigned char *b, enum order o)
 
 
 /*
- * Lookup description for a value.
+ * Lookup and allocate description for a value.
  */
 char *
 finddescr(struct descrip *table, u_int16_t val)
@@ -184,19 +184,6 @@ findprop(struct exifprop *prop, struct exiftag *tagset, u_int16_t tag)
 
 
 /*
- * Lookup a sub-property entry given tag and subtag.
- */
-struct exifprop *
-findsprop(struct exifprop *prop, u_int16_t tag, int16_t subtag)
-{
-
-	for (; prop && (prop->tag != tag || prop->subtag != subtag);
-	    prop = prop->next);
-	return (prop);
-}
-
-
-/*
  * Allocate memory for an Exif property.
  */
 struct exifprop *
@@ -208,14 +195,6 @@ newprop(void)
 	if (!prop)
 		exifdie((const char *)strerror(errno));
 	memset(prop, 0, sizeof(struct exifprop));
-
-	/*
-	 * Default; maker modules can depend on this being -2 unless they
-	 * they touch it.  (-1 is reserved for synthesized maker values.)
-	 */
-
-	prop->subtag = -2;
-
 	return (prop);
 }
 
@@ -232,7 +211,7 @@ childprop(struct exifprop *parent)
 
 	prop = newprop();
 
-	/* Property inherits everything but type & subtag from its parent. */
+	/* By default, the child inherits most values from its parent. */
 
 	prop->tag = parent->tag;
 	prop->type = TIFF_UNKN;
@@ -240,8 +219,7 @@ childprop(struct exifprop *parent)
 	prop->descr = parent->descr;
 	prop->lvl = parent->lvl;
 	prop->ifdseq = parent->ifdseq;
-	prop->ifdtag = parent->ifdtag;
-	prop->subtag = -1;
+	prop->par = parent;
 	prop->next = parent->next;
 
 	/* Now insert the new property into our list. */
@@ -276,29 +254,23 @@ dumpprop(struct exifprop *prop, struct field *afield)
 	if (!debug) return;
 
 	for (i = 0; ftypes[i].type && ftypes[i].type != prop->type; i++);
-
-	if (prop->subtag < -1) {
-		if (afield) {
-			printf("   %s (0x%04X): %s, %d; %d\n", prop->name,
-			    prop->tag, ftypes[i].name, prop->count,
-			    prop->value);
-			printf("      ");
-			hexprint(afield->tag, 2);
-			printf(" |");
-			hexprint(afield->type, 2);
-			printf(" |");
-			hexprint(afield->count, 4);
-			printf(" |");    
-			hexprint(afield->value, 4);
-			printf("\n");
-		} else
-			printf("   %s (0x%04X): %s, %d; %d, 0x%04X\n",
-			    prop->name, prop->tag, ftypes[i].name,
-			    prop->count, prop->value, prop->value);
-	} else
-		printf("     %s (%d): %s, %d; %d, 0x%04X\n", prop->name,
-		    prop->subtag, ftypes[i].name, prop->count, prop->value,
+	if (afield) {
+		printf("   %s (0x%04X): %s, %d; %d\n", prop->name,
+		    prop->tag, ftypes[i].name, prop->count,
 		    prop->value);
+		printf("      ");
+		hexprint(afield->tag, 2);
+		printf(" |");
+		hexprint(afield->type, 2);
+		printf(" |");
+		hexprint(afield->count, 4);
+		printf(" |");    
+		hexprint(afield->value, 4);
+		printf("\n");
+	} else
+		printf("   %s (0x%04X): %s, %d; %d, 0x%04X\n",
+		    prop->name, prop->tag, ftypes[i].name,
+		    prop->count, prop->value, prop->value);
 }
 
 
@@ -329,8 +301,8 @@ readifd(unsigned char *b, struct ifd **dir, struct exiftag *set,
 
 	(*dir)->next = NULL;
 	(*dir)->num = exif2byte(b, t->tifforder);
-	(*dir)->tag = EXIF_T_UNKNOWN;
 	(*dir)->tagset = set;
+	(*dir)->par = NULL;
 	ifdsize = (*dir)->num * sizeof(struct field);
 	b += 2;
 

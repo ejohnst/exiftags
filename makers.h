@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.9 2003/01/11 08:20:29 ejohnst Exp $
+ * $Id: makers.h,v 1.10 2003/08/03 04:47:08 ejohnst Exp $
  */
 
 /*
@@ -72,6 +72,7 @@ extern struct makerfun makers[];
 /* Maker note functions. */
 
 extern void canon_prop(struct exifprop *prop, struct exiftags *t);
+extern struct ifd *canon_ifd(u_int32_t offset, struct exiftags *t);
 
 extern void olympus_prop(struct exifprop *prop, struct exiftags *t);
 extern struct ifd *olympus_ifd(u_int32_t offset, struct exiftags *t);

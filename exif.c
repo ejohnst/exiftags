@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.53 2003/08/03 01:34:02 ejohnst Exp $
+ * $Id: exif.c,v 1.54 2003/08/03 04:47:08 ejohnst Exp $
  */
 
 /*
@@ -64,7 +64,7 @@
 
 /* Function prototypes. */
 
-static int parsetag(struct exifprop *prop, struct ifd *dir,
+static void parsetag(struct exifprop *prop, struct ifd *dir,
     struct exiftags *t, int domkr);
 
 
@@ -94,7 +94,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	/* IFD identifying info. */
 
 	prop->ifdseq = ifdseq;
-	prop->ifdtag = dir->tag;
+	prop->par = dir->par;
 	prop->tagset = dir->tagset ? dir->tagset : tags;
 
 	/* Lookup the field name. */
@@ -126,7 +126,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 	/* Skip sanity checking on maker note tags; we'll get to them later. */
 
-	if (prop->ifdtag != EXIF_T_MAKERNOTE) {
+	if (prop->par && prop->par->tag != EXIF_T_MAKERNOTE) {
 		/*
 		 * XXX Ignore UserComment -- a hack to get around an apparent
 		 * WinXP Picture Viewer bug (err, liberty).  When you rotate
@@ -155,18 +155,16 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 	/*
 	 * Do as much as we can with the tag at this point and add it
-	 * to our list if it's not an IFD pointer.
+	 * to our list.
 	 */
 
-	if (parsetag(prop, dir, t, domkr)) {
-		if ((tmpprop = t->props)) {
-			while (tmpprop->next)
-				tmpprop = tmpprop->next;
-			tmpprop->next = prop;
-		} else
-			t->props = prop;
+	parsetag(prop, dir, t, domkr);
+	if ((tmpprop = t->props)) {
+		while (tmpprop->next)
+			tmpprop = tmpprop->next;
+		tmpprop->next = prop;
 	} else
-		free(prop);
+		t->props = prop;
 }
 
 
@@ -186,20 +184,26 @@ static void
 readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
 {
 	int i;
+	u_int16_t tag;
 #ifdef FUJI_BUGS
 	enum order tmporder;
+#endif
 
+	if (dir->par)
+		tag = dir->par->tag;
+	else
+		tag = EXIF_T_UNKNOWN;
+
+#ifdef FUJI_BUGS
 	tmporder = t->tifforder;
-	if (dir->tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
+	if (tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
 		t->tifforder = LITTLE;
 #endif
 
 	if (debug) {
-		if (dir->tag != EXIF_T_UNKNOWN) {
-			for (i = 0; tags[i].tag < EXIF_T_UNKNOWN &&
-			    tags[i].tag != dir->tag; i++);
+		if (tag != EXIF_T_UNKNOWN) {
 			printf("Processing %s directory, %d entries\n",
-			    tags[i].name, dir->num);
+			    dir->par->name, dir->num);
 		} else
 			printf("Processing directory %d, %d entries\n",
 			    seq, dir->num);
@@ -209,7 +213,7 @@ readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
 		readtag(&(dir->fields[i]), seq, dir, t, domkr);
 
 #ifdef FUJI_BUGS
-	if (dir->tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
+	if (tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
 		t->tifforder = tmporder;
 #endif
 	if (debug)
@@ -234,21 +238,26 @@ postprop(struct exifprop *prop, struct exiftags *t)
 
 	/* Process tags from special IFDs. */
 
-	switch (prop->ifdtag) {
+	if (prop->par && prop->par->tagset == tags) {
+		switch (prop->par->tag) {
 
-	case EXIF_T_MAKERNOTE:
-		if (makers[t->mkrval].propfun) {
-			makers[t->mkrval].propfun(prop, t);
+		case EXIF_T_MAKERNOTE:
+			if (makers[t->mkrval].propfun) {
+				makers[t->mkrval].propfun(prop, t);
+				return;
+			}
+			break;
+
+		case EXIF_T_GPSIFD:
+			gpsprop(prop, t);
 			return;
 		}
-		break;
-
-	case EXIF_T_GPSIFD:
-		gpsprop(prop, t);
-		return;
 	}
 
 	/* Process normal tags. */
+
+	if (prop->tagset != tags)
+		return;
 
 	switch (prop->tag) {
 
@@ -424,7 +433,7 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 /*
  * Fetch the data for an Exif tag.
  */
-static int
+static void
 parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 {
 	unsigned int i, len;
@@ -439,8 +448,10 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	    prop->tagset[i].tag != prop->tag; i++);
 	if (prop->tagset[i].table) {
 		prop->str = finddescr(prop->tagset[i].table, v);
-		return (TRUE);
+		return;
 	}
+
+	/* XXX Probably shouldn't process this switch for non-standard tags. */
 
 	switch (prop->tag) {
 
@@ -483,8 +494,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			break;
 		}
 
-		dir->next->tag = prop->tag;
-		return (FALSE);		/* No need to add to property list. */
+		dir->next->par = prop;
+		return;
 
 	/* Record the Exif version. */
 
@@ -512,7 +523,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	case EXIF_T_MAKERNOTE:
 		if (!domkr)
-			return (TRUE);
+			return;
 
 		while (dir->next)
 			dir = dir->next;
@@ -533,8 +544,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		if (!dir->next)
 			break;
 
-		dir->next->tag = prop->tag;
-		return (FALSE);		/* No need to add to property list. */
+		dir->next->par = prop;
+		return;
 
 	/* Lookup functions for maker note. */
 
@@ -558,7 +569,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 * of the comment indicate what charset follows.  For now, we
 	 * just support ASCII.
 	 *
-	 * A handful of the GPS tags are also stored in this format
+	 * XXX A handful of the GPS tags are also stored in this format
 	 * (GPSProcessingMethod & GPSAreaInformation).
 	 */
 
@@ -607,7 +618,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			strncpy(prop->str, c, d - c);
 			prop->str[d - c] = '\0';
 			prop->lvl = prop->str[0] ? ED_IMG : ED_VRB;
-			return (TRUE);
+			return;
 		}
 		break;
 
@@ -621,7 +632,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 #else
 		prop->str = finddescr(filesrcs, v);
 #endif
-		return (TRUE);
+		return;
 	}
 
 	/*
@@ -636,7 +647,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		strncpy(prop->str, (const char *)(t->btiff + prop->value),
 		    prop->count);
 		prop->str[prop->count] = '\0';
-		return (TRUE);
+		return;
 	}
 
 	/*
@@ -664,7 +675,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			denom = gcd(abs(sn), abs(sd));
 			fixfract(prop->str, sn, sd, (int32_t)denom);
 		}
-		return (TRUE);
+		return;
 	}
 
 	/*
@@ -679,7 +690,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	    (u_int32_t)(t->etiff - t->btiff))) {
 
 		if (prop->count > 8)
-			return (TRUE);
+			return;
 
 		len = 8 * prop->count + 1;
 		if (!(prop->str = (char *)malloc(len)))
@@ -699,9 +710,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 				    (i * 2), t->tifforder));
 		}
 		prop->str[strlen(prop->str) - 2] = '\0';
-		return (TRUE);
+		return;
 	}
-	return (TRUE);
+	return;
 }
 
 

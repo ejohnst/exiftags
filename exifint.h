@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.21 2003/08/03 01:34:02 ejohnst Exp $
+ * $Id: exifint.h,v 1.22 2003/08/03 04:47:08 ejohnst Exp $
  */
 
 /*
@@ -53,29 +53,8 @@
 
 #define EXIF_T_EXIFIFD		0x8769
 #define EXIF_T_GPSIFD		0x8825
-#define EXIF_T_MAKERNOTE	0x927c		/* (potentially) */
+#define EXIF_T_MAKERNOTE	0x927c
 #define EXIF_T_INTEROP		0xa005
-
-
-/* Generic field description lookup table. */
-
-struct descrip {
-	int32_t val;
-	const char *descr;
-};
-
-
-/* Tag lookup table. */
-
-struct exiftag {
-	u_int16_t tag;		/* Tag ID. */
-	u_int16_t type;		/* Expected type. */
-	u_int16_t count;	/* Expected count. */
-	unsigned short lvl;	/* Output level. */
-	const char *name;
-	const char *descr;
-	struct descrip *table;	/* Value lookup table. */
-};
 
 
 /* IFD field types. */
@@ -100,10 +79,10 @@ struct field {
 /* IFD entry. */
 
 struct ifd {
-	u_int16_t tag;		/* Associated tag. */
 	u_int16_t num;		/* Number of fields. */
 	struct field *fields;	/* Array of fields. */
 	struct exiftag *tagset;	/* Tag definitions. */
+	struct exifprop *par;	/* Parent property association. */
 	struct ifd *next;
 };
 
@@ -129,9 +108,7 @@ struct ifd {
 /* The tables from tagdefs.c. */
 
 extern struct fieldtype ftypes[];
-
 extern struct descrip ucomment[];
-
 extern struct descrip flashes[];
 extern struct descrip filesrcs[];
 
@@ -143,8 +120,6 @@ extern int16_t exif2sbyte(unsigned char *b, enum order o);
 extern u_int32_t exif4byte(unsigned char *b, enum order o);
 extern void byte4exif(u_int32_t n, unsigned char *b, enum order o);
 extern int32_t exif4sbyte(unsigned char *b, enum order o);
-extern struct exifprop *findsprop(struct exifprop *prop, u_int16_t tag,
-    int16_t subtag);
 extern char *finddescr(struct descrip *table, u_int16_t val);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);

@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.17 2003/08/03 01:34:02 ejohnst Exp $
+ * $Id: minolta.c,v 1.18 2003/08/03 04:47:08 ejohnst Exp $
  *
  */ 
 
@@ -437,7 +437,8 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 			k = i;
 
 		aprop = childprop(prop);
-		aprop->subtag = i;
+		aprop->tag = i;
+		aprop->tagset = thetags;
 
 		/* Note: these are big-endian regardless. */
 		aprop->value = exif4byte(off + (4 * i), BIG);
@@ -655,12 +656,12 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
  * Make sure meaningless values are meaningless.
  */
 void
-minolta_naval(struct exifprop *props, u_int16_t tag, int16_t subtag)
+minolta_naval(struct exifprop *props, struct exiftag *tags, int16_t tag)
 {
 	struct exifprop *prop;
 	const char *na = "n/a";
 
-	if (!(prop = findsprop(props, tag, subtag)))
+	if (!(prop = findprop(props, tags, tag)))
 		return;
 
 	free(prop->str);
@@ -677,16 +678,8 @@ minolta_naval(struct exifprop *props, u_int16_t tag, int16_t subtag)
 void
 minolta_prop(struct exifprop *prop, struct exiftags *t)
 {
-	struct exiftag *fielddefs;
+	struct exiftag *fielddefs = NULL;
 	struct exifprop *tmpprop;
-
-	/*
-	 * Don't process properties we've created while looking at other
-	 * maker note tags.
-	 */
-
-	if (prop->subtag > -2)
-		return;
 
 	if (debug) {
 		static int once = 0;	/* XXX Breaks on multiple files. */
@@ -741,55 +734,55 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 
 	/* Override meaningless values. */
 
-	if (prop->tag == 0x0001 || prop->tag == 0x0003) {
+	if (fielddefs) {
 
 		/* Drive mode (bracketing step & mode). */
 
-		if ((tmpprop = findsprop(t->props, prop->tag, 6)))
+		if ((tmpprop = findprop(t->props, fielddefs, 6)))
 			if (tmpprop->value != 4) {
-				minolta_naval(t->props, prop->tag, 14);
-				minolta_naval(t->props, prop->tag, 50);
+				minolta_naval(t->props, fielddefs, 14);
+				minolta_naval(t->props, fielddefs, 50);
 			}
 
 		/* Focus mode (wide focus area, AF zone, point X & Y). */
 
-		if ((tmpprop = findsprop(t->props, prop->tag, 48)))
+		if ((tmpprop = findprop(t->props, fielddefs, 48)))
 			if (tmpprop->value == 1) {
-				minolta_naval(t->props, prop->tag, 45);
-				minolta_naval(t->props, prop->tag, 46);
-				minolta_naval(t->props, prop->tag, 47);
-				minolta_naval(t->props, prop->tag, 49);
+				minolta_naval(t->props, fielddefs, 45);
+				minolta_naval(t->props, fielddefs, 46);
+				minolta_naval(t->props, fielddefs, 47);
+				minolta_naval(t->props, fielddefs, 49);
 			}
 
 		/* Flash fired (flash comp, mode, & internal flash). */
 
-		if ((tmpprop = findsprop(t->props, prop->tag, 20)))
+		if ((tmpprop = findprop(t->props, fielddefs, 20)))
 			if (tmpprop->value != 1) {
-				minolta_naval(t->props, prop->tag, 2);
-				minolta_naval(t->props, prop->tag, 35);
-				minolta_naval(t->props, prop->tag, 43);
+				minolta_naval(t->props, fielddefs, 2);
+				minolta_naval(t->props, fielddefs, 35);
+				minolta_naval(t->props, fielddefs, 43);
 			}
 
 		/* Exposure mode (meter mode, exposure comp). */
 
 		if ((tmpprop = findprop(t->props, tags, EXIF_T_EXPMODE)))
 			if (tmpprop->value == 1) {
-				minolta_naval(t->props, prop->tag, 7);
-				minolta_naval(t->props, prop->tag, 13);
+				minolta_naval(t->props, fielddefs, 7);
+				minolta_naval(t->props, fielddefs, 13);
 			}
 
 		/* Exposure prog (scene capture type). */
 
-		if ((tmpprop = findsprop(t->props, prop->tag, 1)))
+		if ((tmpprop = findprop(t->props, fielddefs, 1)))
 			if (tmpprop->value != 0)
-				minolta_naval(t->props, prop->tag, 34);
+				minolta_naval(t->props, fielddefs, 34);
 
 		/* Interval mode (interval pics, time). */
 
-		if ((tmpprop = findsprop(t->props, prop->tag, 38)))
+		if ((tmpprop = findprop(t->props, fielddefs, 38)))
 			if (tmpprop->value != 1) {
-				minolta_naval(t->props, prop->tag, 16);
-				minolta_naval(t->props, prop->tag, 17);
+				minolta_naval(t->props, fielddefs, 16);
+				minolta_naval(t->props, fielddefs, 17);
 			}
 	}
 }

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.11 2003/08/03 00:50:03 ejohnst Exp $
+ * $Id: olympus.c,v 1.12 2003/08/03 04:47:08 ejohnst Exp $
  */
 
 /*
@@ -97,14 +97,6 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	u_int32_t a, b;
 	unsigned char *offset;
 	struct exifprop *aprop;
-
-	/*
-	 * Don't process properties we've created while looking at other
-	 * maker note tags.
-	 */
-
-	if (prop->subtag > -2)
-		return;
 
 	switch (prop->tag) {
 

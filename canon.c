@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.31 2003/08/03 00:50:02 ejohnst Exp $
+ * $Id: canon.c,v 1.32 2003/08/03 04:47:08 ejohnst Exp $
  */
 
 /*
@@ -46,15 +46,6 @@
 #include <errno.h>
 
 #include "makers.h"
-
-
-/* Custom function field description lookup table. */
-
-struct ccstm {
-	int32_t val;
-	const char *descr;
-	struct descrip *table;
-};
 
 
 /* Macro mode. */
@@ -276,7 +267,7 @@ static struct exiftag canon_tags[] = {
 	  "Custom Function", NULL },
 	{ 0x00a0, TIFF_SHORT, 0,  ED_UNK, "CanonA0Tag",
 	  "Canon TagA0 Offset", NULL },
-	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "Unknown",
+	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "CanonUnknown",
 	  "Canon Unknown", NULL },
 };
 
@@ -334,7 +325,7 @@ static struct exiftag canon_tags01[] = {
 	  "Zoomed Resolution", NULL },
 	{ 37, TIFF_SHORT, 0, ED_VRB, "CanonBZoomRes",
 	  "Base Zoom Resolution", NULL },
-	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "Canon01Unknown",
 	  "Canon Tag1 Unknown", NULL },
 };
 
@@ -354,7 +345,7 @@ static struct exiftag canon_tags04[] = {
 	  "Flash Bias", canon_fbias },
 	{ 19, TIFF_SHORT, 0, ED_UNK, "CanonSubjDst",
 	  "Subject Distance", NULL },
-	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "Canon04Unknown",
 	  "Canon Tag4 Unknown", NULL },
 };
 
@@ -364,8 +355,16 @@ static struct exiftag canon_tags04[] = {
 static struct exiftag canon_tagsA0[] = {
 	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonColorTemp",
 	  "Color Temperature", NULL },
-	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonA0Unknown",
 	  "Canon TagA0 Unknown", NULL },
+};
+
+
+/* Placeholder for unknown fields. */
+
+static struct exiftag canon_tagsunk[] = {
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
+	  "Canon Unknown", NULL },
 };
 
 
@@ -636,74 +635,130 @@ static struct descrip ccstm_assistbut[] = {
 
 /* D30/D60 custom functions. */
 
-static struct ccstm canon_d30custom[] = {
-	{ 1,	"Long exposure noise reduction", ccstm_offon },
-	{ 2,	"Shutter/AE lock buttons", ccstm_shutter },
-	{ 3,	"Mirror lockup", ccstm_disen },
-	{ 4,	"Tv/Av and exposure level", ccstm_explvl },
-	{ 5,	"AF-assist light", ccstm_autooff },
-	{ 6,	"Av mode shutter speed", ccstm_shutspd },
-	{ 7,	"AEB sequence/auto cancellation", ccstm_aebseq },
-	{ 8,	"Shutter curtain sync", ccstm_shutsync },
-	{ 9,	"Lens AF stop button", ccstm_lensaf },
-	{ 10,	"Fill flash auto reduction", ccstm_endis },
-	{ 11,	"Menu button return position", ccstm_menubut },
-	{ 12,	"Shooting Set button function", ccstm_setbut },
-	{ 13,	"Sensor cleaning", ccstm_disen },
-	{ 14,	"Superimposed display", ccstm_onoff },
-	{ 15,	"Shutter release w/o CF card", ccstm_yesno },
-	{ -1,	"Unknown function", NULL },
+static struct exiftag canon_d30custom[] = {
+	{ 1,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Long exposure noise reduction", ccstm_offon },
+	{ 2,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Shutter/AE lock buttons", ccstm_shutter },
+	{ 3,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Mirror lockup", ccstm_disen },
+	{ 4,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Tv/Av and exposure level", ccstm_explvl },
+	{ 5,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "AF-assist light", ccstm_autooff },
+	{ 6,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Av mode shutter speed", ccstm_shutspd },
+	{ 7,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "AEB sequence/auto cancellation", ccstm_aebseq },
+	{ 8,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Shutter curtain sync", ccstm_shutsync },
+	{ 9,  TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Lens AF stop button", ccstm_lensaf },
+	{ 10, TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Fill flash auto reduction", ccstm_endis },
+	{ 11, TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Menu button return position", ccstm_menubut },
+	{ 12, TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Shooting Set button function", ccstm_setbut },
+	{ 13, TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Sensor cleaning", ccstm_disen },
+	{ 14, TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Superimposed display", ccstm_onoff },
+	{ 15, TIFF_SHORT, 0, ED_VRB, "D30Custom",
+	  "Shutter release w/o CF card", ccstm_yesno },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "D30CustomUnknown",
+	  "Canon D30 Custom Unknown", NULL },
 };
 
 
 /* EOS-1D/1Ds custom functions. */
 
-static struct ccstm canon_1dcustom[] = {
-	{ 0,	"Focusing screen", ccstm_fscr },
-	{ 1,	"Finder display during exposure", ccstm_offon },
-	{ 2,	"Shutter release w/o CF card", ccstm_yesno },
-	{ 3,	"ISO speed expansion", ccstm_noyes },
-	{ 4,	"Shutter button/AEL button", ccstm_shutterael },
-	{ 5,	"Manual Tv/Av for M", ccstm_tvavform },
-	{ 6,	"Exposure level increments", ccstm_explvlinc },
-	{ 7,	"USM lens electronic MF", ccstm_usmmf },
-	{ 8,	"Top/back LCD panels", ccstm_lcdpanels },
-	{ 9,	"AEB sequence/auto cancellation", ccstm_aebseq },
-	{ 10,	"AF point illumination", ccstm_afill },
-	{ 11,	"AF point selection", ccstm_afsel },
-	{ 12,	"Mirror lockup", ccstm_disen },
-	{ 13,	"# AF points/spot metering", ccstm_afspot },
-	{ 14,	"Fill flash auto reduction", ccstm_endis },
-	{ 15,	"Shutter curtain sync", ccstm_shutsync },
-	{ 16,	"Safety shift in Av or Tv", ccstm_disen },
-	{ 17,	"AF point activation area", ccstm_afact },
-	{ 18,	"Switch to registered AF point", ccstm_regaf },
-	{ 19,	"Lens AF stop button", ccstm_lensaf1 },
-	{ 20,	"AI servo tracking sensitivity", ccstm_aisens },
-	{ -1,	"Unknown function", NULL },
+static struct exiftag canon_1dcustom[] = {
+	{ 0,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Focusing screen", ccstm_fscr },
+	{ 1,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Finder display during exposure", ccstm_offon },
+	{ 2,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Shutter release w/o CF card", ccstm_yesno },
+	{ 3,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "ISO speed expansion", ccstm_noyes },
+	{ 4,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Shutter button/AEL button", ccstm_shutterael },
+	{ 5,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Manual Tv/Av for M", ccstm_tvavform },
+	{ 6,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Exposure level increments", ccstm_explvlinc },
+	{ 7,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "USM lens electronic MF", ccstm_usmmf },
+	{ 8,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Top/back LCD panels", ccstm_lcdpanels },
+	{ 9,  TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "AEB sequence/auto cancellation", ccstm_aebseq },
+	{ 10, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "AF point illumination", ccstm_afill },
+	{ 11, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "AF point selection", ccstm_afsel },
+	{ 12, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Mirror lockup", ccstm_disen },
+	{ 13, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "# AF points/spot metering", ccstm_afspot },
+	{ 14, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Fill flash auto reduction", ccstm_endis },
+	{ 15, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Shutter curtain sync", ccstm_shutsync },
+	{ 16, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Safety shift in Av or Tv", ccstm_disen },
+	{ 17, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "AF point activation area", ccstm_afact },
+	{ 18, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Switch to registered AF point", ccstm_regaf },
+	{ 19, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "Lens AF stop button", ccstm_lensaf1 },
+	{ 20, TIFF_SHORT, 0, ED_VRB, "1DCustom",
+	  "AI servo tracking sensitivity", ccstm_aisens },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "1DCustomUnknown",
+	  "Canon 1D Custom Unknown", NULL },
 };
 
 /* 10D custom functions. */
 
-static struct ccstm canon_10dcustom[] = {
-	{ 1,	"SET button function when shooting", ccstm_10dsetbut },
-	{ 2,	"Shutter release w/o CF card", ccstm_yesno },
-	{ 3,	"Flash sync speed in Av mode", ccstm_shutspd },
-	{ 4,	"Shutter button/AE lock button", ccstm_10dshutter },
-	{ 5,	"AF-assist beam/Flash firing", ccstm_assistflash },
-	{ 6,	"Exposure level increments", ccstm_explvl },
-	{ 7,	"AF point registration", ccstm_afptreg },
-	{ 8,	"RAW+JPEG recording", ccstm_rawjpeg },
-	{ 9,	"AEB sequence/auto cancellation", ccstm_aebseq },
-	{ 10,	"Superimposed display", ccstm_onoff },
-	{ 11,	"Menu button display position", ccstm_10dmenubut },
-	{ 12,	"Mirror lockup", ccstm_disen },
-	{ 13,	"Assist button function", ccstm_assistbut },
-	{ 14,	"Fill flash auto reduction", ccstm_endis },
-	{ 15,	"Shutter curtain sync", ccstm_shutsync },
-	{ 16,	"Safety shift in Av or Tv", ccstm_disen },
-	{ 17,	"Lens AF stop button", ccstm_lensaf },
-	{ -1,	"Unknown function", NULL },
+static struct exiftag canon_10dcustom[] = {
+	{ 1,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "SET button function when shooting", ccstm_10dsetbut },
+	{ 2,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Shutter release w/o CF card", ccstm_yesno },
+	{ 3,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Flash sync speed in Av mode", ccstm_shutspd },
+	{ 4,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Shutter button/AE lock button", ccstm_10dshutter },
+	{ 5,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "AF-assist beam/Flash firing", ccstm_assistflash },
+	{ 6,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Exposure level increments", ccstm_explvl },
+	{ 7,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "AF point registration", ccstm_afptreg },
+	{ 8,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "RAW+JPEG recording", ccstm_rawjpeg },
+	{ 9,  TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "AEB sequence/auto cancellation", ccstm_aebseq },
+	{ 10, TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Superimposed display", ccstm_onoff },
+	{ 11, TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Menu button display position", ccstm_10dmenubut },
+	{ 12, TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Mirror lockup", ccstm_disen },
+	{ 13, TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Assist button function", ccstm_assistbut },
+	{ 14, TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Fill flash auto reduction", ccstm_endis },
+	{ 15, TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Shutter curtain sync", ccstm_shutsync },
+	{ 16, TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Safety shift in Av or Tv", ccstm_disen },
+	{ 17, TIFF_SHORT, 0, ED_VRB, "10DCustom",
+	  "Lens AF stop button", ccstm_lensaf },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "10DCustomUnknown",
+	  "Canon 10D Custom Unknown", NULL },
 };
 
 
@@ -716,7 +771,7 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
 {
 	u_int16_t v = (u_int16_t)aprop->value;
 
-	switch (aprop->subtag) {
+	switch (aprop->tag) {
 	case 2:
 		aprop->lvl = v ? ED_IMG : ED_VRB;
 		if (!(aprop->str = (char *)malloc(32)))
@@ -780,7 +835,7 @@ canon_prop04(struct exifprop *aprop, struct exifprop *prop,
     unsigned char *off, enum order o)
 {
 
-	switch (aprop->subtag) {
+	switch (aprop->tag) {
 	case 7:
 		aprop->override = EXIF_T_WHITEBAL;
 		break;
@@ -803,7 +858,7 @@ canon_propA0(struct exifprop *aprop, struct exifprop *prop,
     unsigned char *off, enum order o)
 {
 
-	switch (aprop->subtag) {
+	switch (aprop->tag) {
 	case 9:
 		if (!(aprop->str = (char *)malloc(32)))
 			exifdie((const char *)strerror(errno));
@@ -831,19 +886,23 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 	struct exifprop *aprop;
 	unsigned char *off = t->btiff + prop->value;
 
-	/* Check size of tag (first value). */
+	/* Check size of tag (first value) if we're not debugging. */
 
-	if (exif2byte(off, t->tifforder) != 2 * prop->count) {
+	if (valfun && exif2byte(off, t->tifforder) != 2 * prop->count) {
 		exifwarn("Canon maker tag appears corrupt");
 		return (FALSE);
 	}
+
+	printf("Processing %s (0x%04X) directory, %d entries\n", prop->name,
+	    prop->tag, prop->count);
 
 	for (i = 0; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2, t->tifforder);
 
 		aprop = childprop(prop);
 		aprop->value = (u_int32_t)v;
-		aprop->subtag = i;
+		aprop->tag = i;
+		aprop->tagset = subtags;
 
 		/* Lookup property name and description. */
 
@@ -869,6 +928,9 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 			aprop->str[31] = '\0';
 		}
 	}
+
+	if (debug)
+		printf("\n");
 	return (TRUE);
 }
 
@@ -878,7 +940,7 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
  */
 static void
 canon_custom(struct exifprop *prop, unsigned char *off, enum order o,
-    struct ccstm *table)
+    struct exiftag *table)
 {
 	int i, j = -1;
 	const char *cn;
@@ -899,32 +961,34 @@ canon_custom(struct exifprop *prop, unsigned char *off, enum order o,
 		return;
 	}
 
+	printf("Processing %s directory, %d entries\n", prop->name,
+	    prop->count);
+
 	for (i = 1; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2, o);
 
 		aprop = childprop(prop);
-		aprop->value = (u_int32_t)v;
-		aprop->subtag = i;
-		aprop->name = prop->name;
-		aprop->descr = prop->descr;
-		aprop->lvl = ED_VRB;
-
-		dumpprop(aprop, NULL);
+		aprop->value = v & 0xff;
+		aprop->tag = v >> 8 & 0xff;
+		aprop->tagset = table;
 
 		/*
-		 * If we have a table, lookup function name and value.
-		 * First byte is function number; second is function value.
+		 * Lookup function name and value.  First byte is function
+		 * number; second is function value.
 		 */
 
-		if (table) {
-			for (j = 0; table[j].val != -1 &&
-			    table[j].val != (v >> 8 & 0xff); j++);
-			if (table[j].table)
-				cv = finddescr(table[j].table,
-				    (u_int16_t)(v & 0xff));
-			cn = table[j].descr;
-		} else
-			cn = "Unknown";
+		for (j = 0; table[j].tag != EXIF_T_UNKNOWN &&
+		    table[j].tag != (v >> 8 & 0xff); j++);
+		aprop->name = table[j].name;
+		aprop->descr = prop->descr;
+		aprop->lvl = table[j].lvl;
+		if (table[j].table)
+			cv = finddescr(table[j].table,
+			    (u_int16_t)(v & 0xff));
+		cn = table[j].descr;
+
+
+		dumpprop(aprop, NULL);
 
 		if (!(aprop->str = (char *)malloc(4 + strlen(cn) +
 		    (cv ? strlen(cv) : 10))))
@@ -942,6 +1006,9 @@ canon_custom(struct exifprop *prop, unsigned char *off, enum order o,
 			aprop->lvl = ED_UNK;
 		}
 	}
+
+	if (debug)
+		printf("\n");
 }
 
 
@@ -951,28 +1018,9 @@ canon_custom(struct exifprop *prop, unsigned char *off, enum order o,
 void
 canon_prop(struct exifprop *prop, struct exiftags *t)
 {
-	unsigned int i;
 	unsigned char *offset;
-	u_int16_t v, flmin = 0, flmax = 0, flunit = 0;
+	u_int16_t flmin = 0, flmax = 0, flunit = 0;
 	struct exifprop *tmpprop;
-
-	/*
-	 * Don't process child properties we've created while looking at
-	 * other maker note tags.
-	 */
-
-	if (prop->subtag > -2)
-		return;
-
-	if (debug) {
-		static int once = 0;
-
-		if (!once) {
-			printf("Processing Canon Maker Note\n");
-			once = 1;
-		}
-		dumpprop(prop, NULL);
-	}
 
 	switch (prop->tag) {
 
@@ -1025,9 +1073,9 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 
 		/* Color temp is bad if white balance isn't manual. */
 
-		if ((tmpprop = findsprop(t->props, 0x0004, 7)))
+		if ((tmpprop = findprop(t->props, canon_tags04, 7)))
 			if (tmpprop->value != 9) {
-				if ((tmpprop = findsprop(prop, 0x00a0, 9)))
+				if ((tmpprop = findprop(prop, canon_tagsA0, 9)))
 					tmpprop->lvl = ED_BAD;
 		}
 		break;
@@ -1086,12 +1134,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 
 	default:
 		if (prop->type == TIFF_SHORT && prop->count > 1 && debug)
-			for (i = 0; i < prop->count; i++) {
-				v = exif2byte(t->btiff + prop->value +
-				    (i * 2), t->tifforder);
-				printf("     Unknown (%d): %d, 0x%04X\n",
-				    i, v, v);
-			}
+			canon_subval(prop, t, canon_tagsunk, NULL);
 		break;
 	}
 }

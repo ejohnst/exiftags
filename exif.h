@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.31 2003/08/03 01:34:02 ejohnst Exp $
+ * $Id: exif.h,v 1.32 2003/08/03 04:47:08 ejohnst Exp $
  */
 
 /*
@@ -158,6 +158,27 @@ typedef __int32 int32_t;
 enum order { LITTLE, BIG };
 
 
+/* Generic field description lookup table. */
+
+struct descrip {
+	int32_t val;
+	const char *descr;
+};
+
+
+/* Tag lookup table. */
+
+struct exiftag {
+	u_int16_t tag;		/* Tag ID. */
+	u_int16_t type;		/* Expected type. */
+	u_int16_t count;	/* Expected count. */
+	unsigned short lvl;	/* Output level. */
+	const char *name;
+	const char *descr;
+	struct descrip *table;	/* Value lookup table. */
+};
+
+
 /* Final Exif property info.  (Note: descr can be NULL.) */
 
 struct exifprop {
@@ -170,10 +191,9 @@ struct exifprop {
 	char *str;		/* String representation of value (dynamic). */
 	unsigned short lvl;	/* Verbosity level. */
 	int ifdseq;		/* Sequence number of parent IFD. */
-	u_int16_t ifdtag;	/* Parent IFD tag association. */
 	u_int16_t override;	/* Override display of another tag. */
 	struct exiftag *tagset;	/* Tags used to create property. */
-	int16_t subtag;		/* Index of a tag's sub-value (def: -2). */
+	struct exifprop *par;	/* Parent property association. */
 	struct exifprop *next;
 };
 
