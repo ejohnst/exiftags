@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.20 2004/12/27 22:27:47 ejohnst Exp $
+ * $Id: nikon.c,v 1.21 2004/12/27 23:55:01 ejohnst Exp $
  */
 
 /*
@@ -247,7 +247,7 @@ static struct exiftag nikon_tags1[] = {
 	{ 0x0087, TIFF_BYTE, 1, ED_VRB, "NikonFlashUsed",
 	  "Flash Used", nikon_flash },
 	{ 0x0088, TIFF_UNDEF, 4, ED_IMG, "NikonAutoFocus",
-	  "Auto Focus Position", NULL },
+	  "Auto Focus", NULL },
 	/* Is either BYTE (D100) or SHORT (D70). */
 	{ 0x0089, TIFF_UNKN, 1, ED_IMG, "NikonShootBrack",
 	  "Shooting/Bracketing Mode", NULL },
@@ -341,22 +341,23 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	/*
 	 * ISO values.  Two shorts stuffed into the value; we only care
 	 * about the second one.  (First is always zero?)
-	 *
-	 * XXX Well, this is messy.  Nikon stuffs the two shorts into
-	 * the tag value, rather than referencing an offset.  Byte order
-	 * screws with us here...  (Need to fix!)
 	 */
 
 	case 0x0002:
 	case 0x0013:
-		exifstralloc(&prop->str, 32);
-
+		/*
+		 * XXX Well, this is messy.  Nikon stuffs the two shorts into
+		 * into the tag value, rather than referencing an offset.
+		 * Byte order screws with us here...  (Need to fix!)
+		 */
 		if (t->mkrmd.order == LITTLE)
-			snprintf(prop->str, 31, "%d",
-			    (u_int16_t)((prop->value >> 16) & 0xffff));
+			v[0] = (prop->value >> 16) & 0xffff;
 		else
-			snprintf(prop->str, 31, "%d",
-			    (u_int16_t)(prop->value & 0xffff));
+			v[0] = prop->value & 0xffff;
+
+		exifstralloc(&prop->str, 32);
+		snprintf(prop->str, 31, "%d", (u_int16_t)v[0]);
+		if (!v[0]) prop->lvl = ED_VRB;
 		break;
 
 	/* White balance. */
@@ -395,7 +396,6 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		prop->str = finddescr(nikon_lenstype,
 		    (u_int16_t)((prop->value >> 24) & 0xff));
 		break;
-		
 
 	/* Lens range. */
 
@@ -407,6 +407,13 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		for (i = 0; i < 8; i++)
 			v[i] = exif4byte(t->mkrmd.btiff + prop->value + (i * 4),
 			    t->mkrmd.order);
+
+		if ((v[0] && !v[1]) || (v[2] && !v[3]) ||
+		    (v[4] && !v[5]) || (v[6] && !v[7])) {
+			snprintf(prop->str, 31, "n/a");
+			prop->lvl = ED_VRB;
+			break;
+		}
 
 		snprintf(prop->str, 31, "%.1f - %.1f mm; f/%.1f - f/%.1f",
 		    (float)v[0] / (float)v[1], (float)v[2] / (float)v[3],
@@ -420,7 +427,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		v[1] = exif4byte(t->mkrmd.btiff + prop->value + 4,
 		    t->mkrmd.order);
 
-		if (v[0] == v[1]) {
+		if (v[0] == v[1] || (v[0] && !v[1])) {
 			snprintf(prop->str, 31, "n/a");
 			prop->lvl = ED_VRB;
 		} else
@@ -435,7 +442,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		v[1] = exif4byte(t->mkrmd.btiff + prop->value + 4,
 		    t->mkrmd.order);
 
-		if (v[0] == v[1]) {
+		if (v[0] == v[1] || !v[0] || (v[0] && !v[1])) {
 			snprintf(prop->str, 31, "None");
 			prop->lvl = ED_VRB;
 		} else
@@ -465,7 +472,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		c1 = finddescr(nikon_afmode,
 		    (u_int16_t)((prop->value >> 24) & 0xff));
 
-		/* Byte 2, area selected; byte 3, area focused. */
+		/* Byte 2, area selected; byte 4, area focused. */
 		c2 = finddescr(nikon_afpos, (u_int16_t)(prop->value & 0xff));
 
 		if ((prop->value & 0xff) == ((prop->value >> 16) & 0xff)) {
@@ -478,7 +485,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 			exifstralloc(&prop->str, strlen(c1) + strlen(c2) +
 			    strlen(c3) + 24);
 			sprintf(prop->str, "%s, %s Selected, %s Focused",
-			    c1, c2, c3);
+			    c1, c3, c2);
 			free(c3);
 		}
 		free(c1);
@@ -555,6 +562,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	/* Saturation.  (Signed, so can't just do lookup table.) */
 
 	case 0x0094:
+		c1 = NULL;
 		switch (prop->value) {
 		case -3:
 			c1 = "Black & White";
@@ -568,7 +576,16 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 			strcpy(prop->str, c1);
 			break;
 		}
+
+		if (!c1) {
+			prop->lvl = ED_VRB;
+			break;
+		}
 		/* FALLTHROUGH */
+
+	case 0x00aa:
+		prop->override = EXIF_T_SATURATION;
+		break;
 
 	/* Serial number (remove prefix). */
 
@@ -576,10 +593,6 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		if (!strncmp(prop->str, "NO= ", 4))
 			memmove(prop->str, prop->str + 4,
 			    strlen(prop->str + 4) + 1);
-		break;
-
-	case 0x00aa:
-		prop->override = EXIF_T_SATURATION;
 		break;
 	}
 }
