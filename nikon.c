@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.18 2004/10/10 03:48:38 ejohnst Exp $
+ * $Id: nikon.c,v 1.19 2004/12/27 21:05:36 ejohnst Exp $
  */
 
 /*
@@ -121,6 +121,58 @@ static struct descrip nikon_convert[] = {
 };
 
 
+/* Flash. */
+
+static struct descrip nikon_flash[] = {
+	{ 0,	"No" },
+	{ 9,	"Fired" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Lens type. */
+
+static struct descrip nikon_lenstype[] = {
+	{ 6,	"Nikon D Series" },
+	{ 14,	"Nikon G Series" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Shooting mode. */
+
+static struct descrip nikon_shoot[] = {
+	{ 0,	"Single Frame" },
+	{ 1,	"Continuous" },
+	{ 2,	"Timer" },
+	{ 3,	"Remote Timer" },
+	{ 4,	"Remote" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Auto focus position. */
+
+static struct descrip nikon_afpos[] = {
+	{ 0,	"Center" },
+	{ 1,	"Top" },
+	{ 2,	"Bottom" },
+	{ 3,	"Left" },
+	{ 4,	"Right" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Auto focus mode. */
+
+static struct descrip nikon_afmode[] = {
+	{ 0,	"Single Area" },
+	{ 1,	"Dynamic Area" },
+	{ 2,	"Closest Subject" },
+	{ -1,	"Unknown" },
+};
+
+
 /* Old school Nikon "lookup" maker note IFD tags. */
 
 static struct exiftag nikon_tags0[] = {
@@ -150,9 +202,9 @@ static struct exiftag nikon_tags0[] = {
 static struct exiftag nikon_tags1[] = {
 	{ 0x0001, TIFF_UNDEF, 4, ED_VRB, "NikonVersion",
 	  "Nikon Note Version", NULL },
-	{ 0x0002, TIFF_SHORT, 2, ED_UNK, "NikonISOUsed",
+	{ 0x0002, TIFF_SHORT, 2, ED_IMG, "NikonISOUsed",
 	  "ISO Speed Used", NULL },
-	{ 0x0003, TIFF_ASCII, 0, ED_IMG, "NikonColor",
+	{ 0x0003, TIFF_ASCII, 0, ED_IMG, "NikonColorMode1",
 	  "Color Mode", NULL },
 	{ 0x0004, TIFF_ASCII, 0, ED_IMG, "NikonQuality",
 	  "Image Quality", NULL },
@@ -166,17 +218,17 @@ static struct exiftag nikon_tags1[] = {
 	  "Flash Setting", NULL },
 	{ 0x0009, TIFF_ASCII, 0, ED_IMG, "NikonAutoFlash",
 	  "Auto Flash Mode", NULL },
-	{ 0x000b, TIFF_UNKN, 0, ED_UNK, "NikonWhiteBalBias",
+	{ 0x000b, TIFF_SSHORT, 1, ED_UNK, "NikonWhiteBalBias",
 	  "White Balance Bias", NULL },
 	{ 0x000f, TIFF_ASCII, 0, ED_IMG, "NikonISOSelect",
 	  "ISO Selection", NULL },
-	{ 0x0012, TIFF_SHORT, 1, ED_IMG, "NikonFlashComp",
+	{ 0x0012, TIFF_UNDEF, 4, ED_IMG, "NikonFlashComp",
 	  "Flash Compensation", NULL },
 	{ 0x0013, TIFF_SHORT, 2, ED_IMG, "NikonISOReq",
 	  "ISO Speed Requested", NULL },
-	{ 0x0018, TIFF_SHORT, 1, ED_IMG, "NikonFlashBrackComp",
+	{ 0x0018, TIFF_UNDEF, 4, ED_IMG, "NikonFlashBrackComp",
 	  "Flash Bracket Compensation", NULL },
-	{ 0x0019, TIFF_SHORT, 1, ED_IMG, "NikonAEBrackComp",
+	{ 0x0019, TIFF_SRTNL, 1, ED_IMG, "NikonAEBrackComp",
 	  "AE Bracket Compensation", NULL },
 	{ 0x0080, TIFF_ASCII, 0, ED_IMG, "NikonImgAdjust",
 	  "Image Adjustment", NULL },
@@ -184,31 +236,36 @@ static struct exiftag nikon_tags1[] = {
 	  "Tone Compensation", NULL },
 	{ 0x0082, TIFF_ASCII, 0, ED_IMG, "NikonLensAdapter",
 	  "Lens Adapter", NULL },
-	{ 0x0083, TIFF_ASCII, 0, ED_IMG, "NikonLensType",
+	{ 0x0083, TIFF_BYTE, 1, ED_IMG, "NikonLensType",
 	  "Lens Type", NULL },
-	{ 0x0084, TIFF_ASCII, 0, ED_IMG, "NikonLensRange",
+	{ 0x0084, TIFF_RTNL, 4, ED_IMG, "NikonLensRange",
 	  "Lens Range", NULL },
-	{ 0x0085, TIFF_ASCII, 0, ED_IMG, "NikonFocusDist",
+	{ 0x0085, TIFF_RTNL, 1, ED_IMG, "NikonFocusDist",
 	  "Focus Distance", NULL },
-	{ 0x0086, TIFF_ASCII, 0, ED_IMG, "NikonDigiZoom",
+	{ 0x0086, TIFF_RTNL, 1, ED_IMG, "NikonDigiZoom",
 	  "Digital Zoom", NULL },
-	{ 0x0087, TIFF_SHORT, 1, ED_IMG, "NikonFlashUsed",
-	  "Flash Used", NULL },
-	{ 0x0088, TIFF_SHORT, 1, ED_IMG, "NikonAutoFocus",
+	{ 0x0087, TIFF_BYTE, 1, ED_VRB, "NikonFlashUsed",
+	  "Flash Used", nikon_flash },
+	{ 0x0088, TIFF_UNDEF, 4, ED_IMG, "NikonAutoFocus",
 	  "Auto Focus Position", NULL },
-	{ 0x0089, TIFF_SHORT, 1, ED_IMG, "NikonBrackShoot",
-	  "Bracketing/Shooting Mode", NULL },
-	{ 0x008d, TIFF_ASCII, 0, ED_IMG, "NikonColorMode",
-	  "Color Mode 2", NULL },
-	{ 0x008f, TIFF_ASCII, 0, ED_IMG, "NikonLighting",
+	/* Is either BYTE (D100) or SHORT (D70). */
+	{ 0x0089, TIFF_UNKN, 1, ED_IMG, "NikonShootBrack",
+	  "Shooting/Bracketing Mode", NULL },
+	{ 0x008d, TIFF_ASCII, 0, ED_IMG, "NikonColorMode2",
+	  "Color Mode", NULL },
+	{ 0x008f, TIFF_ASCII, 0, ED_IMG, "NikonSceneMode",
+	  "Scene Mode", NULL },
+	{ 0x0090, TIFF_ASCII, 0, ED_IMG, "NikonLighting",
 	  "Lighting Type", NULL },
-	{ 0x0092, TIFF_UNDEF, 0, ED_UNK, "NikonHueAdjust",
+	{ 0x0092, TIFF_SSHORT, 1, ED_UNK, "NikonHueAdjust",
 	  "Hue Adjustment", NULL },
-	{ 0x0094, TIFF_SHORT, 1, ED_IMG, "NikonSaturate",
+	{ 0x0094, TIFF_SSHORT, 1, ED_IMG, "NikonSaturate",
 	  "Saturation", NULL },
 	{ 0x0095, TIFF_ASCII, 0, ED_IMG, "NikonNoiseReduce",
 	  "Noise Reduction", NULL },
-	{ 0x00a7, TIFF_SHORT, 1, ED_IMG, "NikonAcuations",
+	{ 0x00a0, TIFF_ASCII, 0, ED_CAM, "NikonSerial",
+	  "Serial Number", NULL },
+	{ 0x00a7, TIFF_LONG, 1, ED_IMG, "NikonAcuations",
 	  "Camera Actuations", NULL },
 	{ 0x00a9, TIFF_ASCII, 0, ED_IMG, "NikonImageOpt",
 	  "Image Optimization", NULL },
@@ -234,8 +291,8 @@ nikon_prop0(struct exifprop *prop, struct exiftags *t)
 	/* Digital zoom. */
 
 	case 0x000a:
-		a = exif4byte(t->md.btiff + prop->value, t->md.order);
-		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
+		a = exif4byte(t->mkrmd.btiff + prop->value, t->mkrmd.order);
+		b = exif4byte(t->mkrmd.btiff + prop->value + 4, t->mkrmd.order);
 
 		if (!a) {
 			snprintf(prop->str, 31, "None");
@@ -253,34 +310,266 @@ nikon_prop0(struct exifprop *prop, struct exiftags *t)
 static void
 nikon_prop1(struct exifprop *prop, struct exiftags *t)
 {
-	u_int32_t a, b;
+	int i;
+	u_int32_t v[8];
+	char *c1, *c2, *c3;
+	int32_t sn, sd;
+	char buf[5];
 
 	switch (prop->tag) {
+
+	/* Nikon maker note version.  (XXX Dup from EXIF_T_VERSION code.) */
+
+	case 0x0001:
+		exifstralloc(&prop->str, 8);
+
+		/* Platform byte order affects this... */
+
+		i = 1;
+		if (*(char *)&i == 1)
+			for (i = 0; i < 4; i++)
+				buf[i] = ((const char *)&prop->value)[3 - i];
+		else
+			strncpy(buf, (const char *)&prop->value, 4);
+		buf[4] = '\0';
+		v[1] = atoi(buf + 2);
+		buf[2] = '\0';
+		v[0] = atoi(buf);
+		snprintf(prop->str, 7, "%d.%d", v[0], v[1]);
+		break;
+
+	/*
+	 * ISO values.  Two shorts stuffed into the value; we only care
+	 * about the second one.  (First is always zero?)
+	 */
+
+	case 0x0002:
+	case 0x0013:
+		snprintf(prop->str, 31, "%d",
+		    (u_int16_t)(prop->value & 0xffff));
+		break;
+
+	/* White balance. */
+
+	case 0x0005:
+		prop->override = EXIF_T_WHITEBAL;
+		break;
+
+	/* Flash [bracket] compensation.  Four values here; we only know one. */
+
+	case 0x0012:
+	case 0x0018:
+		exifstralloc(&prop->str, 10);
+		snprintf(prop->str, 9, "%.1f EV",
+		    (float)(prop->value >> 24) / 6);
+		break;
+
+	/* AE bracket compensation. */
+
+	case 0x0019:
+		sn = exif4byte(t->mkrmd.btiff + prop->value, t->mkrmd.order);
+		sd = exif4byte(t->mkrmd.btiff + prop->value + 4,
+		    t->mkrmd.order);
+
+		if (sn && !sd) {
+			snprintf(prop->str, 31, "n/a");
+			prop->lvl = ED_VRB;
+		} else
+			snprintf(prop->str, 31, "%.1f EV", (float)sn /
+			    (float)sd);
+		break;
+
+	/* Lens type. */
+
+	case 0x0083:
+		prop->str = finddescr(nikon_lenstype,
+		    (u_int16_t)((prop->value >> 24) & 0xff));
+		break;
+		
+
+	/* Lens range. */
+
+	case 0x0084:
+		if (prop->value + prop->count * 8 >
+		    (u_int32_t)(t->mkrmd.etiff - t->mkrmd.btiff))
+			break;
+
+		for (i = 0; i < 8; i++)
+			v[i] = exif4byte(t->mkrmd.btiff + prop->value + (i * 4),
+			    t->mkrmd.order);
+
+		snprintf(prop->str, 31, "%.1f - %.1f mm; f/%.1f - f/%.1f",
+		    (float)v[0] / (float)v[1], (float)v[2] / (float)v[3],
+		    (float)v[4] / (float)v[5], (float)v[6] / (float)v[7]);
+		break;
 
 	/* Manual focus distance. */
 
 	case 0x0085:
-		a = exif4byte(t->md.btiff + prop->value, t->md.order);
-		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
+		v[0] = exif4byte(t->mkrmd.btiff + prop->value, t->mkrmd.order);
+		v[1] = exif4byte(t->mkrmd.btiff + prop->value + 4,
+		    t->mkrmd.order);
 
-		if (a == b) {
-			snprintf(prop->str, 31, "N/A");
+		if (v[0] == v[1]) {
+			snprintf(prop->str, 31, "n/a");
 			prop->lvl = ED_VRB;
 		} else
-			snprintf(prop->str, 31, "x%.1f m", (float)a / (float)b);
+			snprintf(prop->str, 31, "x%.1f m", (float)v[0] /
+			    (float)v[1]);
 		break;
 
 	/* Digital zoom. */
 
 	case 0x0086:
-		a = exif4byte(t->md.btiff + prop->value, t->md.order);
-		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
+		v[0] = exif4byte(t->mkrmd.btiff + prop->value, t->mkrmd.order);
+		v[1] = exif4byte(t->mkrmd.btiff + prop->value + 4,
+		    t->mkrmd.order);
 
-		if (a == b) {
+		if (v[0] == v[1]) {
 			snprintf(prop->str, 31, "None");
 			prop->lvl = ED_VRB;
 		} else
-			snprintf(prop->str, 31, "x%.1f", (float)a / (float)b);
+			snprintf(prop->str, 31, "x%.1f", (float)v[0] /
+			    (float)v[1]);
+		break;
+
+	/*
+	 * Auto focus position.
+	 * XXX Need some feedback from users here -- guessing somewhat.
+	 */
+
+	case 0x0088:
+		/*
+		 * An older/simpler method?  (Byte 3 only.)
+		 * Note that cameras using the newer method will get caught
+		 * here on Single Area, Center (and just show Center).
+		 */
+		if (!(prop->value & 0xffff00ff)) {
+			if (prop->str) printf("err, hello?  overwriting?\n");
+			prop->str = finddescr(nikon_afpos,
+			    (u_int16_t)((prop->value >> 8) & 0xff));
+			break;
+		}
+
+		/* Byte 1, mode. */
+		c1 = finddescr(nikon_afmode,
+		    (u_int16_t)((prop->value >> 24) & 0xff));
+
+		/* Byte 2, area selected; byte 3, area focused. */
+		c2 = finddescr(nikon_afpos, (u_int16_t)(prop->value & 0xff));
+
+		if ((prop->value & 0xff) == ((prop->value >> 16) & 0xff)) {
+			exifstralloc(&prop->str, strlen(c1) + strlen(c2) + 3);
+			sprintf(prop->str, "%s, %s", c1, c2);
+
+		} else {
+			c3 = finddescr(nikon_afpos,
+			    (u_int16_t)((prop->value >> 16) & 0xff));
+			exifstralloc(&prop->str, strlen(c1) + strlen(c2) +
+			    strlen(c3) + 24);
+			sprintf(prop->str, "%s, %s Selected, %s Focused",
+			    c1, c2, c3);
+			free(c3);
+		}
+		free(c1);
+		free(c2);
+		break;
+
+	/*
+	 * Bracketing/shooting mode.
+	 * XXX I've probably made this a lot more complicated than it
+	 * needs to be.  Would be nice to be able to experiment...
+	 */
+
+	case 0x0089:
+		/* XXX Shouldn't be necessary. */
+		if (prop->type == TIFF_BYTE)
+			prop->value = (prop->value >> 24) & 0xff;
+		else if (prop->type == TIFF_SHORT)
+			prop->value = (prop->value >> 8) & 0xff;
+
+		/* Bits 0 & 1. */
+		c1 = finddescr(nikon_shoot, (u_int16_t)(prop->value & 0x03));
+
+		/* Bit 4 = bracketing, bit 6 = white balance bracketing. */
+		if (prop->value & 0x40) {
+			if (prop->value & 0x10)
+				c2 = "On, White Balance";
+			else
+				c2 = "Off, White Balance";
+		} else {
+			if (prop->value & 0x10)
+				c2 = "On";
+			else
+				c2 = "Off";
+		}
+
+		exifstralloc(&prop->str, strlen(c1) + strlen(c2) + 2);
+		sprintf(prop->str, "%s/%s", c1, c2);
+		free(c1);
+		break;
+
+	/* Color mode. */
+
+	case 0x008d:
+		if (!(c1 = prop->str)) break;
+
+		if (!strncmp(c1, "MODE1a", 6)) {
+			free(c1);
+			prop->str = NULL;
+			c1 = "Portrait sRGB";
+			exifstralloc(&prop->str, strlen(c1) + 1);
+			strcpy(prop->str, c1);
+			break;
+		}
+
+		if (!strncmp(c1, "MODE2", 5)) {
+			free(c1);
+			prop->str = NULL;
+			c1 = "Adobe RGB";
+			exifstralloc(&prop->str, strlen(c1) + 1);
+			strcpy(prop->str, c1);
+			break;
+		}
+
+		if (!strncmp(c1, "MODE3a", 6)) {
+			free(c1);
+			prop->str = NULL;
+			c1 = "Landscape sRGB";
+			exifstralloc(&prop->str, strlen(c1) + 1);
+			strcpy(prop->str, c1);
+			break;
+		}
+		break;
+
+	/* Saturation.  (Signed, so can't just do lookup table.) */
+
+	case 0x0094:
+		switch (prop->value) {
+		case -3:
+			c1 = "Black & White";
+			exifstralloc(&prop->str, strlen(c1) + 1);
+			strcpy(prop->str, c1);
+			break;
+
+		case 0:
+			c1 = "Normal";
+			exifstralloc(&prop->str, strlen(c1) + 1);
+			strcpy(prop->str, c1);
+			break;
+		}
+		/* FALLTHROUGH */
+
+	/* Serial number (remove prefix). */
+
+	case 0x00a0:
+		if (!strncmp(prop->str, "NO= ", 4))
+			memmove(prop->str, prop->str + 4,
+			    strlen(prop->str + 4) + 1);
+		break;
+
+	case 0x00aa:
+		prop->override = EXIF_T_SATURATION;
 		break;
 	}
 }
@@ -292,6 +581,22 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 void
 nikon_prop(struct exifprop *prop, struct exiftags *t)
 {
+	int i;
+
+	for (i = 0; prop->tagset[i].tag < EXIF_T_UNKNOWN &&
+	    prop->tagset[i].tag != prop->tag; i++);
+
+	if (prop->tagset[i].type && prop->tagset[i].type != prop->type)
+		exifwarn2("field type mismatch", prop->name);
+
+	/*
+	 * Check the field count.
+	 * XXX For whatever the reason, Sigma doesn't follow the
+	 * spec on count for FileSource.
+	 */
+
+	if (prop->tagset[i].count && prop->tagset[i].count != prop->count)
+		exifwarn2("field count mismatch", prop->name);
 
 	if (prop->tagset == nikon_tags0) {
 		nikon_prop0(prop, t);
@@ -313,10 +618,8 @@ nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 {
 	struct ifd *myifd;
 	unsigned char *b;
-	struct tiffmeta mkrmd;
 
 	b = md->btiff + offset;
-	mkrmd = *md;
 
 	/*
 	 * Seems that some Nikon maker notes start with an ID string and
@@ -325,13 +628,13 @@ nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 
 	if (!strcmp((const char *)b, "Nikon")) {
 		b += 6;
-
 		switch (exif2byte(b, md->order)) {
 		case 0x0001:
-			readifd(offset + 8, &myifd, nikon_tags0, &mkrmd);
+			readifd(offset + 8, &myifd, nikon_tags0, md);
 			return (myifd);
 
 		case 0x0200:
+		case 0x0210:
 			b += 4;
 
 			/*
@@ -342,26 +645,26 @@ nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 			/* Determine endianness of the TIFF data. */
 
 			if (*((u_int16_t *)b) == 0x4d4d)
-				mkrmd.order = BIG;
+				md->order = BIG;
 			else if (*((u_int16_t *)b) == 0x4949)
-				mkrmd.order = LITTLE;
+				md->order = LITTLE;
 			else {
 				exifwarn("invalid Nikon TIFF header");
 				return (NULL);
 			}
-			mkrmd.btiff = b;	/* Beginning of maker. */
+			md->btiff = b;		/* Beginning of maker. */
 			b += 2;
 
 			/* Verify the TIFF header. */
 
-			if (exif2byte(b, mkrmd.order) != 42) {
+			if (exif2byte(b, md->order) != 42) {
 				exifwarn("invalid Nikon TIFF header");
 				return (NULL);
 			}
 			b += 2;
 
-			readifd(exif4byte(b, mkrmd.order), &myifd,
-			    nikon_tags1, &mkrmd);
+			readifd(exif4byte(b, md->order), &myifd,
+			    nikon_tags1, md);
 			return (myifd);
 
 		default:
@@ -374,6 +677,6 @@ nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 	 * Others are just normal IFDs.
 	 */
 
-	readifd(offset, &myifd, nikon_tags1, &mkrmd);
+	readifd(offset, &myifd, nikon_tags1, md);
 	return (myifd);
 }
