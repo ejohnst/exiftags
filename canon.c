@@ -29,13 +29,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.29 2003/02/11 16:00:47 ejohnst Exp $
+ * $Id: canon.c,v 1.30 2003/06/22 02:27:12 ejohnst Exp $
  */
 
 /*
  * Exif tag definitions for Canon maker notes.
  * Developed from http://www.burren.cx/david/canon.html.
  * EOS 1D and 1Ds contributions from Stan Jirman <stanj@mac.com>.
+ * EOS 10D contributions from Jason Montojo <jason.montojo@rogers.com>.
  *
  */
 
@@ -368,7 +369,7 @@ static struct exiftag canon_tagsA0[] = {
 };
 
 
-/* Value descriptions for D30, D60 custom functions. */
+/* Value descriptions for custom functions. */
 
 static struct descrip ccstm_offon[] = {
 	{ 0,	"Off" },
@@ -569,6 +570,69 @@ static struct descrip ccstm_fscr[] = {
 	{ -1,	"Unknown" },
 };
 
+static struct descrip ccstm_10dsetbut[] = {
+	{ 0,	"Not Assigned" },
+	{ 1,	"Change Quality" },
+	{ 2,	"Change Parameters" },
+	{ 3,	"Menu Display" },
+	{ 4,	"Image Replay" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_10dshutter[] = {
+	{ 0,	"AF/AE Lock" },
+	{ 1,	"AE Lock/AF" },
+	{ 2,	"AF/AF Lock, No AE Lock" },
+	{ 3,	"AE/AF, No AE Lock" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_assistflash[] = {
+	{  0,	"Emits/Fires" },
+	{  1,	"Does Not Emit/Fires" },
+	{  2,	"Only Ext. Flash Emits/Fires" },
+	{  3,	"Emits/Does Not Fire" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_afptreg[] = {
+	{ 0,	"Center" },
+	{ 1,	"Bottom" },
+	{ 2,	"Right" },
+	{ 3,	"Extreme Right" },
+	{ 4,	"Automatic" },
+	{ 5,	"Extreme Left" },
+	{ 6,	"Left" },
+	{ 7,	"Top" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_rawjpeg[] = {
+	{ 0,	"RAW+Small/Normal" },
+	{ 1,	"RAW+Small/Fine" },
+	{ 2,	"RAW+Medium/Normal" },
+	{ 3,	"RAW+Medium/Fine" },
+	{ 4,	"RAW+Large/Normal" },
+	{ 5,	"RAW+Large/Fine" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_10dmenubut[] = {
+	{ 0,	"Previous (Volatile)" },
+	{ 1,	"Previous" },
+	{ 2,	"Top" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_assistbut[] = {
+	{ 0,	"Normal" },
+	{ 1,	"Select Home Position" },
+	{ 2,	"Select HP (while pressing)" },
+	{ 3,	"Av+/- (AF point by QCD)" },
+	{ 4,	"FE lock" },
+	{ -1,	"Unknown" },
+};
+
 
 /* D30/D60 custom functions. */
 
@@ -616,6 +680,29 @@ static struct ccstm canon_1dcustom[] = {
 	{ 18,	"Switch to registered AF point", ccstm_regaf },
 	{ 19,	"Lens AF stop button", ccstm_lensaf1 },
 	{ 20,	"AI servo tracking sensitivity", ccstm_aisens },
+	{ -1,	"Unknown function", NULL },
+};
+
+/* 10D custom functions. */
+
+static struct ccstm canon_10dcustom[] = {
+	{ 1,	"SET button function when shooting", ccstm_10dsetbut },
+	{ 2,	"Shutter release w/o CF card", ccstm_yesno },
+	{ 3,	"Flash sync speed in Av mode", ccstm_shutspd },
+	{ 4,	"Shutter button/AE lock button", ccstm_10dshutter },
+	{ 5,	"AF-assist beam/Flash firing", ccstm_assistflash },
+	{ 6,	"Exposure level increments", ccstm_explvl },
+	{ 7,	"AF point registration", ccstm_afptreg },
+	{ 8,	"RAW+JPEG recording", ccstm_rawjpeg },
+	{ 9,	"AEB sequence/auto cancellation", ccstm_aebseq },
+	{ 10,	"Superimposed display", ccstm_onoff },
+	{ 11,	"Menu button display position", ccstm_10dmenubut },
+	{ 12,	"Mirror lockup", ccstm_disen },
+	{ 13,	"Assist button function", ccstm_assistbut },
+	{ 14,	"Fill flash auto reduction", ccstm_endis },
+	{ 15,	"Shutter curtain sync", ccstm_shutsync },
+	{ 16,	"Safety shift in Av or Tv", ccstm_disen },
+	{ 17,	"Lens AF stop button", ccstm_lensaf },
 	{ -1,	"Unknown function", NULL },
 };
 
@@ -974,8 +1061,28 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 	/* Custom functions. */
 
 	case 0x000f:
-		canon_custom(prop, t->btiff + prop->value, t->tifforder,
-		    canon_d30custom);
+		/*
+		 * Canon annoyingly reuses this tag value for different sets
+		 * of custom functions (e.g., D30/60, 10D).  Therefore, we
+		 * won't try to interpret them unless we know for sure that
+		 * the camera model is supported.
+		 */
+
+		if (!t->model) {
+			exifwarn("Canon model unset; please report to author");
+			break;
+		}
+
+		if (!strcasecmp(t->model, "canon eos 10d"))
+			canon_custom(prop, t->btiff + prop->value,
+			    t->tifforder, canon_10dcustom);
+		else if (!strcasecmp(t->model, "canon eos d30") ||
+		    !strcasecmp(t->model, "canon eos d60"))
+			canon_custom(prop, t->btiff + prop->value,
+			    t->tifforder, canon_d30custom);
+		else
+			exifwarn2("Custom function unsupported for %s; please "
+			    "report to author", t->model);
 		break;
 
 	case 0x0090:
