@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.41 2004/05/07 05:46:06 ejohnst Exp $
+ * $Id: canon.c,v 1.42 2004/08/20 22:29:45 ejohnst Exp $
  */
 
 /*
@@ -239,6 +239,8 @@ static struct descrip canon_whitebal[] = {
 	{ 7,	"Black & White" },
 	{ 8,	"Shade" },
 	{ 9,	"Manual Temperature" },
+	{ 15,	"Custom 1" },
+	{ 16,	"Custom 2" },
 	{ -1,	"Unknown" },
 };
 
