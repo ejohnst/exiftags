@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.8 2002/10/07 00:57:31 ejohnst Exp $
+ * $Id: exifint.h,v 1.9 2002/10/15 02:56:55 ejohnst Exp $
  */
 
 /*
@@ -41,8 +41,8 @@
  * (http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF)
  *
  * Definitions internal to the Exif parsing library.
+ *
  */
-
 
 #ifndef _EXIFINT_H
 #define _EXIFINT_H

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: jpeg.c,v 1.4 2002/10/07 00:57:31 ejohnst Exp $
+ * $Id: jpeg.c,v 1.5 2002/10/15 02:57:09 ejohnst Exp $
  */
 
 /*
@@ -42,7 +42,6 @@
  * 'Jhead' program (version 1.2) by Matthias Wandel <mwandel@rim.net>.
  */
 
-
 #include <stdio.h>
 
 #include "jpeg.h"
@@ -50,7 +49,6 @@
 
 
 static FILE *infile;
-
 
 /* Some data we collect from a start of frame. */
 
@@ -156,6 +154,7 @@ skipmkr(void)
 static int
 topmkr(void)
 {
+
 	if (jpg1byte() != JPEG_M_BEG)
 		return (JPEG_M_ERR);
 	return (jpg1byte());
@@ -290,6 +289,7 @@ int
 jpeginfo(int *prcsn, int *cmpnts, unsigned int *height, unsigned int *width,
     const char *prcss)
 {
+
 	*prcsn = jpg_prcsn;
 	*cmpnts = jpg_cmpnts;
 	*height = jpg_height;

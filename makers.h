@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.3 2002/07/11 02:07:21 ejohnst Exp $
+ * $Id: makers.h,v 1.4 2002/10/15 02:57:33 ejohnst Exp $
  */
 
 /*
@@ -38,8 +38,8 @@
  * When adding a new module, include a #define, a property function,
  * and, if applicable, an IFD reading function.  These need to be included
  * in the makers table found in tagdefs.c.
+ *
  */
-
 
 #ifndef _MAKERS_H
 #define _MAKERS_H

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.11 2002/10/08 07:45:46 ejohnst Exp $
+ * $Id: exif.h,v 1.12 2002/10/15 02:55:08 ejohnst Exp $
  */
 
 /*
@@ -39,13 +39,14 @@
  * (http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf)
  * and the EXIF 2.1 standard
  * (http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF)
+ *
  */
-
 
 #ifndef _EXIF_H
 #define _EXIF_H
 
 #include <sys/types.h>
+
 
 /*
  * XXX Only checking for Solaris & Windows now.  Other platforms will

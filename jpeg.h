@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: jpeg.h,v 1.3 2002/06/30 08:58:05 ejohnst Exp $
+ * $Id: jpeg.h,v 1.4 2002/10/15 02:57:09 ejohnst Exp $
  */
 
 /*
@@ -37,8 +37,8 @@
  *
  * Portions of this code were developed while referencing the public domain
  * 'Jhead' program (version 1.2) by Matthias Wandel <mwandel@rim.net>.
+ *
  */
-
 
 #ifndef _JPEG_H
 #define _JPEG_H

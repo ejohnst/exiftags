@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.13 2002/10/06 19:36:59 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.14 2002/10/15 02:57:33 ejohnst Exp $
  */
 
 /*
@@ -39,6 +39,7 @@
  * (http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf)
  * and the EXIF 2.1 standard:
  * (http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF)
+ *
  */
 
 #include <string.h>
@@ -149,8 +150,10 @@ struct descrip resunits[] = {
 };
 
 
-/* Chrominance components sampling ratio. */
-/* Note: This only refers to the second short; first is assumed to be 2. */
+/*
+ * Chrominance components sampling ratio.
+ * Note: This only refers to the second short; first is assumed to be 2.
+ */
 
 struct descrip chromratios[] = {
 	{ 1,	"YCbCr4:2:2" },

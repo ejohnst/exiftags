@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.25 2002/10/08 07:45:46 ejohnst Exp $
+ * $Id: exif.c,v 1.26 2002/10/15 02:55:08 ejohnst Exp $
  */
 
 /*
@@ -42,8 +42,8 @@
  *
  * Portions of this code were developed while referencing the public domain
  * 'Jhead' program (version 1.2) by Matthias Wandel <mwandel@rim.net>.
+ *
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
