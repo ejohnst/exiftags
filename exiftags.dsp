@@ -97,6 +97,10 @@ SOURCE=.\exif.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\exifgps.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\exiftags.c
 # End Source File
 # Begin Source File
@@ -130,6 +134,10 @@ SOURCE=.\nikon.c
 # Begin Source File
 
 SOURCE=.\olympus.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\sanyo.c
 # End Source File
 # Begin Source File
 
