@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.3 2003/01/11 18:52:30 ejohnst Exp $
+ * $Id: minolta.c,v 1.4 2003/01/11 19:17:45 ejohnst Exp $
  *
  */ 
 
@@ -413,35 +413,6 @@ static struct exiftag minolta_0TLM[] = {
 };
 
 
-/* Display debug information about the propery. */
-
-void
-minolta_pdump(struct exifprop *prop, int custom)
-{
-	int i, n;
-	static int once = 0;	/* XXX Breaks on multiple files. */
-
-	if (!once) {
-		printf("Processing Minolta Maker Note\n");
-		once = 1;
-	}
-
-	for (i = 0; ftypes[i].type &&
-	    ftypes[i].type != prop->type; i++);
-	printf("   %s (0x%04X): %s, %d, %d\n", prop->name,
-	    custom ? prop->tag & (MMN_CUSTOMTAG ^ 0xffff) : prop->tag,
-	    ftypes[i].name, prop->count, prop->value);
-
-#if 0
-	if (!(prop->str=(char *)calloc((5*(prop->count))+1,sizeof(char))))
-		exifdie((const char *)strerror(errno));
-
-	for (n=0;n<prop->count;n++)
-		snprintf (prop->str+(n*5),6,"0x%02x ",(unsigned char) off[n]);
-#endif
-}
-
-
 /*
  * Process maker note tag 0x0001 and 0x0003 values.
  */
@@ -450,9 +421,12 @@ void
 minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 {
 	int i, j;
+	u_int32_t v;
+	double d;
+	unsigned char *cp;
 	struct exifprop *aprop;
 
-	for (i = 0; i * 4 < prop->count; n++) {
+	for (i = 0; i * 4 < prop->count; i++) {
 		aprop = childprop(prop);
 
 		/* Note: these are big-endian regardless. */
@@ -513,42 +487,41 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 		/* ISO setting. */
 
 		case 36:
-			unsigned int a=pow(2,((double)prop->value/8)-1)*(double)3.125;
-			prop->str=(char *)calloc(4,sizeof(char));
-			snprintf(prop->str,4,"%d",a);
+			v = pow(2, ((double)prop->value / 8) - 1) * (double)3.125;
+			prop->str = (char *)calloc(4, sizeof(char));
+			snprintf(prop->str, 4, "%d", v);
 			break;
 
 		/* Aperture and max aperture. */
 
 		case 10:
 		case 23:
-			double a=pow(2,((double)prop->value/16)-0.5);
-			prop->str=(char *)calloc(20,sizeof(char));
-			snprintf(prop->str,20,"%0.1f",a);
+			d = pow(2, ((double)prop->value / 16) - 0.5);
+			prop->str = (char *)calloc(20, sizeof(char));
+			snprintf(prop->str, 20, "%0.1f", d);
 			break;
 
 		/* Exposure time. */
 
 		case 9:
-			double a=(double)pow(2,((double)abs(48-prop->value))/8);
-			prop->str=(char *)calloc(20,sizeof(char));
+			d = (double)pow(2, ((double)abs(48 - prop->value)) / 8);
+			prop->str = (char *)calloc(20, sizeof(char));
 
 			//1 sec limit
 			if (prop->value<56)
-				snprintf(prop->str,20,"%0.1f",a);
+				snprintf(prop->str, 20, "%0.1f", d);
 			else
-				snprintf(prop->str,20,"1/%d",(unsigned int)a);
+				snprintf(prop->str, 20, "1/%d", (unsigned int)d);
 
 			/* Bulb mode D7i bug, always recorded as 30secs in standard EXIF
 			 * Replace EXIF_T_EXPOSURE data with correct value
 			 */
-			if (prop->value<32) {
+			if (prop->value < 32) {
 				struct exifprop *tmpprop;
 
 				tmpprop=findprop((struct exifprop *)t->props,EXIF_T_EXPOSURE);
 				if (!tmpprop)
 					break;
-
 				free(tmpprop->str);
 				tmpprop->str=strdup(prop->str);
 			}
@@ -573,10 +546,11 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 		 */
 
 		case 2:
+			break; /* XXX */
 			if (REDEFINE_STANDARD) {
 				struct exifprop *tmpprop;
 
-				tmpprop=findprop( (struct exifprop *) t->props, EXIF_T_FLASH );
+				tmpprop = findprop((struct exifprop *)t->props, EXIF_T_FLASH);
 				if (!tmpprop)
 					break;
 
@@ -624,21 +598,21 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 		/* Date. */
 
 		case 21:
-			unsigned char *ptr = (unsigned char *)&prop->value;
+			cp = (unsigned char *)&prop->value;
 
 			if (!(prop->str = (char *)calloc(11, sizeof(char))))
 				exifdie((const char *)strerror(errno));
-			snprintf(prop->str, 11, "%02d/%02d/%04d", ptr[0], ptr[1], ptr[3] << 8 | ptr[2]);
+			snprintf(prop->str, 11, "%02d/%02d/%04d", cp[0], cp[1], cp[3] << 8 | cp[2]);
 			break;
 
 		/* Time. */
 
 		case 22:
-			unsigned char *ptr = (unsigned char *)&prop->value;
+			cp = (unsigned char *)&prop->value;
 
 			if (!(prop->str = (char *)calloc(9, sizeof(char))))
 				exifdie((const char *)strerror(errno));
-			snprintf(prop->str, 9, "%02d:%02d:%02d", ptr[2], ptr[1], ptr[0]);
+			snprintf(prop->str, 9, "%02d:%02d:%02d", cp[2], cp[1], cp[0]);
 			break;
 
 		/* White balance. */
@@ -682,8 +656,6 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 			prop->override = EXIF_T_SATURATION;
 			break;
 		}
-		if (debug)
-			minolta_pdump(prop, 1);
 	}
 }
 
@@ -711,8 +683,19 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 	prop->descr = minolta_tags[i].descr;
 	prop->lvl = minolta_tags[i].lvl;
 
-	if (debug)
-		minolta_pdump(prop, 0);
+	if (debug) {
+		static int once = 0;	/* XXX Breaks on multiple files. */
+
+		if (!once) {
+			printf("Processing Minolta Maker Note\n");
+			once = 1;
+		}
+
+		for (i = 0; ftypes[i].type &&
+		    ftypes[i].type != prop->type; i++);
+		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
+		    ftypes[i].name, prop->count, prop->value);
+	}
 
 	switch (prop->tag) {
 
