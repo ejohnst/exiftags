@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.2 2003/08/02 17:45:44 ejohnst Exp $
+ * $Id: exifgps.c,v 1.3 2003/08/02 18:26:24 ejohnst Exp $
  */
 
 /*
@@ -194,32 +194,20 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		if (!(prop->str = (char *)malloc(8)))
 			exifdie((const char *)strerror(errno));
 
-		/* Platform byte order affects this... */
+		/* Convert the value back into a string. */
 
-		i = 1;
-		if (*(char *)&i == 1)
-			for (i = 0; i < 4; i++) {
-				prop->str[i * 2] = '0' +
-				    ((const char *)&prop->value)[3 - i];
-				prop->str[i * 2 + 1] = '.';
-			}
-		else
-			for (i = 0; i < 4; i++) {
-				prop->str[i * 2] = '0' +
-				    ((const char *)&prop->value)[i];
-				prop->str[i * 2 + 1] = '.';
-			}
+		byte4exif(prop->value, (unsigned char *)buf, t->tifforder);
+
+		for (i = 0; i < 4; i++) {
+			prop->str[i * 2] = '0' + buf[i];
+			prop->str[i * 2 + 1] = '.';
+		}
 		prop->str[7] = '\0';
 		break;
 
 	/*
 	 * Reference values.  The value is 2-count nul-terminated ASCII,
-	 * not an offset to the ASCII string.  Being a little lazy here
-	 * with how I'm extracting the byte: both the byte orders of the
-	 * platform and the file matter.  So, I just look to see where the
-	 * non-zero byte is in the value and assume it's the one I want.
-	 * (All this is due primarily to the fact that the value is normally
-	 * an offset to the string, not the string itself.)
+	 * not an offset to the ASCII string.
 	 */
 
 	case 0x0001:
@@ -233,14 +221,14 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 	case 0x0015:
 	case 0x0017:
 	case 0x0019:
-		for (i = 0; i < 3 && !((unsigned char *)&prop->value)[i]; i++);
+		byte4exif(prop->value, (unsigned char *)buf, t->tifforder);
 		if (gpstags[x].table)
 			prop->str = finddescr(gpstags[x].table,
-			    ((unsigned char *)&prop->value)[i]);
+			    (unsigned char)buf[0]);
 		else {
 			if (!(prop->str = (char *)malloc(2)))
 				exifdie((const char *)strerror(errno));
-			prop->str[0] = ((unsigned char *)&prop->value)[i];
+			prop->str[0] = buf[0];
 			prop->str[1] = '\0';
 		}
 		break;
