@@ -1,4 +1,5 @@
-20050104 version: exiftags 1.00a
+20050126 version: exiftags 1.00
+20050107 added Canon tags, minor tweaks (thanks: Henrik Levkowetz)
 20050104 fixed handling of short ASCII strings
 20041228 added Panasonic tags (thanks: Lee Kindness)
 20041227 enhanced Nikon maker note support for newer cameras
@@ -97,4 +98,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.20 2005/01/05 00:31:03 ejohnst Exp $
+$Id: CHANGES,v 1.21 2005/01/27 07:15:00 ejohnst Exp $

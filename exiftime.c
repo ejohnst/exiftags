@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.11 2005/01/05 00:31:03 ejohnst Exp $
+ * $Id: exiftime.c,v 1.12 2005/01/27 07:15:01 ejohnst Exp $
  */
 
 /*
@@ -63,7 +63,7 @@ struct linfo {
 	time_t ts;
 };
 
-static const char *version = "1.00a";
+static const char *version = "1.00";
 static int iflag, lflag, qflag, wflag, ttags;
 static const char *delim = ": ";
 static const char *fname;

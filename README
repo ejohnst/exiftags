@@ -1,5 +1,5 @@
-exiftags-1.00a
-20050104
+exiftags-1.00
+20050126
 Eric M. Johnston, emj@postal.net
 
 This package consists of three utilities for displaying and modifying
@@ -49,4 +49,4 @@ Please report bugs, incompatibilities, successes, etc. to
 emj@postal.net.  The latest version of this software will be posted
 at http://johnst.org/sw/exiftags/.
 
-$Id: README,v 1.15 2005/01/05 00:31:03 ejohnst Exp $
+$Id: README,v 1.16 2005/01/27 07:15:00 ejohnst Exp $
