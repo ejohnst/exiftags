@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.13 2003/01/20 21:38:32 ejohnst Exp $
+ * $Id: exifutil.c,v 1.14 2003/01/25 00:15:20 ejohnst Exp $
  */
 
 /*
@@ -166,6 +166,19 @@ findprop(struct exifprop *prop, u_int16_t tag)
 
 
 /*
+ * Lookup a sub-property entry given tag and subtag.
+ */
+struct exifprop *
+findsprop(struct exifprop *prop, u_int16_t tag, int16_t subtag)
+{
+
+	for (; prop && (prop->tag != tag || prop->subtag != subtag);
+	    prop = prop->next);
+	return (prop);
+}
+
+
+/*
  * Allocate memory for an Exif property.
  */
 struct exifprop *
@@ -178,14 +191,21 @@ newprop(void)
 		exifdie((const char *)strerror(errno));
 	memset(prop, 0, sizeof(struct exifprop));
 
+	/*
+	 * Default; maker modules can depend on this being -2 unless they
+	 * they touch it.  (-1 is reserved for synthesized maker values.)
+	 */
+
+	prop->subtag = -2;
+
 	return (prop);
 }
 
 
 /*
- * Given a parent, create a new child Exif property.  These are typically
- * used by maker note modules when a single tag may contain multiple
- * items of interest.
+ * Given a parent, create a new child Exif property.  These are
+ * typically used by maker note modules when a single tag may contain
+ * multiple items of interest.
  */
 struct exifprop *
 childprop(struct exifprop *parent)
@@ -194,21 +214,16 @@ childprop(struct exifprop *parent)
 
 	prop = newprop();
 
-	/*
-	 * Set tag and type to unknown.  We'll key off of the unknown
-	 * tag to avoid processing this property again.
-	 */
+	/* Property inherits everything but type & subtag from its parent. */
 
-	prop->tag = EXIF_T_UNKNOWN;
+	prop->tag = parent->tag;
 	prop->type = TIFF_UNKN;
-
-	/* New property inherits everything else from its parent. */
-
 	prop->name = parent->name;
 	prop->descr = parent->descr;
 	prop->lvl = parent->lvl;
 	prop->ifdseq = parent->ifdseq;
 	prop->ifdtag = parent->ifdtag;
+	prop->subtag = -1;
 	prop->next = parent->next;
 
 	/* Now insert the new property into our list. */
@@ -216,6 +231,27 @@ childprop(struct exifprop *parent)
 	parent->next = prop;
 
 	return (prop);
+}
+
+
+/*
+ * Print debug info for a property.
+ */
+void
+dumpprop(struct exifprop *prop)
+{
+	int i;
+
+	for (i = 0; ftypes[i].type && ftypes[i].type != prop->type; i++);
+
+	if (prop->subtag < -1)
+		printf("   %s (0x%04X): %s, %d; %d, 0x%04X\n", prop->name,
+		    prop->tag, ftypes[i].name, prop->count, prop->value,
+		    prop->value);
+	else
+		printf("     %s (0x%04X:%d): %s, %d; %d, 0x%04X\n", prop->name,
+		    prop->tag, prop->subtag, ftypes[i].name, prop->count,
+		    prop->value, prop->value);
 }
 
 
