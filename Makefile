@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.9 2002/10/15 03:35:03 ejohnst Exp $
+# $Id: Makefile,v 1.10 2002/11/02 22:18:02 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
 #
-MKRS=canon.o olympus.o fuji.o nikon.o
+MKRS=canon.o olympus.o fuji.o nikon.o casio.o
 
 #
 # A few parameters...
@@ -13,7 +13,7 @@ DEBUG=
 CFLAGS=$(DEBUG)
 PREFIX=/usr/local
 
-OBJS=exif.o tagdefs.o exifutil.o jpeg.o $(MKRS)
+OBJS=exif.o tagdefs.o exifutil.o jpeg.o
 HDRS=exif.h exifint.h jpeg.h makers.h
 
 
@@ -24,11 +24,11 @@ HDRS=exif.h exifint.h jpeg.h makers.h
 
 all: exiftags exifcom
 
-exiftags: exiftags.o $(OBJS) $(HDRS)
-	$(CC) $(CFLAGS) -o $@ exiftags.o $(OBJS) -lm
+exiftags: exiftags.o $(OBJS) $(MKRS) $(HDRS)
+	$(CC) $(CFLAGS) -o $@ exiftags.o $(OBJS) $(MKRS) -lm
 
-exifcom: exifcom.o $(OBJS) $(HDRS)
-	$(CC) $(CFLAGS) -o $@ exifcom.o $(OBJS) -lm
+exifcom: exifcom.o $(OBJS) $(MKRS) $(HDRS)
+	$(CC) $(CFLAGS) -o $@ exifcom.o $(OBJS) $(MKRS) -lm
 
 clean:
 	@rm -f $(OBJS) exiftags.o exifcom.o exiftags exifcom

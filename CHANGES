@@ -1,3 +1,5 @@
+20021101 added Casio maker note support
+20021101 fixed segfault on bad Exif data
 20021006 version: exiftags 0.95
 20021007 added exifcom utility to display and write UserComment
 20021006 fixed read of max len UserComment
@@ -23,4 +25,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.7 2002/10/15 03:35:28 ejohnst Exp $
+$Id: CHANGES,v 1.8 2002/11/02 22:18:02 ejohnst Exp $

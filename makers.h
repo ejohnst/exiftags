@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.4 2002/10/15 02:57:33 ejohnst Exp $
+ * $Id: makers.h,v 1.5 2002/11/02 22:18:02 ejohnst Exp $
  */
 
 /*
@@ -64,6 +64,7 @@ extern struct makerfun makers[];
 #define EXIF_MKR_OLYMPUS	1
 #define EXIF_MKR_FUJI		2
 #define EXIF_MKR_NIKON		3
+#define EXIF_MKR_CASIO		4
 #define EXIF_MKR_UNKNOWN	-1
 
 
@@ -79,5 +80,8 @@ extern struct ifd *fuji_ifd(u_int32_t offset, struct exiftags *t);
 
 extern void nikon_prop(struct exifprop *prop, struct exiftags *t);
 extern struct ifd *nikon_ifd(u_int32_t offset, struct exiftags *t);
+
+extern void casio_prop(struct exifprop *prop, struct exiftags *t);
+extern struct ifd *casio_ifd(u_int32_t offset, struct exiftags *t);
 
 #endif
