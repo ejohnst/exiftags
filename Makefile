@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002/01/20 23:58:18 ejohnst Exp $
+# $Id: Makefile,v 1.3 2002/01/21 00:00:14 ejohnst Exp $
 
 OBJ=.
 SRC=.
@@ -11,6 +11,9 @@ clean:
 
 objs = $(OBJ)/exif.o $(OBJ)/jpeg.o $(OBJ)/exifdump.o $(OBJ)/exiftags.o \
 	$(OBJ)/exifutil.o $(OBJ)/canon.o
+
+./exifdump.o: ./exifdump.c
+	cc -O3 -Wall -c -g $< -o $@
 
 ./exif.o: ./exif.c
 	cc -O3 -Wall -c -g $< -o $@
