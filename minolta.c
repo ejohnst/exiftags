@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.8 2003/01/21 05:55:11 ejohnst Exp $
+ * $Id: minolta.c,v 1.9 2003/01/25 00:54:54 ejohnst Exp $
  *
  */ 
 
@@ -407,7 +407,6 @@ static struct exiftag minolta_unkn[] = {
 /*
  * Process maker note tag 0x0001 and 0x0003 fields.
  */
-
 void
 minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
     struct exiftag *thetags)
@@ -422,6 +421,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 
 	for (i = 0; i * 4 < prop->count; i++) {
 		aprop = childprop(prop);
+		aprop->subtag = i;
 
 		/* Note: these are big-endian regardless. */
 		aprop->value = exif4byte(off + (4 * i), BIG);
@@ -438,8 +438,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 			    aprop->value);
 
 		if (debug)
-			printf("     %s (%d): %d\n", aprop->name, i,
-			    aprop->value);
+			dumpprop(aprop);
 
 		/*
 		 * Further process known properties.
@@ -630,8 +629,9 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 }
 
 
-/* Process Minolta maker note tags. */
-
+/*
+ * Process Minolta maker note tags.
+ */
 void
 minolta_prop(struct exifprop *prop, struct exiftags *t)
 {
@@ -643,7 +643,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 	 * maker note tags.
 	 */
 
-	if (prop->tag == EXIF_T_UNKNOWN)
+	if (prop->subtag > -2)
 		return;
 
 	/* Lookup the field name (if known). */
@@ -661,11 +661,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			printf("Processing Minolta Maker Note\n");
 			once = 1;
 		}
-
-		for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
+		dumpprop(prop);
 	}
 
 	switch (prop->tag) {
@@ -714,7 +710,6 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 /*
  * Try to read a Minolta maker note IFD, which differs by model.
  */
-
 struct ifd *
 minolta_ifd(u_int32_t offset, struct exiftags *t)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2002, 2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.4 2002/11/04 07:23:16 ejohnst Exp $
+ * $Id: casio.c,v 1.5 2003/01/25 00:54:20 ejohnst Exp $
  */
 
 /*
@@ -189,8 +189,9 @@ static struct exiftag casio_tags1[] = {
 };
 
 
-/* Process older Casio maker note tags. */
-
+/*
+ * Process older Casio maker note tags.
+ */
 static void
 casio_prop0(struct exifprop *prop, struct exiftags *t)
 {
@@ -209,8 +210,9 @@ casio_prop0(struct exifprop *prop, struct exiftags *t)
 }
 
 
-/* Process newer Casio maker note tags. */
-
+/*
+ * Process newer Casio maker note tags.
+ */
 static void
 casio_prop1(struct exifprop *prop, struct exiftags *t)
 {
@@ -229,20 +231,13 @@ casio_prop1(struct exifprop *prop, struct exiftags *t)
 }
 
 
-/* Process Casio maker note tags. */
-
+/*
+ * Process Casio maker note tags.
+ */
 void
 casio_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
-
-	/*
-	 * Don't process properties we've created while looking at other
-	 * maker note tags.
-	 */
-
-	if (prop->tag == EXIF_T_UNKNOWN)
-		return;
 
 	/*
 	 * XXX This is a rather ugly hack, but we don't really have a way
@@ -263,17 +258,14 @@ casio_prop(struct exifprop *prop, struct exiftags *t)
 			    t->mkrinfo);
 			once = 1;
 		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
+		dumpprop(prop);
 	}
 }
 
 
-/* Try to read a Casio maker note IFD. */
-
+/*
+ * Try to read a Casio maker note IFD.
+ */
 struct ifd *
 casio_ifd(u_int32_t offset, struct exiftags *t)
 {

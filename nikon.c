@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.7 2002/11/03 10:07:50 ejohnst Exp $
+ * $Id: nikon.c,v 1.8 2003/01/25 00:55:12 ejohnst Exp $
  */
 
 /*
@@ -167,8 +167,9 @@ static struct exiftag nikon_tags1[] = {
 };
 
 
-/* Process normal Nikon maker note tags. */
-
+/*
+ * Process normal Nikon maker note tags.
+ */
 static void
 nikon_prop0(struct exifprop *prop, struct exiftags *t)
 {
@@ -214,8 +215,9 @@ nikon_prop0(struct exifprop *prop, struct exiftags *t)
 }
 
 
-/* Process Nikon maker note tags that start from an offset. */
-
+/*
+ * Process Nikon maker note tags that start from an offset.
+ */
 static void
 nikon_prop1(struct exifprop *prop, struct exiftags *t)
 {
@@ -251,20 +253,13 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 }
 
 
-/* Process Nikon maker note tags. */
-
+/*
+ * Process Nikon maker note tags.
+ */
 void
 nikon_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
-
-	/*
-	 * Don't process properties we've created while looking at other
-	 * maker note tags.
-	 */
-
-	if (prop->tag == EXIF_T_UNKNOWN)
-		return;
 
 	/*
 	 * XXX This is a rather ugly hack, but we don't really have a way
@@ -285,17 +280,14 @@ nikon_prop(struct exifprop *prop, struct exiftags *t)
 			    t->mkrinfo);
 			once = 1;
 		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
+		dumpprop(prop);
 	}
 }
 
 
-/* Try to read a Nikon maker note IFD. */
-
+/*
+ * Try to read a Nikon maker note IFD.
+ */
 struct ifd *
 nikon_ifd(u_int32_t offset, struct exiftags *t)
 {

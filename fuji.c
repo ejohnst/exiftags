@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2002, 2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.5 2002/10/07 00:57:31 ejohnst Exp $
+ * $Id: fuji.c,v 1.6 2003/01/25 00:54:36 ejohnst Exp $
  */
 
 /*
@@ -194,21 +194,14 @@ static struct exiftag fuji_tags[] = {
 };
 
 
-/* Process Fuji maker note tags. */
-
+/*
+ * Process Fuji maker note tags.
+ */
 void
 fuji_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
 	u_int16_t v = (u_int16_t)prop->value;
-
-	/*
-	 * Don't process properties we've created while looking at other
-	 * maker note tags.
-	 */
-
-	if (prop->tag == EXIF_T_UNKNOWN)
-		return;
 
 	/* Lookup the field name (if known). */
 
@@ -227,11 +220,7 @@ fuji_prop(struct exifprop *prop, struct exiftags *t)
 			printf("Processing Fuji Maker Note\n");
 			once = 1;
 		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
+		dumpprop(prop);
 	}
 
 	switch (prop->tag) {
@@ -248,8 +237,9 @@ fuji_prop(struct exifprop *prop, struct exiftags *t)
 }
 
 
-/* Try to read a Fuji maker note IFD. */
-
+/*
+ * Try to read a Fuji maker note IFD.
+ */
 struct ifd *
 fuji_ifd(u_int32_t offset, struct exiftags *t)
 {

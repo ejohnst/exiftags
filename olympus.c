@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.7 2002/10/07 00:57:31 ejohnst Exp $
+ * $Id: olympus.c,v 1.8 2003/01/25 00:55:25 ejohnst Exp $
  */
 
 /*
@@ -88,8 +88,9 @@ static struct exiftag olympus_tags[] = {
 };
 
 
-/* Process Olympus maker note tags. */
-
+/*
+ * Process Olympus maker note tags.
+ */
 void
 olympus_prop(struct exifprop *prop, struct exiftags *t)
 {
@@ -104,7 +105,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	 * maker note tags.
 	 */
 
-	if (prop->tag == EXIF_T_UNKNOWN)
+	if (prop->subtag > -2)
 		return;
 
 	/* Lookup the field name (if known). */
@@ -124,11 +125,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 			printf("Processing Olympus Maker Note\n");
 			once = 1;
 		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
+		dumpprop(prop);
 	}
 
 	switch (prop->tag) {
@@ -196,8 +193,9 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 }
 
 
-/* Try to read an Olympus maker note IFD. */
-
+/*
+ * Try to read an Olympus maker note IFD.
+ */
 struct ifd *
 olympus_ifd(u_int32_t offset, struct exiftags *t)
 {
