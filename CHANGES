@@ -1,3 +1,10 @@
+20030130 version: exiftags 0.97
+20030128 assign bad or senseless tags separate dump level
+20030124 internal code cleanups
+20030123 assign overridden tags separate dump level
+20030121 support for Canon EOS-1D & 1DS (thanks: Stan Jirman)
+20030120 added -s option to customize delimiter
+20030120 support for multiple shorts in a tag (e.g., subject area)
 20030112 added Minolta maker note support (thanks: Javier Crespo)
 20030104 removed spurious Exif header warning (thanks: Kevin Layer)
 20030104 Canon ISO values (thanks: Alan Murphy)
@@ -34,4 +41,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.10 2003/01/14 05:46:34 ejohnst Exp $
+$Id: CHANGES,v 1.11 2003/01/30 07:21:49 ejohnst Exp $
