@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.12 2002/10/05 17:57:59 ejohnst Exp $
+ * $Id: exiftags.c,v 1.13 2002/10/07 00:54:16 ejohnst Exp $
  */
 
 /*
@@ -52,37 +52,13 @@ extern int optind, opterr, optopt;
 int getopt(int, char * const [], const char *);
 #endif
 
-#include "exiftags.h"
 #include "jpeg.h"
 #include "exif.h"
 
 
-int debug, quiet;
-static char *version = "0.94";
-const char *progname;
+int quiet;
+static char *version = "0.95 alpha";
 static int fnum;
-
-
-void
-exifdie(const char *msg)
-{
-	fprintf(stderr, "%s: %s\n", progname, msg);
-	exit(1);
-}
-
-
-void
-exifwarn(const char *msg)
-{
-	fprintf(stderr, "%s: %s\n", progname, msg);
-}
-
-
-void
-exifwarn2(const char *msg1, const char *msg2)
-{
-	fprintf(stderr, "%s: %s (%s)\n", progname, msg1, msg2);
-}
 
 
 static void
@@ -165,7 +141,7 @@ doit(FILE *fp, int dumplvl, int pas)
 		}
 
 		gotapp1 = TRUE;
-		t = exifscan(exifbuf, len);
+		t = exifparse(exifbuf, len);
 
 		if (t && t->props) {
 			if (dumplvl & ED_CAM)
