@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.18 2002/10/05 00:46:10 ejohnst Exp $
+ * $Id: exif.c,v 1.19 2002/10/05 01:03:33 ejohnst Exp $
  */
 
 /*
@@ -238,7 +238,9 @@ readtags(struct ifd *dir, int seq, struct exiftags *t)
 
 
 /*
- * Post-process property values.
+ * Post-process property values.  By now we've got all of the standard
+ * Exif tags read in (but not maker tags), so it's safe to work out
+ * dependencies between tags.
  */
 static void
 postprop(struct exifprop *prop, struct exiftags *t)
@@ -274,6 +276,12 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		prop->str[31] = '\0';
 		break;
 
+	/*
+	 * Shutter speed doesn't seem all that useful.  It's usually the
+	 * same as exposure time and when it's not, it's wrong.  In the
+	 * absence of an exposure time we'll make it ED_IMG.
+	 */
+
 	case EXIF_T_SHUTTER:
 		fval = (float)exif4sbyte(t->btiff + prop->value, o) /
 		    (float)exif4sbyte(t->btiff + prop->value + 4, o);
@@ -282,6 +290,9 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		snprintf(prop->str, 31, "1/%d",
 		    (int)floor(pow(2, (double)fval) + 0.5));
 		prop->str[31] = '\0';
+
+		if (!findprop(h, EXIF_T_EXPOSURE))
+			prop->lvl = ED_IMG;
 		/* FALLTHROUGH */
 
 	case EXIF_T_EXPOSURE:

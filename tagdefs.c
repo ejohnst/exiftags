@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.8 2002/09/28 20:51:27 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.9 2002/10/05 01:03:33 ejohnst Exp $
  */
 
 /*
@@ -174,7 +174,7 @@ struct exiftag tags[] = {
 	    "ComponentsConfiguration", "Meaning of Each Component" },
 	{ 0x9102, TIFF_RTNL,  1,  ED_VRB,
 	    "CompressedBitsPerPixel", "Image Compression Mode" },
-	{ 0x9201, TIFF_SRTNL, 1,  ED_IMG,		/* s */
+	{ 0x9201, TIFF_SRTNL, 1,  ED_VRB,		/* s */
 	    "ShutterSpeedValue", "Shutter Speed" },
 	{ 0x9202, TIFF_RTNL,  1,  ED_IMG,
 	    "ApertureValue", "Lens Aperture" },
