@@ -1,4 +1,4 @@
-exiftags-0.91
+exiftags-0.92
 20020712
 Eric M. Johnston, emj@postal.net
 
@@ -16,10 +16,15 @@ To install it (defaults to a prefix of /usr/local):
 
     make install
 
-It should build fine on FreeBSD, Linux, and Solaris using gcc.
-Portability patches are welcomed.  You might have problems with the use
-of u_int16_t and u_int32_t.  If so, see exif.h.  One of these days I'll
-get around to making it compile under WIN32.
+Included are Visual Studio workspace and project files which should
+be sufficient for building under Windows.  To install, just copy
+exiftags.exe to some directory in your path (c:\windows\system32 usually
+works).
+
+It should build fine on FreeBSD, Linux, and Solaris using gcc; on Windows
+using Visual C++ 6.0 (and probably others).  Portability patches are
+welcomed.  You might have problems with the use of u_int16_t and
+u_int32_t.  If so, see exif.h.
 
 Feel free to use the source within the confines of its BSD license.  Note
 that I do not wish it to be re-licensed under some other Open Source
@@ -35,4 +40,4 @@ Please report bugs, incompatibilities, successes, etc. to
 emj@postal.net.  The latest version of this software will be posted
 at http://emj.postal.net/sw/exifdump/.
 
-$Id: README,v 1.3 2002/07/15 03:21:25 ejohnst Exp $
+$Id: README,v 1.4 2002/08/01 18:32:35 ejohnst Exp $
