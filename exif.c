@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.69 2004/12/27 22:27:17 ejohnst Exp $
+ * $Id: exif.c,v 1.70 2004/12/29 20:35:35 ejohnst Exp $
  */
 
 /*
@@ -345,7 +345,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 
 	/* Flash consists of a number of bits, which expanded with v2.2. */
 
-#define FLASHMAX 96
+#define LFLSH 96
 
 	case EXIF_T_FLASH:
 		if (t->exifmaj <= 2 && t->exifmin < 20)
@@ -353,17 +353,18 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		else
 			v = (u_int16_t)(prop->value & 0x7F);
 
-		exifstralloc(&prop->str, FLASHMAX);
+		exifstralloc(&prop->str, LFLASH);
 
 		/* Don't do anything else if there isn't a flash. */
 
-		if (catdescr(prop->str, flash_func, v & 0x20, FLASHMAX))
+		if (catdescr(prop->str, flash_func, (u_int16_t)(v & 0x20),
+		    LFLSH))
 			break;
 
-		catdescr(prop->str, flash_fire, v & 0x01, FLASHMAX);
-		catdescr(prop->str, flash_mode, v & 0x18, FLASHMAX);
-		catdescr(prop->str, flash_redeye, v & 0x40, FLASHMAX);
-		catdescr(prop->str, flash_return, v & 0x06, FLASHMAX);
+		catdescr(prop->str, flash_fire, (u_int16_t)(v & 0x01), LFLSH);
+		catdescr(prop->str, flash_mode, (u_int16_t)(v & 0x18), LFLSH);
+		catdescr(prop->str, flash_redeye, (u_int16_t)(v & 0x40), LFLSH);
+		catdescr(prop->str, flash_return, (u_int16_t)(v & 0x06), LFLSH);
 		break;
 
 	case EXIF_T_FOCALLEN:

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sigma.c,v 1.3 2004/10/10 03:38:56 ejohnst Exp $
+ * $Id: sigma.c,v 1.4 2004/12/29 20:35:35 ejohnst Exp $
  */
 
 /*
@@ -116,7 +116,7 @@ sigma_deprefix(char *str, const char *prefix)
 void
 sigma_prop(struct exifprop *prop, struct exiftags *t)
 {
-	int i;
+	u_int16_t i;
 
 	/* Couldn't grok the value somewhere upstream, so nevermind. */
 
