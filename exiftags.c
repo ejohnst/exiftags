@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.2 2002/01/21 03:21:17 ejohnst Exp $
+ * $Id: exiftags.c,v 1.3 2002/02/17 03:48:24 ejohnst Exp $
  */
 
 /*
@@ -42,7 +42,7 @@
 
 
 int debug, quiet;
-static char *version = "0.8";
+static char *version = "0.9";
 static const char *progname;
 static int fnum;
 
@@ -114,14 +114,16 @@ printprops(struct exifprop *list, unsigned short lvl)
 static void
 doit(FILE *fp, int dumplvl)
 {
-	int mark, gotapp1;
+	int mark, gotapp1, first;
 	unsigned int len, rlen;
 	unsigned char *exifbuf;
 	struct exifprop *proplist;
 
 	gotapp1 = FALSE;
+	first = 0;
+	exifbuf = NULL;
 
-	while (jpegscan(fp, &mark, &len)) {
+	while (jpegscan(fp, &mark, &len, !(first++))) {
 		exifbuf = (unsigned char *)malloc(len);
 		if (!exifbuf)
 			exifdie((const char *)strerror(errno));
@@ -182,7 +184,6 @@ main(int argc, char **argv)
 {
 	register int ch;
 	int dumplvl, eval;
-	int fnum;
 	FILE *fp;
 
 	progname = argv[0];
