@@ -1,3 +1,4 @@
+20040915 added Sigma maker note support
 20040506 version: exiftags 0.99.1
 20040506 fixed exiftime install oversight
 20040504 added Canon camera actuations (thanks: Stan Jirman)
@@ -70,4 +71,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.18 2004/05/07 05:47:43 ejohnst Exp $
+$Id: CHANGES,v 1.19 2004/09/15 23:35:55 ejohnst Exp $

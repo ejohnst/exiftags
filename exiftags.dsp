@@ -153,6 +153,10 @@ SOURCE=.\sanyo.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\sigma.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\tagdefs.c
 # End Source File
 # End Group
