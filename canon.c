@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.8 2002/10/05 17:57:59 ejohnst Exp $
+ * $Id: canon.c,v 1.9 2002/10/05 22:49:38 ejohnst Exp $
  */
 
 /*
@@ -54,66 +54,6 @@ struct ccstm {
 	int32_t val;
 	const char *descr;
 	struct descrip *table;
-};
-
-
-/* Maker note IFD tags. */
-
-static struct exiftag canon_tags[] = {
-	{ 0x0001, TIFF_SHORT, 0,  ED_VRB, "Canon1Tag", "Canon Tag1 Offset" },
-	{ 0x0004, TIFF_SHORT, 0,  ED_VRB, "Canon4Tag", "Canon Tag4 Offset" },
-	{ 0x0006, TIFF_ASCII, 32, ED_VRB, "ImageType", "Image Type" },
-	{ 0x0007, TIFF_ASCII, 24, ED_CAM, "FirmwareVer", "Firmware Version" },
-	{ 0x0008, TIFF_LONG,  1,  ED_IMG, "ImgNum", "Image Number" },
-	{ 0x0009, TIFF_ASCII, 32, ED_CAM, "OwnerName", "Owner Name" },
-	{ 0x000c, TIFF_LONG,  1,  ED_CAM, "Serial", "Serial Number" },
-	{ 0x000f, TIFF_SHORT, 0,  ED_IMG, "CustomFunc", "Custom Function" },
-	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "Unknown", "Canon Unknown" },
-};
-
-
-/* Fields under tag 0x0001. */
-
-static struct exiftag canon_tags1[] = {
-	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon1Len", "Canon Tag1 Length" },
-	{ 1,  TIFF_SHORT, 0, ED_IMG, "CanonMacroMode", "Macro Mode" },
-	{ 2,  TIFF_SHORT, 0, ED_VRB, "CanonTimerLen", "Self-Timer Length" },
-	{ 3,  TIFF_SHORT, 0, ED_IMG, "CanonQuality", "Compression Setting" },
-	{ 4,  TIFF_SHORT, 0, ED_IMG, "CanonFlashMode", "Flash Mode" },
-	{ 5,  TIFF_SHORT, 0, ED_IMG, "CanonDriveMode", "Drive Mode" },
-	{ 7,  TIFF_SHORT, 0, ED_IMG, "CanonFocusMode", "Focus Mode" },
-	{ 10, TIFF_SHORT, 0, ED_IMG, "CanonImageSize", "Image Size" },
-	{ 11, TIFF_SHORT, 0, ED_IMG, "CanonShootMode", "Shooting Mode" },
-	{ 12, TIFF_SHORT, 0, ED_VRB, "CanonDigiZoom", "Digital Zoom" },
-	{ 13, TIFF_SHORT, 0, ED_IMG, "CanonContrast", "Contrast" },
-	{ 14, TIFF_SHORT, 0, ED_IMG, "CanonSaturate", "Saturation" },
-	{ 15, TIFF_SHORT, 0, ED_IMG, "CanonSharpness", "Sharpness" },
-	{ 16, TIFF_SHORT, 0, ED_UNK, "CanonISO", "ISO Speed Rating" },
-	{ 17, TIFF_SHORT, 0, ED_IMG, "CanonMeterMode", "Metering Mode" },
-	{ 18, TIFF_SHORT, 0, ED_IMG, "CanonFocusType", "Focus Type" },
-	{ 19, TIFF_SHORT, 0, ED_UNK, "CanonAFPoint", "Autofocus Point" },
-	{ 20, TIFF_SHORT, 0, ED_IMG, "CanonExpMode", "Exposure Mode" },
-	{ 23, TIFF_SHORT, 0, ED_UNK, "CanonMaxFocal", "Max Focal Length" },
-	{ 24, TIFF_SHORT, 0, ED_UNK, "CanonMinFocal", "Min Focal Length" },
-	{ 25, TIFF_SHORT, 0, ED_UNK, "CanonFocalUnits", "Focal Units/mm" },
-	{ 28, TIFF_SHORT, 0, ED_UNK, "CanonFlashAct", "Flash Activity" },
-	{ 29, TIFF_SHORT, 0, ED_UNK, "CanonFlashDet", "Flash Details" },
-	{ 36, TIFF_SHORT, 0, ED_VRB, "CanonDZoomRes", "Zoomed Resolution" },
-	{ 37, TIFF_SHORT, 0, ED_VRB, "CanonBZoomRes", "Base Zoom Resolution" },
-	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown", "Canon Tag1 Unknown" },
-};
-
-
-/* Fields under tag 0x0004. */
-
-static struct exiftag canon_tags4[] = {
-	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon4Len", "Canon Tag4 Length" },
-	{ 7,  TIFF_SHORT, 0, ED_IMG, "CanonWhiteB", "White Balance" },
-	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonSequence", "Sequence Number" },
-	{ 14, TIFF_SHORT, 0, ED_UNK, "CanonAFPoint2", "Autofocus Point" },
-	{ 15, TIFF_SHORT, 0, ED_VRB, "CanonFlashBias", "Flash Bias" },
-	{ 19, TIFF_SHORT, 0, ED_UNK, "CanonSubjDst", "Subject Distance" },
-	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown", "Canon Tag4 Unknown" },
 };
 
 
@@ -297,6 +237,108 @@ static struct descrip canon_whitebal[] = {
 };
 
 
+/* Maker note IFD tags. */
+
+static struct exiftag canon_tags[] = {
+	{ 0x0001, TIFF_SHORT, 0,  ED_VRB, "Canon1Tag",
+	  "Canon Tag1 Offset", NULL },
+	{ 0x0004, TIFF_SHORT, 0,  ED_VRB, "Canon4Tag",
+	  "Canon Tag4 Offset", NULL },
+	{ 0x0006, TIFF_ASCII, 32, ED_VRB, "ImageType",
+	  "Image Type", NULL },
+	{ 0x0007, TIFF_ASCII, 24, ED_CAM, "FirmwareVer",
+	  "Firmware Version", NULL },
+	{ 0x0008, TIFF_LONG,  1,  ED_IMG, "ImgNum",
+	  "Image Number", NULL },
+	{ 0x0009, TIFF_ASCII, 32, ED_CAM, "OwnerName",
+	  "Owner Name", NULL },
+	{ 0x000c, TIFF_LONG,  1,  ED_CAM, "Serial",
+	  "Serial Number", NULL },
+	{ 0x000f, TIFF_SHORT, 0,  ED_IMG, "CustomFunc",
+	  "Custom Function", NULL },
+	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "Unknown",
+	  "Canon Unknown", NULL },
+};
+
+
+/* Fields under tag 0x0001. */
+
+static struct exiftag canon_tags1[] = {
+	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon1Len",
+	  "Canon Tag1 Length", NULL },
+	{ 1,  TIFF_SHORT, 0, ED_IMG, "CanonMacroMode",
+	  "Macro Mode", canon_macro },
+	{ 2,  TIFF_SHORT, 0, ED_VRB, "CanonTimerLen",
+	  "Self-Timer Length", NULL },
+	{ 3,  TIFF_SHORT, 0, ED_IMG, "CanonQuality",
+	  "Compression Setting", canon_quality },
+	{ 4,  TIFF_SHORT, 0, ED_IMG, "CanonFlashMode",
+	  "Flash Mode", canon_flash },
+	{ 5,  TIFF_SHORT, 0, ED_IMG, "CanonDriveMode",
+	  "Drive Mode", canon_drive },
+	{ 7,  TIFF_SHORT, 0, ED_IMG, "CanonFocusMode",
+	  "Focus Mode", canon_focus1 },
+	{ 10, TIFF_SHORT, 0, ED_IMG, "CanonImageSize",
+	  "Image Size", canon_imagesz },
+	{ 11, TIFF_SHORT, 0, ED_IMG, "CanonShootMode",
+	  "Shooting Mode", canon_shoot },
+	{ 12, TIFF_SHORT, 0, ED_VRB, "CanonDigiZoom",
+	  "Digital Zoom", NULL },
+	{ 13, TIFF_SHORT, 0, ED_IMG, "CanonContrast",
+	  "Contrast", canon_range },
+	{ 14, TIFF_SHORT, 0, ED_IMG, "CanonSaturate",
+	  "Saturation", canon_range },
+	{ 15, TIFF_SHORT, 0, ED_IMG, "CanonSharpness",
+	  "Sharpness", canon_range },
+	{ 16, TIFF_SHORT, 0, ED_UNK, "CanonISO",
+	  "ISO Speed Rating", NULL },
+	{ 17, TIFF_SHORT, 0, ED_IMG, "CanonMeterMode",
+	  "Metering Mode", canon_meter },
+	{ 18, TIFF_SHORT, 0, ED_IMG, "CanonFocusType",
+	  "Focus Type", canon_focustype },
+	{ 19, TIFF_SHORT, 0, ED_UNK, "CanonAFPoint",
+	  "Autofocus Point", NULL },
+	{ 20, TIFF_SHORT, 0, ED_IMG, "CanonExpMode",
+	  "Exposure Mode", canon_expmode },
+	{ 23, TIFF_SHORT, 0, ED_UNK, "CanonMaxFocal",
+	  "Max Focal Length", NULL },
+	{ 24, TIFF_SHORT, 0, ED_UNK, "CanonMinFocal",
+	  "Min Focal Length", NULL },
+	{ 25, TIFF_SHORT, 0, ED_UNK, "CanonFocalUnits",
+	  "Focal Units/mm", NULL },
+	{ 28, TIFF_SHORT, 0, ED_UNK, "CanonFlashAct",
+	  "Flash Activity", NULL },
+	{ 29, TIFF_SHORT, 0, ED_UNK, "CanonFlashDet",
+	  "Flash Details", NULL },
+	{ 36, TIFF_SHORT, 0, ED_VRB, "CanonDZoomRes",
+	  "Zoomed Resolution", NULL },
+	{ 37, TIFF_SHORT, 0, ED_VRB, "CanonBZoomRes",
+	  "Base Zoom Resolution", NULL },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
+	  "Canon Tag1 Unknown", NULL },
+};
+
+
+/* Fields under tag 0x0004. */
+
+static struct exiftag canon_tags4[] = {
+	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon4Len",
+	  "Canon Tag4 Length", NULL },
+	{ 7,  TIFF_SHORT, 0, ED_IMG, "CanonWhiteB",
+	  "White Balance", canon_whitebal },
+	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonSequence",
+	  "Sequence Number", NULL },
+	{ 14, TIFF_SHORT, 0, ED_UNK, "CanonAFPoint2",
+	  "Autofocus Point", NULL },
+	{ 15, TIFF_SHORT, 0, ED_VRB, "CanonFlashBias",
+	  "Flash Bias", canon_fbias },
+	{ 19, TIFF_SHORT, 0, ED_UNK, "CanonSubjDst",
+	  "Subject Distance", NULL },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
+	  "Canon Tag4 Unknown", NULL },
+};
+
+
 /* Value descriptions for D30 custom functions. */
 
 static struct descrip ccstm_offon[] = {
@@ -439,13 +481,15 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 		aprop->name = canon_tags1[j].name;
 		aprop->descr = canon_tags1[j].descr;
 		aprop->lvl = canon_tags1[j].lvl;
+		if (canon_tags1[j].table)
+			aprop->str = finddescr(canon_tags1[j].table, v);
+
+		if (debug)
+			printf("     %s (%d): %d\n", aprop->name, i, v);
 
 		/* Further process known properties. */
 
 		switch (i) {
-		case 1:
-			aprop->str = finddescr(canon_macro, v);
-			break;
 		case 2:
 			aprop->lvl = v ? ED_IMG : ED_VRB;
 			if (!(aprop->str = (char *)malloc(32)))
@@ -453,28 +497,11 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 			snprintf(aprop->str, 31, "%d sec", v / 10);
 			aprop->str[31] = '\0';
 			break;
-		case 3:
-			aprop->str = finddescr(canon_quality, v);
-			break;
-		case 4:
-			aprop->str = finddescr(canon_flash, v);
-			break;
 		case 5:
-			aprop->str = finddescr(canon_drive, v);
-
 			/* Change "Single" to "Timed" if #2 > 0. */
 
 			if (!v && exif2byte(off + 2 * 2, o))
 				strcpy(aprop->str, "Timed");
-			break;
-		case 7:
-			aprop->str = finddescr(canon_focus1, v);
-			break;
-		case 10:
-			aprop->str = finddescr(canon_imagesz, v);
-			break;
-		case 11:
-			aprop->str = finddescr(canon_shoot, v);
 			break;
 		case 12:
 			aprop->lvl = v ? ED_IMG : ED_VRB;
@@ -494,22 +521,10 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 			} else
 				aprop->str = finddescr(canon_dzoom, v);
 			break;
-		case 13:
-		case 14:
-		case 15:
-			aprop->str = finddescr(canon_range, v);
-			break;
 		case 17:
-			aprop->str = finddescr(canon_meter, v);
 			/* Maker meter mode overrides standard one. */
 			if ((tmpprop = findprop(t->props, EXIF_T_METERMODE)))
 				tmpprop->lvl = ED_VRB;
-			break;
-		case 18:
-			aprop->str = finddescr(canon_focustype, v);
-			break;
-		case 20:
-			aprop->str = finddescr(canon_expmode, v);
 			break;
 		case 23:
 			flmax = v;
@@ -581,18 +596,17 @@ canon_prop4(struct exifprop *prop, char *off, enum order o)
 		aprop->name = canon_tags4[j].name;
 		aprop->descr = canon_tags4[j].descr;
 		aprop->lvl = canon_tags4[j].lvl;
+		if (canon_tags4[j].table)
+			aprop->str = finddescr(canon_tags4[j].table, v);
+
+		if (debug)
+			printf("     %s (%d): %d\n", aprop->name, i, v);
 
 		/* Further process known properties. */
 
 		switch (i) {
-		case 7:
-			aprop->str = finddescr(canon_whitebal, v);
-			break;
 		case 9:
 			aprop->lvl = v ? ED_IMG : ED_VRB;
-			break;
-		case 15:
-			aprop->str = finddescr(canon_fbias, v);
 			break;
 		default:
 			if (aprop->lvl != ED_UNK)
@@ -641,6 +655,9 @@ canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 		aprop->name = prop->name;
 		aprop->descr = prop->descr;
 		aprop->lvl = prop->lvl;
+
+		if (debug)
+			printf("     %s (%d): %d\n", aprop->name, i, v);
 
 		/* If we have a table, lookup function name and value. */
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.3 2002/08/01 03:08:48 ejohnst Exp $
+ * $Id: nikon.c,v 1.4 2002/10/05 22:49:39 ejohnst Exp $
  */
 
 /*
@@ -45,60 +45,6 @@
 #include "exiftags.h"
 #include "exifint.h"
 #include "makers.h"
-
-
-/* Maker note IFD tags. */
-
-static struct exiftag nikon_tags0[] = {
-	{ 0x0002, TIFF_SHORT, 2, ED_UNK, "NikonISOSet",
-	  "ISO Setting" },
-	{ 0x0003, TIFF_ASCII, 0, ED_IMG, "NikonColor",
-	  "Color Mode" },
-	{ 0x0004, TIFF_ASCII, 0, ED_IMG, "NikonQuality",
-	  "Image Quality" },
-	{ 0x0005, TIFF_ASCII, 0, ED_IMG, "NikonWhiteBal",
-	  "White Balance" },
-	{ 0x0006, TIFF_ASCII, 0, ED_IMG, "NikonSharp",
-	  "Image Sharpening" },
-	{ 0x0007, TIFF_ASCII, 0, ED_IMG, "NikonFocusMode",
-	  "Focus Mode" },
-	{ 0x0008, TIFF_ASCII, 0, ED_IMG, "NikonFlashSet",
-	  "Flash Setting" },
-	{ 0x000f, TIFF_ASCII, 0, ED_IMG, "NikonISOSelect",
-	  "ISO Selection" },
-	{ 0x0080, TIFF_ASCII, 0, ED_IMG, "NikonImgAdjust",
-	  "Image Adjustment" },
-	{ 0x0082, TIFF_ASCII, 0, ED_IMG, "NikonAdapter",
-	  "Lens Adapter" },
-	{ 0x0085, TIFF_ASCII, 0, ED_IMG, "NikonFocusDist",
-	  "Focus Distance" },
-	{ 0x0086, TIFF_ASCII, 0, ED_IMG, "NikonDigiZoom",
-	  "Digital Zoom" },
-	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
-	  "Nikon Unknown" },
-};
-
-
-static struct exiftag nikon_tags1[] = {
-	{ 0x0003, TIFF_SHORT, 1, ED_UNK, "NikonQuality",
-	  "Image Quality" },
-	{ 0x0004, TIFF_SHORT, 1, ED_IMG, "NikonColor",
-	  "Color Mode" },
-	{ 0x0005, TIFF_SHORT, 1, ED_IMG, "NikonImgAdjust",
-	  "Image Adjustment" },
-	{ 0x0006, TIFF_SHORT, 1, ED_IMG, "NikonCCDSensitive",
-	  "CCD Sensitivity" },
-	{ 0x0007, TIFF_SHORT, 1, ED_IMG, "NikonWhiteBal",
-	  "White Balance" },
-	{ 0x0008, TIFF_RTNL, 1, ED_UNK, "NikonFocus",
-	  "Focus" },
-	{ 0x000a, TIFF_RTNL, 1, ED_IMG, "NikonDigiZoom",
-	  "Digital Zoom" },
-	{ 0x000b, TIFF_SHORT, 1, ED_IMG, "NikonAdapter",
-	  "Lens Adapter" },
-	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
-	  "Nikon Unknown" },
-};
 
 
 /* Quality. */
@@ -166,6 +112,60 @@ static struct descrip nikon_convert[] = {
 	{ 0,	"None" },
 	{ 2,	"Fisheye" },
 	{ -1,	"Unknown" },
+};
+
+
+/* Maker note IFD tags. */
+
+static struct exiftag nikon_tags0[] = {
+	{ 0x0002, TIFF_SHORT, 2, ED_UNK, "NikonISOSet",
+	  "ISO Setting", NULL },
+	{ 0x0003, TIFF_ASCII, 0, ED_IMG, "NikonColor",
+	  "Color Mode", NULL },
+	{ 0x0004, TIFF_ASCII, 0, ED_IMG, "NikonQuality",
+	  "Image Quality", NULL },
+	{ 0x0005, TIFF_ASCII, 0, ED_IMG, "NikonWhiteBal",
+	  "White Balance", NULL },
+	{ 0x0006, TIFF_ASCII, 0, ED_IMG, "NikonSharp",
+	  "Image Sharpening", NULL },
+	{ 0x0007, TIFF_ASCII, 0, ED_IMG, "NikonFocusMode",
+	  "Focus Mode", NULL },
+	{ 0x0008, TIFF_ASCII, 0, ED_IMG, "NikonFlashSet",
+	  "Flash Setting", NULL },
+	{ 0x000f, TIFF_ASCII, 0, ED_IMG, "NikonISOSelect",
+	  "ISO Selection", NULL },
+	{ 0x0080, TIFF_ASCII, 0, ED_IMG, "NikonImgAdjust",
+	  "Image Adjustment", NULL },
+	{ 0x0082, TIFF_ASCII, 0, ED_IMG, "NikonAdapter",
+	  "Lens Adapter", NULL },
+	{ 0x0085, TIFF_ASCII, 0, ED_IMG, "NikonFocusDist",
+	  "Focus Distance", NULL },
+	{ 0x0086, TIFF_ASCII, 0, ED_IMG, "NikonDigiZoom",
+	  "Digital Zoom", NULL },
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
+	  "Nikon Unknown", NULL },
+};
+
+
+static struct exiftag nikon_tags1[] = {
+	{ 0x0003, TIFF_SHORT, 1, ED_UNK, "NikonQuality",
+	  "Image Quality", nikon_quality },
+	{ 0x0004, TIFF_SHORT, 1, ED_IMG, "NikonColor",
+	  "Color Mode", nikon_color },
+	{ 0x0005, TIFF_SHORT, 1, ED_IMG, "NikonImgAdjust",
+	  "Image Adjustment", nikon_adjust },
+	{ 0x0006, TIFF_SHORT, 1, ED_IMG, "NikonCCDSensitive",
+	  "CCD Sensitivity", nikon_ccd },
+	{ 0x0007, TIFF_SHORT, 1, ED_IMG, "NikonWhiteBal",
+	  "White Balance", nikon_white },
+	{ 0x0008, TIFF_RTNL, 1, ED_UNK, "NikonFocus",
+	  "Focus", NULL },
+	{ 0x000a, TIFF_RTNL, 1, ED_IMG, "NikonDigiZoom",
+	  "Digital Zoom", NULL },
+	{ 0x000b, TIFF_SHORT, 1, ED_IMG, "NikonAdapter",
+	  "Lens Adapter", nikon_convert },
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
+	  "Nikon Unknown", NULL },
 };
 
 
@@ -246,6 +246,8 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	prop->name = nikon_tags1[i].name;
 	prop->descr = nikon_tags1[i].descr;
 	prop->lvl = nikon_tags1[i].lvl;
+	if (nikon_tags1[i].table)
+		prop->str = finddescr(nikon_tags1[i].table, v);
 
 	if (debug) {
 		static int once = 0;	/* XXX Breaks on multiple files. */
@@ -262,25 +264,6 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	}
 
 	switch (prop->tag) {
-
-	case 0x0003:
-		prop->str = finddescr(nikon_quality, v);
-		break;
-	case 0x0004:
-		prop->str = finddescr(nikon_color, v);
-		break;
-	case 0x0005:
-		prop->str = finddescr(nikon_adjust, v);
-		break;
-	case 0x0006:
-		prop->str = finddescr(nikon_ccd, v);
-		break;
-	case 0x0007:
-		prop->str = finddescr(nikon_white, v);
-		break;
-	case 0x000b:
-		prop->str = finddescr(nikon_convert, v);
-		break;
 
 	/* Digital zoom. */
 

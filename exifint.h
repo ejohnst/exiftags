@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.6 2002/10/05 17:12:40 ejohnst Exp $
+ * $Id: exifint.h,v 1.7 2002/10/05 22:49:39 ejohnst Exp $
  */
 
 /*
@@ -95,6 +95,14 @@
 #define EXIF_T_SCENETYPE	0xa301
 
 
+/* Generic field description lookup table. */
+
+struct descrip {
+	int32_t val;
+	const char *descr;
+};
+
+
 /* Tag lookup table. */
 
 struct exiftag {
@@ -104,14 +112,7 @@ struct exiftag {
 	unsigned short lvl;	/* Output level. */
 	const char *name;
 	const char *descr;
-};
-
-
-/* Generic field description lookup table. */
-
-struct descrip {
-	int32_t val;
-	const char *descr;
+	struct descrip *table;	/* Value lookup table. */
 };
 
 

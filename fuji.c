@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.3 2002/08/01 03:08:48 ejohnst Exp $
+ * $Id: fuji.c,v 1.4 2002/10/05 22:49:39 ejohnst Exp $
  */
 
 /*
@@ -45,46 +45,6 @@
 #include "exiftags.h"
 #include "exifint.h"
 #include "makers.h"
-
-
-/* Maker note IFD tags. */
-
-static struct exiftag fuji_tags[] = {
-	{ 0x0000, TIFF_UNDEF, 4, ED_CAM, "FujiVersion",
-	  "Maker Note Version" },
-	{ 0x1000, TIFF_ASCII, 8, ED_UNK, "FujiQuality",
-	  "Quality Setting" },
-	{ 0x1001, TIFF_SHORT, 1, ED_IMG, "FujiSharpness",
-	  "Sharpness" },
-	{ 0x1002, TIFF_SHORT, 1, ED_IMG, "FujiWhiteBal",
-	  "White Balance" },
-	{ 0x1003, TIFF_SHORT, 1, ED_IMG, "FujiColor",
-	  "Chroma Saturation" },
-	{ 0x1004, TIFF_SHORT, 1, ED_IMG, "FujiTone",
-	  "Contrast" },
-	{ 0x1010, TIFF_SHORT, 1, ED_IMG, "FujiFlashMode",
-	  "Flash Mode" },
-	{ 0x1011, TIFF_SRTNL, 1, ED_UNK, "FujiFlashStrength",
-	  "Flash Strength" },
-	{ 0x1020, TIFF_SHORT, 1, ED_IMG, "FujiMacro",
-	  "Macro Mode" },
-	{ 0x1021, TIFF_SHORT, 1, ED_IMG, "FujiFocusMode",
-	  "Focus Mode" },
-	{ 0x1030, TIFF_SHORT, 1, ED_IMG, "FujiSlowSync",
-	  "Slow Synchro Mode" },
-	{ 0x1031, TIFF_SHORT, 1, ED_IMG, "FujiPicMode",
-	  "Picture Mode" },
-	{ 0x1100, TIFF_SHORT, 1, ED_IMG, "FujiBracket",
-	  "Continuous/Bracketing Mode" },
-	{ 0x1300, TIFF_SHORT, 1, ED_IMG, "FujiBlurWarn",
-	  "Blur Status" },
-	{ 0x1301, TIFF_SHORT, 1, ED_IMG, "FujiFocusWarn",
-	  "Focus Status" },
-	{ 0x1302, TIFF_SHORT, 1, ED_IMG, "FujiAEWarn",
-	  "Auto Exposure Status" },
-	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "FujiUnknown",
-	  "Fuji Unknown" },
-};
 
 
 /* Sharpness. */
@@ -196,6 +156,46 @@ static struct descrip fuji_aew[] = {
 };
 
 
+/* Maker note IFD tags. */
+
+static struct exiftag fuji_tags[] = {
+	{ 0x0000, TIFF_UNDEF, 4, ED_CAM, "FujiVersion",
+	  "Maker Note Version", NULL },
+	{ 0x1000, TIFF_ASCII, 8, ED_UNK, "FujiQuality",
+	  "Quality Setting", NULL },
+	{ 0x1001, TIFF_SHORT, 1, ED_IMG, "FujiSharpness",
+	  "Sharpness", fuji_sharp },
+	{ 0x1002, TIFF_SHORT, 1, ED_IMG, "FujiWhiteBal",
+	  "White Balance", fuji_white },
+	{ 0x1003, TIFF_SHORT, 1, ED_IMG, "FujiColor",
+	  "Chroma Saturation", fuji_color },
+	{ 0x1004, TIFF_SHORT, 1, ED_IMG, "FujiTone",
+	  "Contrast", fuji_color },
+	{ 0x1010, TIFF_SHORT, 1, ED_IMG, "FujiFlashMode",
+	  "Flash Mode", fuji_flmode },
+	{ 0x1011, TIFF_SRTNL, 1, ED_UNK, "FujiFlashStrength",
+	  "Flash Strength", NULL },
+	{ 0x1020, TIFF_SHORT, 1, ED_IMG, "FujiMacro",
+	  "Macro Mode", fuji_bool },
+	{ 0x1021, TIFF_SHORT, 1, ED_IMG, "FujiFocusMode",
+	  "Focus Mode", fuji_focus },
+	{ 0x1030, TIFF_SHORT, 1, ED_IMG, "FujiSlowSync",
+	  "Slow Synchro Mode", fuji_bool },
+	{ 0x1031, TIFF_SHORT, 1, ED_IMG, "FujiPicMode",
+	  "Picture Mode", fuji_picture },
+	{ 0x1100, TIFF_SHORT, 1, ED_IMG, "FujiBracket",
+	  "Continuous/Bracketing Mode", fuji_bool },
+	{ 0x1300, TIFF_SHORT, 1, ED_IMG, "FujiBlurWarn",
+	  "Blur Status", fuji_blurw },
+	{ 0x1301, TIFF_SHORT, 1, ED_IMG, "FujiFocusWarn",
+	  "Focus Status", fuji_focusw },
+	{ 0x1302, TIFF_SHORT, 1, ED_IMG, "FujiAEWarn",
+	  "Auto Exposure Status", fuji_aew },
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "FujiUnknown",
+	  "Fuji Unknown", NULL },
+};
+
+
 /* Process Fuji maker note tags. */
 
 void
@@ -219,6 +219,8 @@ fuji_prop(struct exifprop *prop, struct exiftags *t)
 	prop->name = fuji_tags[i].name;
 	prop->descr = fuji_tags[i].descr;
 	prop->lvl = fuji_tags[i].lvl;
+	if (fuji_tags[i].table)
+		prop->str = finddescr(fuji_tags[i].table, v);
 
 	if (debug) {
 		static int once = 0;	/* XXX Breaks on multiple files. */
@@ -243,49 +245,6 @@ fuji_prop(struct exifprop *prop, struct exiftags *t)
 			exifdie((const char *)strerror(errno));
 		strncpy(prop->str, (const char*)(&prop->value), prop->count);
 		prop->str[prop->count] = '\0';
-		break;
-
-	case 0x1001:
-		prop->str = finddescr(fuji_sharp, v);
-		break;
-
-	case 0x1002:
-		prop->str = finddescr(fuji_white, v);
-		break;
-
-	case 0x1003:
-	case 0x1004:
-		prop->str = finddescr(fuji_color, v);
-		break;
-
-	case 0x1010:
-		prop->str = finddescr(fuji_flmode, v);
-		break;
-
-	case 0x1020:
-	case 0x1030:
-	case 0x1100:
-		prop->str = finddescr(fuji_bool, v);
-		break;
-
-	case 0x1021:
-		prop->str = finddescr(fuji_focus, v);
-		break;
-
-	case 0x1031:
-		prop->str = finddescr(fuji_picture, v);
-		break;
-
-	case 0x1300:
-		prop->str = finddescr(fuji_blurw, v);
-		break;
-
-	case 0x1301:
-		prop->str = finddescr(fuji_focusw, v);
-		break;
-
-	case 0x1302:
-		prop->str = finddescr(fuji_aew, v);
 		break;
 	}
 }

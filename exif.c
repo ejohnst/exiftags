@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.20 2002/10/05 18:05:01 ejohnst Exp $
+ * $Id: exif.c,v 1.21 2002/10/05 22:49:38 ejohnst Exp $
  */
 
 /*
@@ -386,6 +386,15 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 	u_int16_t v = (u_int16_t)prop->value;
 	char buf[32], *c, *d;
 
+	/* Set description if we have a lookup table. */
+
+	for (i = 0; tags[i].tag < EXIF_T_UNKNOWN &&
+	    tags[i].tag != prop->tag; i++);
+	if (tags[i].table) {
+		prop->str = finddescr(tags[i].table, v);
+		return (TRUE);
+	}
+
 	switch (prop->tag) {
 
 	/* Process an Exif IFD. */
@@ -510,51 +519,6 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 		}
 		break;
 
-	/* Lookup strings for various values. */
-
-	case EXIF_T_COMPRESS:
-		prop->str = finddescr(compresss, v);
-		return (TRUE);
-	case EXIF_T_PHOTOINTERP:
-		prop->str = finddescr(pixelcomps, v);
-		return (TRUE);
-	case EXIF_T_ORIENT:
-		prop->str = finddescr(orients, v);
-		return (TRUE);
-	case EXIF_T_PLANARCONFIG:
-		prop->str = finddescr(planarconfigs, v);
-		return (TRUE);
-	case EXIF_T_RESUNITS:
-	case EXIF_T_FPRESUNITS:
-		prop->str = finddescr(resunits, v);
-		return (TRUE);
-	case EXIF_T_CHROMRATIO:
-		prop->str = finddescr(chromratios, v);
-		return (TRUE);
-	case EXIF_T_CHROMPOS:
-		prop->str = finddescr(chrompos, v);
-		return (TRUE);
-	case EXIF_T_EXPPROG:
-		prop->str = finddescr(expprogs, v);
-		return (TRUE);
-	case EXIF_T_COMPCONFIG:
-		prop->str = finddescr(compconfig, v);
-		return (TRUE);
-	case EXIF_T_METERMODE:
-		prop->str = finddescr(metermodes, v);
-		return (TRUE);
-	case EXIF_T_LIGHTSRC:
-		prop->str = finddescr(lightsrcs, v);
-		return (TRUE);
-	case EXIF_T_FLASH:
-		prop->str = finddescr(flashes, v);
-		return (TRUE);
-	case EXIF_T_COLORSPC:
-		prop->str = finddescr(colorspcs, v);
-		return (TRUE);
-	case EXIF_T_IMGSENSOR:
-		prop->str = finddescr(imgsensors, v);
-		return (TRUE);
 	case EXIF_T_FILESRC:
 		/*
 		 * This 'undefined' field is one byte; runs afoul of XP
@@ -565,9 +529,6 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 #else
 		prop->str = finddescr(filesrcs, v);
 #endif
-		return (TRUE);
-	case EXIF_T_SCENETYPE:
-		prop->str = finddescr(scenetypes, v);
 		return (TRUE);
 	}
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.5 2002/08/01 03:08:48 ejohnst Exp $
+ * $Id: olympus.c,v 1.6 2002/10/05 22:49:39 ejohnst Exp $
  */
 
 /*
@@ -49,28 +49,6 @@
 #include "makers.h"
 
 
-/* Maker note IFD tags. */
-
-static struct exiftag olympus_tags[] = {
-	{ 0x0200, TIFF_LONG, 3, ED_UNK, "OlympusShootMode",
-	  "Shooting Mode" },
-	{ 0x0201, TIFF_SHORT, 1, ED_IMG, "OlympusQuality",
-	  "Compression Setting" },
-	{ 0x0202, TIFF_SHORT, 1, ED_IMG, "OlympusMacroMode",
-	  "Macro Mode" },
-	{ 0x0204, TIFF_RTNL, 1, ED_UNK, "OlympusDigiZoom",
-	  "Digital Zoom" },
-	{ 0x0207, TIFF_ASCII, 5, ED_UNK, "FirmwareVer",
-	  "Firmware Version" },
-	{ 0x0208, TIFF_ASCII, 52, ED_UNK, "OlympusPicInfo",
-	  "Picture Info" },
-	{ 0x0209, TIFF_UNKN, 32, ED_UNK, "OlympusCameraID",
-	  "Camera ID" },
-	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
-	  "Olympus Unknown" },
-};
-
-
 /* Macro mode. */
 
 static struct descrip olympus_macro[] = {
@@ -87,6 +65,28 @@ static struct descrip olympus_quality[] = {
 	{ 2,	"HQ" },
 	{ 3,	"SHQ" },
 	{ -1,	"Unknown" },
+};
+
+
+/* Maker note IFD tags. */
+
+static struct exiftag olympus_tags[] = {
+	{ 0x0200, TIFF_LONG, 3, ED_UNK, "OlympusShootMode",
+	  "Shooting Mode", NULL },
+	{ 0x0201, TIFF_SHORT, 1, ED_IMG, "OlympusQuality",
+	  "Compression Setting", olympus_quality },
+	{ 0x0202, TIFF_SHORT, 1, ED_IMG, "OlympusMacroMode",
+	  "Macro Mode", olympus_macro },
+	{ 0x0204, TIFF_RTNL, 1, ED_UNK, "OlympusDigiZoom",
+	  "Digital Zoom", NULL },
+	{ 0x0207, TIFF_ASCII, 5, ED_UNK, "FirmwareVer",
+	  "Firmware Version", NULL },
+	{ 0x0208, TIFF_ASCII, 52, ED_UNK, "OlympusPicInfo",
+	  "Picture Info", NULL },
+	{ 0x0209, TIFF_UNKN, 32, ED_UNK, "OlympusCameraID",
+	  "Camera ID", NULL },
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
+	  "Olympus Unknown", NULL },
 };
 
 
@@ -116,6 +116,8 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	prop->name = olympus_tags[i].name;
 	prop->descr = olympus_tags[i].descr;
 	prop->lvl = olympus_tags[i].lvl;
+	if (olympus_tags[i].table)
+		prop->str = finddescr(olympus_tags[i].table, v);
 
 	if (debug) {
 		static int once = 0;	/* XXX Breaks on multiple files. */
@@ -169,14 +171,6 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 		aprop->descr = "Panoramic Direction";
 		aprop->lvl = ED_UNK;
 
-		break;
-
-	case 0x0201:
-		prop->str = finddescr(olympus_quality, v);
-		break;
-
-	case 0x0202:
-		prop->str = finddescr(olympus_macro, v);
 		break;
 
 	/* Digital zoom. */
