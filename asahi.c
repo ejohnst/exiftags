@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: asahi.c,v 1.4 2004/04/08 04:12:29 ejohnst Exp $
+ * $Id: asahi.c,v 1.5 2004/12/23 20:38:52 ejohnst Exp $
  */
 
 /*
@@ -161,10 +161,6 @@ asahi_prop(struct exifprop *prop, struct exiftags *t)
 struct ifd *
 asahi_ifd(u_int32_t offset, struct tiffmeta *md)
 {
-	struct tiffmeta mkrmd;
-
-	mkrmd = *md;
-	mkrmd.order = BIG;
 
 	/*
 	 * It appears that there are a couple of maker note schemes for
@@ -179,8 +175,10 @@ asahi_ifd(u_int32_t offset, struct tiffmeta *md)
 		 * E.g., Optio 230, 330GS, 33L.
 		 */
 
-		if (!memcmp("  ", md->btiff + offset + 4, 2))
-			return (readifds(offset + 6, asahi_tags, &mkrmd));
+		if (!memcmp("  ", md->btiff + offset + 4, 2)) {
+			md->order = BIG;
+			return (readifds(offset + 6, asahi_tags, md));
+		}
 
 		/*
 		 * With two zero bytes, try file byte order (?).
@@ -216,5 +214,6 @@ asahi_ifd(u_int32_t offset, struct tiffmeta *md)
 
 	/* E.g., Optio 330, 430. */
 
-	return (readifds(offset, asahi_tags, &mkrmd));
+	md->order = BIG;
+	return (readifds(offset, asahi_tags, md));
 }

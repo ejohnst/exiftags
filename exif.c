@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.67 2004/12/23 18:14:51 ejohnst Exp $
+ * $Id: exif.c,v 1.68 2004/12/23 20:38:52 ejohnst Exp $
  */
 
 /*
@@ -231,7 +231,6 @@ postprop(struct exifprop *prop, struct exiftags *t)
 
 	/*
 	 * Process tags from special IFDs.
-	 * XXX Don't properly pass IFD byte order here.
 	 */
 
 	if (prop->par && prop->par->tagset == tags) {
@@ -571,7 +570,10 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		if (!domkr)
 			return;
 
-		md = &dir->md;
+		/* Maker function can change metadata if necessary. */
+
+		t->mkrmd = dir->md;
+		md = &t->mkrmd;
 		while (dir->next)
 			dir = dir->next;
 

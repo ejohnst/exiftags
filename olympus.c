@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.16 2003/08/06 02:26:42 ejohnst Exp $
+ * $Id: olympus.c,v 1.17 2004/12/23 20:38:52 ejohnst Exp $
  */
 
 /*
@@ -102,7 +102,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	/* Various image data. */
 
 	case 0x0200:
-		offset = t->md.btiff + prop->value;
+		offset = t->mkrmd.btiff + prop->value;
 
 		/*
 		 * XXX Would be helpful to test this with a panoramic.
@@ -114,7 +114,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 		/* Picture taking mode. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset, t->md.order);
+		aprop->value = exif4byte(offset, t->mkrmd.order);
 		aprop->name = "OlympusPicMode";
 		aprop->descr = "Picture Mode";
 		aprop->lvl = ED_UNK;
@@ -122,7 +122,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 		/* Sequence number. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset + 4, t->md.order);
+		aprop->value = exif4byte(offset + 4, t->mkrmd.order);
 		aprop->name = "OlympusSeqNum";
 		aprop->descr = "Sequence Number";
 		aprop->lvl = ED_UNK;
@@ -130,7 +130,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 		/* Panorama direction. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset + 8, t->md.order);
+		aprop->value = exif4byte(offset + 8, t->mkrmd.order);
 		aprop->name = "OlympusPanDir";
 		aprop->descr = "Panoramic Direction";
 		aprop->lvl = ED_UNK;
@@ -140,8 +140,8 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	/* Digital zoom. */
 
 	case 0x0204:
-		a = exif4byte(t->md.btiff + prop->value, t->md.order);
-		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
+		a = exif4byte(t->mkrmd.btiff + prop->value, t->mkrmd.order);
+		b = exif4byte(t->mkrmd.btiff + prop->value + 4, t->mkrmd.order);
 
 		if (a == b)
 			snprintf(prop->str, 31, "None");

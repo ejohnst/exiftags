@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.27 2004/09/15 23:30:33 ejohnst Exp $
+ * $Id: minolta.c,v 1.28 2004/12/23 20:38:52 ejohnst Exp $
  *
  */ 
 
@@ -695,7 +695,8 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 		if (prop->count < 4)
 			break;
 		exifstralloc(&prop->str, prop->count + 1);
-		byte4exif(prop->value, (unsigned char *)prop->str, t->md.order);
+		byte4exif(prop->value, (unsigned char *)prop->str,
+		    t->mkrmd.order);
 
 		/* We recognize two types: MLT0 and mlt0. */
 
@@ -715,7 +716,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			fielddefs = minolta_unkn;
 		} else
 			fielddefs = minolta_MLT0;
-		minolta_cprop(prop, t->md.btiff + prop->value, t, fielddefs);
+		minolta_cprop(prop, t->mkrmd.btiff + prop->value, t, fielddefs);
 		break;
 
 	case 0x0003:
@@ -724,7 +725,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			fielddefs = minolta_unkn;
 		} else
 			fielddefs = minolta_MLT0;
-		minolta_cprop(prop, t->md.btiff + prop->value, t, fielddefs);
+		minolta_cprop(prop, t->mkrmd.btiff + prop->value, t, fielddefs);
 		break;
 	}
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.47 2004/12/20 21:36:23 ejohnst Exp $
+ * $Id: canon.c,v 1.48 2004/12/23 20:38:52 ejohnst Exp $
  */
 
 /*
@@ -880,7 +880,7 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
 	case 5:
 		/* Change "Single" to "Timed" if #2 > 0. */
 
-		if (!v && exif2byte(off + 2 * 2, t->md.order))
+		if (!v && exif2byte(off + 2 * 2, t->mkrmd.order))
 			strcpy(aprop->str, "Timed");
 		break;
 	case 12:
@@ -894,8 +894,8 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
 		if (v == 3 && prop->count >= 37) {
 			exifstralloc(&aprop->str, 32);
 			snprintf(aprop->str, 31, "x%.1f", 2 *
-			    (float)exif2byte(off + 37 * 2, t->md.order) /
-			    (float)exif2byte(off + 36 * 2, t->md.order));
+			    (float)exif2byte(off + 37 * 2, t->mkrmd.order) /
+			    (float)exif2byte(off + 36 * 2, t->mkrmd.order));
 		} else
 			aprop->str = finddescr(canon_dzoom, v);
 		break;
@@ -1028,11 +1028,11 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 	int i, j;
 	u_int16_t v;
 	struct exifprop *aprop;
-	unsigned char *off = t->md.btiff + prop->value;
+	unsigned char *off = t->mkrmd.btiff + prop->value;
 
 	/* Check size of tag (first value) if we're not debugging. */
 
-	if (valfun && exif2byte(off, t->md.order) != 2 * prop->count) {
+	if (valfun && exif2byte(off, t->mkrmd.order) != 2 * prop->count) {
 		exifwarn("Canon maker tag appears corrupt");
 		return (FALSE);
 	}
@@ -1042,7 +1042,7 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 		    prop->name, prop->tag, prop->count);
 
 	for (i = 0; i < (int)prop->count; i++) {
-		v = exif2byte(off + i * 2, t->md.order);
+		v = exif2byte(off + i * 2, t->mkrmd.order);
 
 		aprop = childprop(prop);
 		aprop->value = (u_int32_t)v;
@@ -1180,10 +1180,10 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		 */
 
 		if (prop->count >= 25) {
-			offset = t->md.btiff + prop->value;
-			flmax = exif2byte(offset + 23 * 2, t->md.order);
-			flmin = exif2byte(offset + 24 * 2, t->md.order);
-			flunit = exif2byte(offset + 25 * 2, t->md.order);
+			offset = t->mkrmd.btiff + prop->value;
+			flmax = exif2byte(offset + 23 * 2, t->mkrmd.order);
+			flmin = exif2byte(offset + 24 * 2, t->mkrmd.order);
+			flunit = exif2byte(offset + 25 * 2, t->mkrmd.order);
 		}
 
 		if (flunit && (flmin || flmax)) {
@@ -1322,21 +1322,21 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		}
 
 		if (strstr(t->model, "10D"))
-			canon_custom(prop, t->md.btiff + prop->value,
-			    t->md.order, canon_10dcustom);
+			canon_custom(prop, t->mkrmd.btiff + prop->value,
+			    t->mkrmd.order, canon_10dcustom);
 		else if (strstr(t->model, "D30") || strstr(t->model, "D60"))
-			canon_custom(prop, t->md.btiff + prop->value,
-			    t->md.order, canon_d30custom);
+			canon_custom(prop, t->mkrmd.btiff + prop->value,
+			    t->mkrmd.order, canon_d30custom);
 		else if (strstr(t->model, "20D"))
-			canon_custom(prop, t->md.btiff + prop->value,
-			    t->md.order, canon_20dcustom);
+			canon_custom(prop, t->mkrmd.btiff + prop->value,
+			    t->mkrmd.order, canon_20dcustom);
 		else
 			exifwarn2("Custom function unsupported; please "
 			    "report to author", t->model);
 		break;
 
 	case 0x0090:
-		canon_custom(prop, t->md.btiff + prop->value, t->md.order,
+		canon_custom(prop, t->mkrmd.btiff + prop->value, t->mkrmd.order,
 		    canon_1dcustom);
 		break;
 

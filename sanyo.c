@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sanyo.c,v 1.3 2003/08/08 22:31:32 ejohnst Exp $
+ * $Id: sanyo.c,v 1.4 2004/12/23 20:38:52 ejohnst Exp $
  */
 
 /*
@@ -277,8 +277,8 @@ sanyo_prop(struct exifprop *prop, struct exiftags *t)
 			    prop->name, prop->tag, prop->count);
 
 		for (i = 0; i < (int)prop->count; i++) {
-			a = exif4byte(t->md.btiff + prop->value + i * 2,
-			    t->md.order);
+			a = exif4byte(t->mkrmd.btiff + prop->value + i * 2,
+			    t->mkrmd.order);
 
 			aprop = childprop(prop);
 			aprop->value = a;
@@ -326,8 +326,8 @@ sanyo_prop(struct exifprop *prop, struct exiftags *t)
 	/* Digital zoom. */
 
 	case 0x0204:
-		a = exif4byte(t->md.btiff + prop->value, t->md.order);
-		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
+		a = exif4byte(t->mkrmd.btiff + prop->value, t->mkrmd.order);
+		b = exif4byte(t->mkrmd.btiff + prop->value + 4, t->mkrmd.order);
 
 		if (!a || !b || a == b)
 			snprintf(prop->str, 31, "None");

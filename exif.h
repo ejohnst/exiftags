@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.35 2004/04/08 05:57:27 ejohnst Exp $
+ * $Id: exif.h,v 1.36 2004/12/23 20:38:52 ejohnst Exp $
  */
 
 /*
@@ -230,6 +230,7 @@ struct exiftags {
 
 	const char *model;	/* Camera model, to aid maker tag processing. */
 	short mkrval;		/* Maker index (see makers.h). */
+	struct tiffmeta mkrmd;	/* Maker TIFF info. */
 
 	/* Version info. */
 
