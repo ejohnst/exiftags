@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.16 2003/01/25 01:17:12 ejohnst Exp $
+ * $Id: exifint.h,v 1.17 2003/02/04 07:15:03 ejohnst Exp $
  */
 
 /*
@@ -109,18 +109,19 @@ struct ifd {
 
 /* Macro for making sense of a fraction. */
 
-#define fixfract(n, d, t)	{ \
-	if (t) { n /= t; d /= t; } \
-	if (!n) sprintf(prop->str, "0"); \
-	else if (!d) sprintf(prop->str, "Infinite"); \
-	else if (n == d) sprintf(prop->str, "1"); \
-	else if (d == 1) snprintf(prop->str, 31, "%d", n); \
-	else if (abs(n) > abs(d)) snprintf(prop->str, 31, "%.1f", \
-	    (double)n / (double)d); \
-	else if (abs(d) > 2 && abs(n) > 1) snprintf(prop->str, 31, \
-	    "%.1f", (double)n/(double)d); \
-	else snprintf(prop->str, 31, "%d/%d", n, d); \
-	prop->str[31] = '\0'; \
+#define fixfract(str, n, d, t)	{ \
+	if ((t)) { (n) /= (t); (d) /= (t); } \
+	if (!(n)) sprintf((str), "0"); \
+	else if (!(d)) sprintf((str), "Infinite"); \
+	else if (abs((n)) == abs((d))) sprintf((str), "%d", (n) / (d)); \
+	else if (abs((d)) == 1) snprintf((str), 31, "%d", (n) / (d)); \
+	else if (abs((n)) > abs((d))) snprintf((str), 31, "%.1f", \
+	    (double)(n) / (double)(d)); \
+	else if (abs((d)) > 2 && abs((n)) > 1 && \
+	    ((double)(n) / (double)(d)) >= 0.1) \
+		snprintf((str), 31, "%.1f", (double)(n) / (double)(d)); \
+	else snprintf((str), 31, "%d/%d", (n), (d)); \
+	(str)[31] = '\0'; \
 }
 
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.43 2003/01/25 09:27:51 ejohnst Exp $
+ * $Id: exif.c,v 1.44 2003/02/04 07:15:03 ejohnst Exp $
  */
 
 /*
@@ -585,13 +585,13 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			ud = exif4byte(t->btiff + prop->value + 4,
 			    t->tifforder);
 			denom = gcd(un, ud);
-			fixfract(un, ud, denom);
+			fixfract(prop->str, un, ud, denom);
 		} else {
 			sn = exif4sbyte(t->btiff + prop->value, t->tifforder);
 			sd = exif4sbyte(t->btiff + prop->value + 4,
 			    t->tifforder);
 			denom = gcd(abs(sn), abs(sd));
-			fixfract(sn, sd, (int32_t)denom);
+			fixfract(prop->str, sn, sd, (int32_t)denom);
 		}
 		return (TRUE);
 	}
