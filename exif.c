@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.34 2002/11/04 07:08:19 ejohnst Exp $
+ * $Id: exif.c,v 1.35 2002/11/04 08:21:38 ejohnst Exp $
  */
 
 /*
@@ -398,11 +398,9 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 	if (prop->ifdseq == 1 && prop->lvl != ED_UNK)
 		prop->lvl = ED_VRB;
 
-	if (prop->override && (tmpprop = findprop(t->props, prop->override))) {
+	if (prop->override && (tmpprop = findprop(t->props, prop->override)))
 		if (tmpprop->lvl & (ED_CAM | ED_IMG | ED_PAS))
 			tmpprop->lvl = ED_VRB;
-printf("%s (%d) overrode %s (%d)\n", prop->name, prop->tag, tmpprop->name, tmpprop->tag);
-	}
 }
 
 
