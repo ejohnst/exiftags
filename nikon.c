@@ -29,12 +29,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.13 2003/08/04 06:11:47 ejohnst Exp $
+ * $Id: nikon.c,v 1.14 2003/08/05 22:51:28 ejohnst Exp $
  */
 
 /*
  * Exif tag definitions for Nikon maker notes.
  *
+ * Some information for Nikon D1X support obtained from JoJoThumb, version
+ * 2.7.2 (http://www.jojosoftware.de/jojothumb/).
  */
 
 #include <stdio.h>
@@ -167,7 +169,31 @@ static struct exiftag nikon_tags1[] = {
 
 
 static struct exiftag nikon_tags2[] = {
-	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
+	{ 0x0001, TIFF_UNDEF, 4, ED_VRB, "NikonVersion",
+	  "Nikon Note Version", NULL },
+	{ 0x0002, TIFF_SHORT, 2, ED_IMG, "NikonISOSetting",
+	  "ISO Setting", NULL },
+	{ 0x0003, TIFF_ASCII, 0, ED_IMG, "NikonColor",
+	  "Color Mode", NULL },
+	{ 0x0004, TIFF_ASCII, 0, ED_IMG, "NikonQuality",
+	  "Image Quality", NULL },
+	{ 0x0005, TIFF_ASCII, 0, ED_IMG, "NikonWhiteBal",
+	  "White Balance", NULL },
+	{ 0x0006, TIFF_ASCII, 0, ED_IMG, "NikonImgSharp",
+	  "Image Sharpening", NULL },
+	{ 0x0007, TIFF_ASCII, 0, ED_IMG, "NikonFocus",
+	  "Focus Mode", NULL },
+	{ 0x0008, TIFF_ASCII, 0, ED_IMG, "NikonFlash",
+	  "Flash Setting", NULL },
+	{ 0x000b, TIFF_UNKN, 0, ED_UNK, "NikonWhiteBalBias",
+	  "White Balance Bias", NULL },
+	{ 0x0081, TIFF_ASCII, 0, ED_IMG, "NikonImgAdjust",
+	  "Image Adjustment", NULL },
+	{ 0x0088, TIFF_UNDEF, 0, ED_UNK, "NikonAutoFocus",
+	  "Auto Focus Position", NULL },
+	{ 0x0092, TIFF_UNDEF, 0, ED_UNK, "NikonHueAdjust",
+	  "Hue Adjustment", NULL },
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "NikonUnknown",
 	  "Nikon Unknown", NULL },
 };
 
@@ -259,10 +285,9 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 {
 	struct ifd *myifd;
 	unsigned char *b, *bmaker;
-	struct exiftags nikont;
+	enum order makerorder;
 
-	nikont = *t;
-	b = nikont.btiff + offset;
+	b = t->btiff + offset;
 
 	/*
 	 * Seems that some Nikon maker notes start with an ID string.
@@ -273,7 +298,8 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 
 		switch (*((u_int16_t *)b)) {
 		case 0x0001:
-			readifd(b + 2, &myifd, nikon_tags1, t);
+			readifd(t->btiff, t->etiff, offset + 8, &myifd,
+			    nikon_tags1, t->tifforder);
 			return (myifd);
 
 		case 0x0002:
@@ -287,9 +313,9 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 			/* Determine endianness of the TIFF data. */
 
 			if (*((u_int16_t *)b) == 0x4d4d)
-				nikont.tifforder = BIG;
+				makerorder = BIG;
 			else if (*((u_int16_t *)b) == 0x4949)
-				nikont.tifforder = LITTLE;
+				makerorder = LITTLE;
 			else {
 				exifwarn("invalid Nikon TIFF header");
 				return (NULL);
@@ -299,18 +325,18 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 
 			/* Verify the TIFF header. */
 
-			if (exif2byte(b, nikont.tifforder) != 42) {
+			if (exif2byte(b, makerorder) != 42) {
 				exifwarn("invalid Nikon TIFF header");
 				return (NULL);
 			}
 			b += 2;
 
-			readifd(bmaker + exif4byte(b, nikont.tifforder),
-			    &myifd, nikon_tags2, &nikont);
+			readifd(bmaker, t->etiff, exif4byte(b, makerorder),
+			    &myifd, nikon_tags2, makerorder);
 			return (myifd);
 		}
 	}
 
-	readifd(b, &myifd, nikon_tags0, &nikont);
+	readifd(t->btiff, t->etiff, offset, &myifd, nikon_tags0, t->tifforder);
 	return (myifd);
 }
