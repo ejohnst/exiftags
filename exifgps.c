@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.3 2003/08/02 18:26:24 ejohnst Exp $
+ * $Id: exifgps.c,v 1.4 2003/08/02 23:27:23 ejohnst Exp $
  */
 
 /*
@@ -170,21 +170,20 @@ struct exiftag gpstags[] = {
 void
 gpsprop(struct exifprop *prop, struct exiftags *t)
 {
-	int i, x;
+	int i;
 	u_int32_t n, d;
-	u_int16_t v = (u_int16_t)prop->value;
-	double deg, min, sec;
-	char fmt[32], buf[8];
-	unsigned char *c;
+	double deg, min, sec, alt;
+	char fmt[32], buf[16];
 	struct exifprop *tmpprop;
 
 	/* Lookup field description values. */
 
-	for (x = 0; gpstags[x].tag < EXIF_T_UNKNOWN &&
-	    gpstags[x].tag != prop->tag; x++);
-	if (gpstags[x].table)
-		if (gpstags[x].type != TIFF_ASCII)
-			prop->str = finddescr(gpstags[x].table, v);
+	for (i = 0; gpstags[i].tag < EXIF_T_UNKNOWN &&
+	    gpstags[i].tag != prop->tag; i++);
+	if (gpstags[i].table)
+		if (gpstags[i].type != TIFF_ASCII)
+			prop->str = finddescr(gpstags[i].table,
+			    (u_int16_t)prop->value);
 
 	switch (prop->tag) {
 
@@ -222,8 +221,8 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 	case 0x0017:
 	case 0x0019:
 		byte4exif(prop->value, (unsigned char *)buf, t->tifforder);
-		if (gpstags[x].table)
-			prop->str = finddescr(gpstags[x].table,
+		if (gpstags[i].table)
+			prop->str = finddescr(gpstags[i].table,
 			    (unsigned char)buf[0]);
 		else {
 			if (!(prop->str = (char *)malloc(2)))
@@ -282,7 +281,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		d = exif4byte(t->btiff + prop->value + 4 + i * 8, t->tifforder);
 
 		strcpy(fmt, "%s %.f° ");
-		if (!n)				/* Punt. */
+		if (!n || !d)			/* Punt. */
 			deg = 0.0;
 		else {
 			deg = (double)n / (double)d;
@@ -297,7 +296,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		n = exif4byte(t->btiff + prop->value + i * 8, t->tifforder);
 		d = exif4byte(t->btiff + prop->value + 4 + i * 8, t->tifforder);
 
-		if (!n) {			/* Punt. */
+		if (!n || !d) {			/* Punt. */
 			min = 0.0;
 			strcat(fmt, "%.f'");
 		} else {
@@ -318,7 +317,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		n = exif4byte(t->btiff + prop->value + i * 8, t->tifforder);
 		d = exif4byte(t->btiff + prop->value + 4 + i * 8, t->tifforder);
 
-		if (!n) {			/* Assume no seconds. */
+		if (!n || !d) {			/* Assume no seconds. */
 			snprintf(prop->str, 31, fmt, tmpprop && tmpprop->str ?
 			    tmpprop->str : "", deg, min);
 			break;
@@ -332,6 +331,54 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		}
 		snprintf(prop->str, 31, fmt, tmpprop && tmpprop->str ?
 		    tmpprop->str : "", deg, min, sec);
+		break;
+
+	/* Altitude. */
+
+	case 0x0006:
+		n = exif4byte(t->btiff + prop->value, t->tifforder);
+		d = exif4byte(t->btiff + prop->value + 4, t->tifforder);
+
+		/* Look up reference.  Non-zero means negative altitude. */
+
+		tmpprop = findtprop(t->props, gpstags, 0x0005);
+		if (tmpprop && tmpprop->value)
+			n *= -1;
+
+		if (!n || !d)
+			alt = 0.0;
+		else
+			alt = (double)n / (double)d;
+
+		/* Should already have a 32-byte buffer from parsetag(). */
+
+		snprintf(prop->str, 31, "%.2f m", alt);
+		prop->str[31] = '\0';
+		break;
+
+	/* Time. */
+
+	case 0x0007:
+		/* Should already have a 32-byte buffer from parsetag(). */
+
+		prop->str[0] = '\0';
+		for (i = 0; i < prop->count; i++) {
+			n = exif4byte(t->btiff + prop->value + i * 8,
+			    t->tifforder);
+			d = exif4byte(t->btiff + prop->value + 4 + i * 8,
+			    t->tifforder);
+
+			if (!d) break;
+
+			if (!i)
+				sprintf(fmt, "%%02.%df", (int)log10((double)d));
+			else
+				sprintf(fmt, ":%%02.%df",
+				    (int)log10((double)d));
+
+			snprintf(buf, 8, fmt, (double)n / (double)d);
+			strcat(prop->str, buf);
+		}
 		break;
 	}
 }
