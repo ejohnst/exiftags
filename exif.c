@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.32 2002/11/03 23:41:35 ejohnst Exp $
+ * $Id: exif.c,v 1.33 2002/11/04 02:01:53 ejohnst Exp $
  */
 
 /*
@@ -97,20 +97,9 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	prop->tag = exif2byte(afield->tag, t->tifforder);
 	prop->type = exif2byte(afield->type, t->tifforder);
 	prop->count = exif4byte(afield->count, t->tifforder);
-
-	/*
-	 * Fetch the value.
-	 *
-	 * XXX WinXP doesn't seem to zero out values when mucking with
-	 * the data when it rotates an image.  This fix could get us into
-	 * trouble if count > 1.
-	 */
-
-#ifdef WINXP_BUGS
 	if (prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT)
 		prop->value = exif2byte(afield->value, t->tifforder);
 	else
-#endif
 		prop->value = exif4byte(afield->value, t->tifforder);
 
 	/* IFD identifying info. */
