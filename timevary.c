@@ -25,16 +25,18 @@
  *
  * Lifted from FreeBSD: src/bin/date/vary.c,v 1.15
  *
- * $Id: timevary.c,v 1.2 2004/04/08 07:29:21 ejohnst Exp $
+ * $Id: timevary.c,v 1.3 2004/04/20 17:23:03 ejohnst Exp $
  *
  */
 
+#ifndef WIN32
 #include <sys/cdefs.h>
-#include <err.h>
+#endif
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
 #include "timevary.h"
+#include "exif.h"
 
 struct trans {
   int val;
@@ -64,7 +66,7 @@ domktime(struct tm *t, char type)
 
   while ((ret = mktime(t)) == -1 && t->tm_year > 68 && t->tm_year < 138)
     /* While mktime() fails, adjust by an hour */
-    adjhour(t, type == '-' ? type : '+', 1, 0);
+    adjhour(t, (char)(type == '-' ? type : '+'), 1, 0);
 
   return ret;
 }
@@ -73,10 +75,17 @@ static int
 trans(const struct trans t[], const char *arg)
 {
   int f;
+  char tmp[16];
+
+  /* No strncasecmp() in Win32.  No month or day over 16 bytes long... */
+
+  for (f = 0; f < sizeof(tmp) && arg[f]; f++)
+    tmp[f] = tolower(arg[f]);
+  tmp[15] = '\0';
 
   for (f = 0; t[f].val != -1; f++)
-    if (!strncasecmp(t[f].str, arg, 3) ||
-        !strncasecmp(t[f].str, arg, strlen(t[f].str)))
+    if (!strncmp(t[f].str, tmp, 3) ||
+        !strncmp(t[f].str, tmp, strlen(t[f].str)))
       return t[f].val;
 
   return -1;
@@ -96,7 +105,7 @@ vary_append(struct vary *v, char *arg)
     nextp = &result;
 
   if ((*nextp = (struct vary *)malloc(sizeof(struct vary))) == NULL)
-    err(1, "malloc");
+    exifdie((const char *)strerror(errno));
   (*nextp)->arg = arg;
   (*nextp)->next = NULL;
   return result;
