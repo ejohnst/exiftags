@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.17 2002/11/04 09:15:03 ejohnst Exp $
+ * $Id: canon.c,v 1.18 2003/01/11 06:19:34 ejohnst Exp $
  */
 
 /*
@@ -197,6 +197,18 @@ static struct descrip canon_range[] = {
 };
 
 
+/* ISO speed rating. */
+
+static struct descrip canon_iso[] = {
+	{ 15,	"Auto" },
+	{ 16,	"50" },
+	{ 17,	"100" },
+	{ 18,	"200" },
+	{ 19,	"400" },
+	{ -1,	"Unknown" },
+};
+
+
 /* Metering mode. */
 
 static struct descrip canon_meter[] = {
@@ -288,8 +300,8 @@ static struct exiftag canon_tags1[] = {
 	  "Saturation", canon_range },
 	{ 15, TIFF_SHORT, 0, ED_IMG, "CanonSharpness",
 	  "Sharpness", canon_range },
-	{ 16, TIFF_SHORT, 0, ED_UNK, "CanonISO",
-	  "ISO Speed Rating", NULL },
+	{ 16, TIFF_SHORT, 0, ED_IMG, "CanonISO",
+	  "ISO Speed Rating", canon_iso },
 	{ 17, TIFF_SHORT, 0, ED_IMG, "CanonMeterMode",
 	  "Metering Mode", canon_meter },
 	{ 18, TIFF_SHORT, 0, ED_IMG, "CanonFocusType",
@@ -518,6 +530,14 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 				aprop->str[31] = '\0';
 			} else
 				aprop->str = finddescr(canon_dzoom, v);
+			break;
+		case 16:
+			/* ISO overrides standard one if known. */
+			if (!strcmp(aprop->str, "Unknown")) {
+				aprop->lvl = ED_VRB;
+				break;
+			}
+			aprop->override = EXIF_T_ISOSPEED;
 			break;
 		case 17:
 			/* Maker meter mode overrides standard one if known. */
