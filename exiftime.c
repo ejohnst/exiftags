@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.9 2004/05/07 05:47:43 ejohnst Exp $
+ * $Id: exiftime.c,v 1.10 2004/12/18 01:31:25 ejohnst Exp $
  */
 
 /*
@@ -98,8 +98,9 @@ void usage()
 	    "(default: \": \").\n");
 	fprintf(stderr, "  -t[acdg]\n\tDisplay/adjust specified timestamp(s), "
 	    "if they exist:\n");
-	fprintf(stderr, "\t  a: All timestamps (default);\n\t  c: Image "
-	    "created;\n\t  g: Image generated; or\n\t  d: Image digitized.\n");
+	fprintf(stderr, "\t  a: All available timestamps (default);\n\t  "
+	    "c: Image created;\n\t  g: Image generated; or\n\t  d: Image "
+	    "digitized.\n");
 	fprintf(stderr, "  -v[+|-]val[ymwdHMS]\n\tAdjust the timestamp(s) by "
 	    "the given amount.\n");
 	fprintf(stderr, "  -w\tWrite adjusted timestamp(s).\n");
@@ -270,6 +271,8 @@ writets(FILE *fp, long pos, struct exiftags *t, struct exifprop *p,
 
 /*
  * Process a timestamp.
+ * Returns 0 on success, 1 if it had trouble writing, 2 if the tag wasn't
+ * found (and it was explictly requested), or -1 if the tag wasn't found.
  */
 static int
 procts(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf,
@@ -280,18 +283,20 @@ procts(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf,
 	struct exifprop *p;
 
 	p = findprop(t->props, tags, tag);
-	rc = ettime(nts, p);
+	if (ettime(nts, p)) {
 
-	/*
-	 * If ttags != 0, then the user explicitly requested the timestamp,
-	 * so print an error if it doesn't exist.
-	 */
-	if (rc && ttags) {
-		fprintf(stderr, "%s: image %s time not available\n",
-		    fname, ttype);
-		return (2);
+		/*
+		 * If ttags != 0, then the user explicitly requested the
+		 * timestamp, so print an error if it doesn't exist.
+		 */
+		if (ttags) {
+			fprintf(stderr, "%s: image %s time not available\n",
+			    fname, ttype);
+			return (2);
+		}
+
+		return (-1);
 	}
-
 
 	if (wflag)
 		rc = writets(fp, pos, t, p, buf, ttype, nts);
@@ -312,7 +317,7 @@ procall(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf)
 {
 	int r, rc, found;
 
-	found = 0;
+	found = rc = 0;
 
 	/*
 	 * If ttags = 0, process them all or an error if there are none.
@@ -320,20 +325,20 @@ procall(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf)
 
 	if (ttags & ET_CREATE || !ttags) {
 		r = procts(fp, pos, t, buf, EXIF_T_DATETIME, "created");
-		if (r < 2) found++;
-		if (r) rc = 1;
+		if (r == 0 || r == 1) found++;
+		if (r > 0) rc = 1;
 	}
 
 	if (ttags & ET_GEN || !ttags) {
 		r = procts(fp, pos, t, buf, EXIF_T_DATETIMEORIG, "generated");
-		if (r < 2) found++;
-		if (r) rc = 1;
+		if (r == 0 || r == 1) found++;
+		if (r > 0) rc = 1;
 	}
 
 	if (ttags & ET_DIGI || !ttags) {
 		r = procts(fp, pos, t, buf, EXIF_T_DATETIMEDIGI, "digitized");
-		if (r < 2) found++;
-		if (r) rc = 1;
+		if (r == 0 || r == 1) found++;
+		if (r > 0) rc = 1;
 	}
 
 	/* No timestamp tags. */
