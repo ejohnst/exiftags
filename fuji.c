@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.10 2003/08/03 06:51:17 ejohnst Exp $
+ * $Id: fuji.c,v 1.11 2003/08/04 06:11:19 ejohnst Exp $
  */
 
 /*
@@ -40,7 +40,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "makers.h"
 
