@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,12 +29,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.19 2003/01/24 08:48:37 ejohnst Exp $
+ * $Id: canon.c,v 1.20 2003/01/25 00:13:31 ejohnst Exp $
  */
 
 /*
  * Exif tag definitions for Canon maker notes.
  * Developed from http://www.burren.cx/david/canon.html.
+ * EOS 1D and 1Ds contributions from Stan Jirman <stanj@mac.com>.
  *
  */
 
@@ -277,7 +278,7 @@ static struct exiftag canon_tags[] = {
 
 /* Fields under tag 0x0001. */
 
-static struct exiftag canon_tags1[] = {
+static struct exiftag canon_tags01[] = {
 	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon1Len",
 	  "Canon Tag1 Length", NULL },
 	{ 1,  TIFF_SHORT, 0, ED_IMG, "CanonMacroMode",
@@ -335,7 +336,7 @@ static struct exiftag canon_tags1[] = {
 
 /* Fields under tag 0x0004. */
 
-static struct exiftag canon_tags4[] = {
+static struct exiftag canon_tags04[] = {
 	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon4Len",
 	  "Canon Tag4 Length", NULL },
 	{ 7,  TIFF_SHORT, 0, ED_IMG, "CanonWhiteB",
@@ -353,17 +354,17 @@ static struct exiftag canon_tags4[] = {
 };
 
 
-/* Fields under tag 0x00a0. */
+/* Fields under tag 0x00a0 (EOS 1D, 1Ds). */
 
 static struct exiftag canon_tagsA0[] = {
-	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonColorTemp",
+	{ 9,  TIFF_SHORT, 0, ED_VRB, "CanonColorTemp",
 	  "Color Temperature", NULL },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
 	  "Canon TagA0 Unknown", NULL },
 };
 
 
-/* Value descriptions for D30 custom functions. */
+/* Value descriptions for D30, D60 custom functions. */
 
 static struct descrip ccstm_offon[] = {
 	{ 0,	"Off" },
@@ -458,7 +459,7 @@ static struct descrip ccstm_onoff[] = {
 };
 
 
-/* D30 custom functions. */
+/* D30/D60 custom functions. */
 
 static struct ccstm canon_d30custom[] = {
 	{ 1,	"Long exposure noise reduction", ccstm_offon },
@@ -483,237 +484,156 @@ static struct ccstm canon_d30custom[] = {
 /*
  * Process maker note tag 0x0001 values.
  */
-
-static void
-canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
+static int
+canon_prop01(struct exifprop *aprop, struct exifprop *prop, char *off,
+    enum order o)
 {
-	int i, j;
-	u_int16_t v, flmin = 0, flmax = 0, flunit = 0;
-	struct exifprop *aprop;
-	enum order o = t->tifforder;
+	u_int16_t v = (u_int16_t)aprop->value;
 
-	for (i = 0; i < (int)prop->count; i++) {
-		v = exif2byte(off + i * 2, o);
-
-		aprop = childprop(prop);
-		aprop->value = (u_int32_t)v;
-
-		/* Lookup property name and description. */
-
-		for (j = 0; canon_tags1[j].tag < EXIF_T_UNKNOWN &&
-		    canon_tags1[j].tag != i; j++);
-		aprop->name = canon_tags1[j].name;
-		aprop->descr = canon_tags1[j].descr;
-		aprop->lvl = canon_tags1[j].lvl;
-		if (canon_tags1[j].table)
-			aprop->str = finddescr(canon_tags1[j].table, v);
-
-		if (debug)
-			printf("     %s (%d): %d\n", aprop->name, i, v);
-
-		/* Further process known properties. */
-
-		switch (i) {
-		case 2:
-			aprop->lvl = v ? ED_IMG : ED_VRB;
-			if (!(aprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
-			snprintf(aprop->str, 31, "%d sec", v / 10);
-			aprop->str[31] = '\0';
-			break;
-		case 5:
-			/* Change "Single" to "Timed" if #2 > 0. */
-
-			if (!v && exif2byte(off + 2 * 2, o))
-				strcpy(aprop->str, "Timed");
-			break;
-		case 12:
-			aprop->lvl = v ? ED_IMG : ED_VRB;
-
-			/*
-			 * Looks like we can calculate zoom level when value
-			 * is 3 (ref S110).  Calculation is (2 * #37 / #36).
-			 */
-
-			if (v == 3 && prop->count > 37) {
-				if (!(aprop->str = (char *)malloc(32)))
-					exifdie((const char *)strerror(errno));
-				snprintf(aprop->str, 31, "x%.1f", 2 *
-				    (float)exif2byte(off + 37 * 2, o) /
-				    (float)exif2byte(off + 36 * 2, o));
-				aprop->str[31] = '\0';
-			} else
-				aprop->str = finddescr(canon_dzoom, v);
-			break;
-		case 16:
-			/* ISO overrides standard one if known. */
-			if (!strcmp(aprop->str, "Unknown")) {
-				aprop->lvl = ED_VRB;
-				break;
-			}
-			aprop->override = EXIF_T_ISOSPEED;
-			break;
-		case 17:
-			/* Maker meter mode overrides standard one if known. */
-			if (!strcmp(aprop->str, "Unknown")) {
-				aprop->lvl = ED_VRB;
-				break;
-			}
-			aprop->override = EXIF_T_METERMODE;
-			break;
-		case 23:
-			flmax = v;
-			break;
-		case 24:
-			flmin = v;
-			break;
-		case 25:
-			flunit = v;
-			break;
-		default:
-			if (aprop->lvl != ED_UNK)
-				break;
-
-			if (!(aprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
-			snprintf(aprop->str, 31,
-			    "num %02d, val 0x%04X", i, v);
-			aprop->str[31] = '\0';
-			break;
-		}
-	}
-
-	/*
-	 * Create a new value for the lens' focal length range.  If it's
-	 * not a zoom lens, we'll make it verbose (it should match the
-	 * existing focal length Exif tag).
-	 */
-
-	if (flunit && (flmin || flmax)) {
-		aprop = childprop(prop);
-		aprop->name = "CanonLensSz";
-		aprop->descr = "Lens Size";
+	switch (aprop->subtag) {
+	case 2:
+		aprop->lvl = v ? ED_IMG : ED_VRB;
 		if (!(aprop->str = (char *)malloc(32)))
 			exifdie((const char *)strerror(errno));
+		snprintf(aprop->str, 31, "%d sec", v / 10);
+		aprop->str[31] = '\0';
+		break;
+	case 5:
+		/* Change "Single" to "Timed" if #2 > 0. */
 
-		if (flmin == flmax) {
-			snprintf(aprop->str, 31, "%.2f mm",
-			    (float)flmax / (float)flunit);
+		if (!v && exif2byte(off + 2 * 2, o))
+			strcpy(aprop->str, "Timed");
+		break;
+	case 12:
+		aprop->lvl = v ? ED_IMG : ED_VRB;
+
+		/*
+		 * Looks like we can calculate zoom level when value
+		 * is 3 (ref S110).  Calculation is (2 * #37 / #36).
+		 */
+
+		if (v == 3 && prop->count >= 37) {
+			if (!(aprop->str = (char *)malloc(32)))
+				exifdie((const char *)strerror(errno));
+			snprintf(aprop->str, 31, "x%.1f", 2 *
+			    (float)exif2byte(off + 37 * 2, o) /
+			    (float)exif2byte(off + 36 * 2, o));
+			aprop->str[31] = '\0';
+		} else
+			aprop->str = finddescr(canon_dzoom, v);
+		break;
+	case 16:
+		/* ISO overrides standard one if known. */
+		if (!strcmp(aprop->str, "Unknown")) {
 			aprop->lvl = ED_VRB;
-		} else {
-			snprintf(aprop->str, 31, "%.2f - %.2f mm",
-			    (float)flmin / (float)flunit,
-			    (float)flmax / (float)flunit);
-			aprop->lvl = ED_PAS;
+			break;
 		}
+		aprop->override = EXIF_T_ISOSPEED;
+		break;
+	case 17:
+		/* Maker meter mode overrides standard one if known. */
+		if (!strcmp(aprop->str, "Unknown")) {
+			aprop->lvl = ED_VRB;
+			break;
+		}
+		aprop->override = EXIF_T_METERMODE;
+		break;
+	default:
+		return (FALSE);
 	}
+
+	return (TRUE);
 }
 
 
 /*
  * Process maker note tag 0x0004 values.
  */
-
-static void
-canon_prop4(struct exifprop *prop, char *off, enum order o)
+static int
+canon_prop04(struct exifprop *aprop, struct exifprop *prop, char *off,
+    enum order o)
 {
-	int i, j;
-	u_int16_t v;
-	struct exifprop *aprop;
 
-	for (i = 0; i < (int)prop->count; i++) {
-		v = exif2byte(off + i * 2, o);
-
-		aprop = childprop(prop);
-		aprop->value = (u_int32_t)v;
-
-		/* Lookup property name and description. */
-
-		for (j = 0; canon_tags4[j].tag < EXIF_T_UNKNOWN &&
-		    canon_tags4[j].tag != i; j++);
-		aprop->name = canon_tags4[j].name;
-		aprop->descr = canon_tags4[j].descr;
-		aprop->lvl = canon_tags4[j].lvl;
-		if (canon_tags4[j].table)
-			aprop->str = finddescr(canon_tags4[j].table, v);
-
-		if (debug)
-			printf("     %s (%d): %d\n", aprop->name, i, v);
-
-		/* Further process known properties. */
-
-		switch (i) {
-		case 7:
-			aprop->override = EXIF_T_WHITEBAL;
-			break;
-		case 9:
-			aprop->lvl = v ? ED_IMG : ED_VRB;
-			break;
-		default:
-			if (aprop->lvl != ED_UNK)
-				break;
-
-			if (!(aprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
-			snprintf(aprop->str, 31,
-			    "num %02d, val 0x%04X", i, v);
-			aprop->str[31] = '\0';
-			break;
-		}
+	switch (aprop->subtag) {
+	case 7:
+		aprop->override = EXIF_T_WHITEBAL;
+		break;
+	case 9:
+		aprop->lvl = aprop->value ? ED_IMG : ED_VRB;
+		break;
+	default:
+		return (FALSE);
 	}
+
+	return (TRUE);
 }
 
 
 /*
  * Process maker note tag 0x00a0 values.
  */
+static int
+canon_propA0(struct exifprop *aprop, struct exifprop *prop, char *off,
+    enum order o)
+{
 
+	switch (aprop->subtag) {
+	case 9:
+		if (!(aprop->str = (char *)malloc(32)))
+			exifdie((const char *)strerror(errno));
+		snprintf(aprop->str, 31, "%d K", aprop->value);
+		aprop->str[31] = '\0';
+		break;
+	default:
+		return (FALSE);
+	}
+
+	return (TRUE);
+}
+
+
+/*
+ * Common function for a tag's child values.  Pass in the list of tags
+ * and a function to process them.
+ */
 static void
-canon_propA0(struct exifprop *prop, char *off, enum order o)
+canon_subval(struct exifprop *prop, char *off, struct exiftags *t,
+    struct exiftag *subtags, int (*valfun)())
 {
 	int i, j;
 	u_int16_t v;
 	struct exifprop *aprop;
 
 	for (i = 0; i < (int)prop->count; i++) {
-		v = exif2byte(off + i * 2, o);
+		v = exif2byte(off + i * 2, t->tifforder);
 
 		aprop = childprop(prop);
 		aprop->value = (u_int32_t)v;
+		aprop->subtag = i;
 
 		/* Lookup property name and description. */
 
-		for (j = 0; canon_tagsA0[j].tag < EXIF_T_UNKNOWN &&
-		    canon_tagsA0[j].tag != i; j++);
-		aprop->name = canon_tagsA0[j].name;
-		aprop->descr = canon_tagsA0[j].descr;
-		aprop->lvl = canon_tagsA0[j].lvl;
-		if (canon_tagsA0[j].table)
-			aprop->str = finddescr(canon_tagsA0[j].table, v);
+		for (j = 0; subtags[j].tag < EXIF_T_UNKNOWN &&
+		    subtags[j].tag != i; j++);
+		aprop->name = subtags[j].name;
+		aprop->descr = subtags[j].descr;
+		aprop->lvl = subtags[j].lvl;
+		if (subtags[j].table)
+			aprop->str = finddescr(subtags[j].table, v);
 
 		if (debug)
-			printf("     %s (%d): %d\n", aprop->name, i, v);
+			dumpprop(aprop);
 
-		/* Further process known properties. */
+		/* Process individual values.  Returns false if unknown. */
 
-		switch (i) {
-		case 9:
-			aprop->lvl = v ? ED_IMG : ED_VRB;
-			if (!(aprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
-			snprintf(aprop->str, 31, "%d° K", v);
-			aprop->str[31] = '\0';
-			break;
-		default:
+		if (valfun && !valfun(aprop, prop, off, t)) {
 			if (aprop->lvl != ED_UNK)
-				break;
+				continue;
 
 			if (!(aprop->str = (char *)malloc(32)))
 				exifdie((const char *)strerror(errno));
-			snprintf(aprop->str, 31,
-			    "num %02d, val 0x%04X", i, v);
+			snprintf(aprop->str, 31, "num %02d, val 0x%04X", i, v);
 			aprop->str[31] = '\0';
-			break;
 		}
 	}
 }
@@ -722,7 +642,6 @@ canon_propA0(struct exifprop *prop, char *off, enum order o)
 /*
  * Process custom function tag values.
  */
-
 static void
 canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 {
@@ -749,12 +668,13 @@ canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 
 		aprop = childprop(prop);
 		aprop->value = (u_int32_t)v;
+		aprop->subtag = i;
 		aprop->name = prop->name;
 		aprop->descr = prop->descr;
 		aprop->lvl = prop->lvl;
 
 		if (debug)
-			printf("     %s (%d): %d\n", aprop->name, i, v);
+			dumpprop(aprop);
 
 		/* If we have a table, lookup function name and value. */
 
@@ -787,21 +707,23 @@ canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 }
 
 
-/* Process Canon maker note tags. */
-
+/*
+ * Process Canon maker note tags.
+ */
 void
 canon_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
 	char *offset;
-	uint16_t v;
+	u_int16_t v, flmin = 0, flmax = 0, flunit = 0;
+	struct exifprop *tmpprop;
 
 	/*
-	 * Don't process properties we've created while looking at other
-	 * maker note tags.
+	 * Don't process child properties we've created while looking at
+	 * other maker note tags.
 	 */
 
-	if (prop->tag == EXIF_T_UNKNOWN)
+	if (prop->subtag > -2)
 		return;
 
 	/* Lookup the field name (if known). */
@@ -819,11 +741,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			printf("Processing Canon Maker Note\n");
 			once = 1;
 		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
+		dumpprop(prop);
 	}
 
 	switch (prop->tag) {
@@ -836,7 +754,38 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			exifwarn("Canon maker note appears corrupt (0x0001)");
 			break;
 		}
-		canon_prop1(prop, offset, t);
+		canon_subval(prop, offset, t, canon_tags01, canon_prop01);
+
+		/*
+		 * Create a new value for the lens' focal length range.  If
+		 * it's not a zoom lens, we'll make it verbose (it should
+		 * match the existing focal length Exif tag).
+		 */
+
+		if (prop->count >= 25) {
+			flmax = exif2byte(offset + 23 * 2, t->tifforder);
+			flmin = exif2byte(offset + 24 * 2, t->tifforder);
+			flunit = exif2byte(offset + 25 * 2, t->tifforder);
+		}
+
+		if (flunit && (flmin || flmax)) {
+			tmpprop = childprop(prop);
+			tmpprop->name = "CanonLensSz";
+			tmpprop->descr = "Lens Size";
+			if (!(tmpprop->str = (char *)malloc(32)))
+				exifdie((const char *)strerror(errno));
+
+			if (flmin == flmax) {
+				snprintf(tmpprop->str, 31, "%.2f mm",
+			    	(float)flmax / (float)flunit);
+				tmpprop->lvl = ED_VRB;
+			} else {
+				snprintf(tmpprop->str, 31, "%.2f - %.2f mm",
+				    (float)flmin / (float)flunit,
+				    (float)flmax / (float)flunit);
+				tmpprop->lvl = ED_PAS;
+			}
+		}
 		break;
 
 	case 0x0004:
@@ -845,7 +794,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			exifwarn("Canon maker note appears corrupt (0x0004)");
 			break;
 		}
-		canon_prop4(prop, offset, t->tifforder);
+		canon_subval(prop, offset, t, canon_tags04, canon_prop04);
 		break;
 
 	case 0x00a0:
@@ -854,7 +803,15 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			exifwarn("Canon maker note appears corrupt (0x00a0)");
 			break;
 		}
-		canon_propA0(prop, offset, t->tifforder);
+		canon_subval(prop, offset, t, canon_tagsA0, canon_propA0);
+
+		/* Show color temp if white balance is manual. */
+
+		if ((tmpprop = findsprop(t->props, 0x0004, 7)))
+			if (tmpprop->value == 9) {
+				if ((tmpprop = findsprop(prop, 0x00a0, 9)))
+					tmpprop->lvl = ED_IMG;
+		}
 		break;
 
 	/* Image number. */
