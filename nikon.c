@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.6 2002/11/02 07:18:05 ejohnst Exp $
+ * $Id: nikon.c,v 1.7 2002/11/03 10:07:50 ejohnst Exp $
  */
 
 /*
@@ -183,20 +183,6 @@ nikon_prop0(struct exifprop *prop, struct exiftags *t)
 	prop->descr = nikon_tags0[i].descr;
 	prop->lvl = nikon_tags0[i].lvl;
 
-	if (debug) {
-		static int once = 0;	/* XXX Breaks on multiple files. */
-
-		if (!once) {
-			printf("Processing Nikon Maker Note (0)\n");
-			once = 1;
-		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
-	}
-
 	switch (prop->tag) {
 
 	/* Manual focus distance. */
@@ -247,20 +233,6 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	if (nikon_tags1[i].table)
 		prop->str = finddescr(nikon_tags1[i].table, v);
 
-	if (debug) {
-		static int once = 0;	/* XXX Breaks on multiple files. */
-
-		if (!once) {
-			printf("Processing Nikon Maker Note (1)\n");
-			once = 1;
-		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
-	}
-
 	switch (prop->tag) {
 
 	/* Digital zoom. */
@@ -284,6 +256,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 void
 nikon_prop(struct exifprop *prop, struct exiftags *t)
 {
+	int i;
 
 	/*
 	 * Don't process properties we've created while looking at other
@@ -303,6 +276,21 @@ nikon_prop(struct exifprop *prop, struct exiftags *t)
 		nikon_prop1(prop, t);
 	else
 		nikon_prop0(prop, t);
+
+	if (debug) {
+		static int once = 0;	/* XXX Breaks on multiple files. */
+
+		if (!once) {
+			printf("Processing Nikon Maker Note (%d)\n",
+			    t->mkrinfo);
+			once = 1;
+		}
+
+	        for (i = 0; ftypes[i].type &&
+		    ftypes[i].type != prop->type; i++);
+		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
+		    ftypes[i].name, prop->count, prop->value);
+	}
 }
 
 
