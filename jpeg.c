@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: jpeg.c,v 1.1 2002/01/20 23:39:32 ejohnst Exp $
+ * $Id: jpeg.c,v 1.2 2002/02/17 03:47:13 ejohnst Exp $
  */
 
 /*
@@ -221,16 +221,13 @@ sofmrk(int mark)
  * Returns false when it's done with the file.
  */
 int
-jpegscan(FILE *fp, int *mark, unsigned int *len)
+jpegscan(FILE *fp, int *mark, unsigned int *len, int first)
 {
-	static int n = 0;
-
 	infile = fp;
-	n++;
 
 	/* First time through. */
 
-	if (n == 1 && topmkr() != JPEG_M_SOI) {
+	if (first && topmkr() != JPEG_M_SOI) {
 		exifwarn("doesn't appear to be a JPEG file; "
 		    "searching for start of image");
 		if (nxtmkr() != JPEG_M_SOI)

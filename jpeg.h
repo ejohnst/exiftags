@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: jpeg.h,v 1.1 2002/01/20 23:39:32 ejohnst Exp $
+ * $Id: jpeg.h,v 1.2 2002/02/17 03:47:13 ejohnst Exp $
  */
 
 /*
@@ -62,7 +62,7 @@
 
 /* Our JPEG utility functions. */
 
-extern int jpegscan(FILE *fp, int *mark, unsigned int *len);
+extern int jpegscan(FILE *fp, int *mark, unsigned int *len, int first);
 extern int jpeginfo(int *prcsn, int *cmpnts, unsigned int *height,
     unsigned int *width, const char *prcss);
 
