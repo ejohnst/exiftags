@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.22 2002/10/05 23:54:06 ejohnst Exp $
+ * $Id: exif.c,v 1.23 2002/10/07 00:53:06 ejohnst Exp $
  */
 
 /*
@@ -53,7 +53,6 @@
 #include <float.h>
 #include <ctype.h>
 
-#include "exiftags.h"		/* XXX For errors/warns.  Need to remove... */
 #include "exif.h"
 #include "exifint.h"
 #include "makers.h"
@@ -606,7 +605,7 @@ exiffree(struct exiftags *t)
 
 
 /*
- * Scan and parse the Exif section.
+ * Scan the Exif section.
  */
 struct exiftags *
 exifscan(unsigned char *b, int len)
@@ -615,7 +614,6 @@ exifscan(unsigned char *b, int len)
 	u_int32_t ifdoff;
 	struct exiftags *t;
 	struct ifd *curifd, *tmpifd;
-	struct exifprop *curprop;
 
 	/* Create and initialize our file info structure. */
 
@@ -678,7 +676,24 @@ exifscan(unsigned char *b, int len)
 		free(tmpifd);		/* No need to keep it around... */
 	}
 
-	/* Finally, make field values pretty. */
+	return (t);
+}
+
+
+/*
+ * Read the Exif section and prepare the data for output.
+ */
+struct exiftags *
+exifparse(unsigned char *b, int len)
+{
+	struct exiftags *t;
+	struct exifprop *curprop;
+
+	/* Find the section and scan it. */
+
+	t = exifscan(b, len);
+
+	/* Make field values pretty. */
 
 	curprop = t->props;
 	while (curprop) {
