@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2002, Javier Crespo <jcrespoc@dsland.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -17,7 +18,7 @@
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS `AS IS'' AND
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
@@ -29,35 +30,25 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * $Id: minolta.c,v 1.2 2003/01/11 08:20:29 ejohnst Exp $
  *
  */ 
 
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * minolta.c
- * provides Minolta DiMAGE (5,7,7i and 7Hi) MakerNote support
- * to exiftags utility from Eric M. Johnston
+/*
+ * Exif tag definitions for Minolta DiMAGE maker notes.
  *
- * History
- * minolta.c v.0.1 08/01/03: TAG 0x03 decoded almost fully.
+ * Compatibility:
  *
+ *   DiMAGE 5		OK, except MMN_IMAGESIZE
+ *   DiMAGE 7		OK
+ *   DiMAGE 7i v1.0e	OK
+ *   DiMAGE 7Hi 1.00u	OK
  *
- * Exif tag definitions for Minolta maker notes.
- * tested aganist  	DiMAGE 7i v1.0e     OK
- *					DiMAGE 7Hi 1.00u	OK
- *					DiMAGE 5			OK except MMN_IMAGESIZE
- *					DiMAGE 7			OK
-
- *					DiMAGE S404			not supported, has short TAG0x01. Interpreted with errors
- *					DiMAGE S304			not supported, has short TAG0x01. Interpreted with errors
- *					DiMAGE F100			not supported, has no TAG0x01
- *					DIMAGE X			not supported, has no TAG0x01
- *
-  * contact jcrespoc@dsland.org
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *   DiMAGE S404	not OK; short TAG0x01; interpreted with errors
+ *   DiMAGE S304	not OK; short TAG0x01; interpreted with errors
+ *   DiMAGE F100	not OK; no TAG0x01
+ *   DiMAGE X		not OK; no TAG0x01
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,24 +59,25 @@
 #include "makers.h"
 
 
-/* Minolta Dimage7 MakerNotes Tags
+/*
+ * Minolta Dimage7 maker note tags:
  *
- * TAG 0x00		char	[4]		'MLT0'									OK
- * TAG 0x03		long	[56]	Camera Settings for D7u, D7i, D7Hi		OK almost fully
- * TAG 0x01		long	[56]	Camera Settings for D5, D7				Same format as 0x03
- * TAG 0x10		byte	[11492]	Unknown									
- * TAG 0x20		byte	[394]	Unknown									
- * TAG 0x40		long	[1]		Compressed Image Size					unprocesed
- * TAG 0x88		long	[1]		Thumbnail Offset						unprocesed
- * TAG 0x89		long	[1]		Thumbnail Lenght						unprocesed
- * TAG 0x0e00	byte	[40]	PIM (Print Image Management)			unprocesed
+ *  0x00 char[4]	'MLT0'
+ *  0x03 long[56]	Camera Settings for D7u, D7i, D7Hi
+ *  0x01 long[56]	Camera Settings for D5, D7
+ *  0x10 byte[11492]	Unknown
+ *  0x20 byte[394]	Unknown
+ *  0x40 long[1]	Compressed Image Size
+ *  0x88 long[1]	Thumbnail Offset
+ *  0x89 long[1]	Thumbnail Length
+ *  0x0e00 byte[40]	PIM (Print Image Management)
  *
- * This module parses only Tags 0x01 and 0x03.
+ * This module parses only tags 0x01 and 0x03.
  */
 
 
-
-/* Uncomment this to overwrite standard tags with more apropiated values 
+/*
+ * Uncomment this to overwrite standard tags with more appropriate values 
  *
  * i.e.  Exposure Program: Not Defined
  *       Scene Capture Type: Protrait 
@@ -107,8 +99,6 @@
 #define EXIF_T_CONTRAST 0xa408
 #define EXIF_T_SATURATION 0xa409
 #define EXIF_T_SCENECAPTURETYPE 0xa406
-
-unsigned int CAMERA_MODEL=-1;
 
 
 enum MINOLTA_TAG_0x03 {
@@ -172,211 +162,225 @@ enum MINOLTA_TAG_0x03 {
 	MMN_UNKFLD_56		//<------------------------------------- Last Field for D7Hi
 };
 
-/* Some fields are marked as no sense because it doesn't aports extra information to the standard ones
- * so they are set to ED_UNK in minolta_makernote_tags
- *
- *
- */
 
+/* Bracketing mode. */
 
-/* Bracketing Mode */
 static struct descrip minolta_brackmode[] = {
-	{ 0, "Exposure" }, 
-	{ 1, "Contrast" }, 
-	{ 2, "Saturation" }, 
-	{ 3, "Filter" }, 
-	{ -1, "Unknown" },
+	{ 0,	"Exposure" },
+	{ 1,	"Contrast" },
+	{ 2,	"Saturation" },
+	{ 3,	"Filter" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Bracketing Step. */
+/* Bracketing step. */
+
 static struct descrip minolta_bracketstep[] = {
-	{ 0, "1/3" }, 
-	{ 1, "1/2" }, 
-	{ 2, "1" }, 
-	{ -1, "Unknown" },
+	{ 0,	"1/3" },
+	{ 1,	"1/2" },
+	{ 2,	"1" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Sharpnes. */
-static struct descrip minolta_sharpnes[] = {
-	{ 0, "Normal" }, 
-	{ 1, "Hard" }, 
-	{ 2, "Soft" }, 
-	{ -1, "Unknown" },
+/* Sharpness. */
+
+static struct descrip minolta_sharpness[] = {
+	{ 0,	"Normal" },
+	{ 1,	"Hard" },
+	{ 2,	"Soft" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Color Mode. */
+/* Color mode. */
+
 static struct descrip minolta_colormode[] = {
-	{ 0, "Natural Color" }, 
-	{ 1, "B&W" }, 
-	{ 2, "Vivid Color" }, 
-	{ 3, "Solarization" }, 
-	{ 4, "AdobeRGB" },
-	{ -1, "Unknown" },
+	{ 0,	"Natural Color" },
+	{ 1,	"Black & White" },
+	{ 2,	"Vivid Color" },
+	{ 3,	"Solarization" },
+	{ 4,	"Adobe RGB" },
+	{ -1,	"Unknown" },
 };
 
 
 /* ISO. */
+
 static struct descrip minolta_isoset[] = {
-	{ 0, "100" }, 
-	{ 1, "200" }, 
-	{ 2, "400" }, 
-	{ 3, "800" }, 
-	{ 4, "AUTO" }, 
-	{ -1, "Unknown" },
+	{ 0,	"100" },
+	{ 1,	"200" },
+	{ 2,	"400" },
+	{ 3,	"800" },
+	{ 4,	"Auto" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Boolean. */
+/* Generic boolean. */
+
 static struct descrip minolta_bool[] = {
-	{ 0, "No" }, 
-	{ 1, "Yes" }, 
-	{ -1, "Unknown" },
+	{ 0,	"No" },
+	{ 1,	"Yes" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Focus Mode. */
+/* Focus mode. */
+
 static struct descrip minolta_focusmode[] = {
-	{ 0, "Auto" }, 
-	{ 1, "Manual" }, 
-	{ -1, "Unknown" },
+	{ 0,	"Auto" },
+	{ 1,	"Manual" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Focus Area. */
+/* Focus area. */
+
 static struct descrip minolta_focusarea[] = {
-	{ 0, "Wide Area" }, 
-	{ 1, "Spot Focus Point" },
-	{ -1, "Unknown" },
+	{ 0,	"Wide Area" },
+	{ 1,	"Spot Focus Point" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Wide Area Focus Zone. */
+/* Wide area focus zone. */
+
 static struct descrip minolta_wfocuszone[] = {
-	{ 0, "No Zone" },
-	{ 1, "Center" },
-	{ 3, "Left" },
-	{ 4, "Right" },
-	{ -1, "Unknown" },
+	{ 0,	"No Zone" },
+	{ 1,	"Center" },
+	{ 3,	"Left" },
+	{ 4,	"Right" },
+	{ -1,	"Unknown" },
 };
 
 
 /* Drive mode. */
+
 static struct descrip minolta_drive[] = {
-	{ 0, "Single Frame" }, 
-	{ 1, "Continous Advance" },
-	{ 2, "Self Timer" },
-	{ 4, "Bracketing" },
-	{ 5, "Interval" },
-	{ 6, "UHS" },
-	{ 7, "HS" },
-	{ -1, "Unknown" },
+	{ 0,	"Single Frame" },
+	{ 1,	"Continous Advance" },
+	{ 2,	"Self Timer" },
+	{ 4,	"Bracketing" },
+	{ 5,	"Interval" },
+	{ 6,	"UHS" },
+	{ 7,	"HS" },
+	{ -1,	"Unknown" },
 };
 
 
-/* White Balance. */
+/* White balance. */
+
 static struct descrip minolta_wb[] = {
-	{ 0, "Auto" }, 
-	{ 1, "Daylight" },
-	{ 2, "Cloudy" },
-	{ 3, "Tungsten" },
-	{ 5, "Custom" },
-	{ 7, "Flourescent" },
-	{ 8, "Flourescent2" },
-	{ 11, "Custom2" },
-	{ 12, "Custom3" },
-	{ -1, "Unknown" },
+	{ 0,	"Auto" },
+	{ 1,	"Daylight" },
+	{ 2,	"Cloudy" },
+	{ 3,	"Tungsten" },
+	{ 5,	"Custom" },
+	{ 7,	"Flourescent" },
+	{ 8,	"Flourescent 2" },
+	{ 11,	"Custom 2" },
+	{ 12,	"Custom 3" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Flash Modes. */
+/* Flash mode. */
+
 static struct descrip minolta_flashmode[] = {
-	{ 0, "Fill Flash" }, 
-	{ 1, "Red Eye" },
-	{ 2, "Rear Sync" },
-	{ 3, "Remote" },
-	{ -1, "Unknown" },
+	{ 0,	"Fill Flash" },
+	{ 1,	"Red-Eye Reduction" },
+	{ 2,	"Rear Sync" },
+	{ 3,	"Remote" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Capture Scene. */
+/* Capture scene. */
+
 static struct descrip minolta_scene[] = {
-	{ 0, "Normal" },	
-	{ 1, "Portrait" },
-	{ 2, "Text" }, 
-	{ 3, "Night Portrait" },
-	{ 4, "Sunset" },
-	{ 5, "Sports Action" },
-	{ -1, "Unknown" },
+	{ 0,	"Normal" },
+	{ 1,	"Portrait" },
+	{ 2,	"Text" },
+	{ 3,	"Night Portrait" },
+	{ 4,	"Sunset" },
+	{ 5,	"Sports Action" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Image Quality. */
+/* Image quality. */
+
 static struct descrip minolta_quality[] = {
-	{ 0, "RAW" }, 
-	{ 1, "Superfine" },
-	{ 2, "Fine" },
-	{ 3, "Standard" },
-	{ 4, "Economy" },
-	{ 5, "Extra Fine" },
-	{ -1, "Unknown" },
+	{ 0,	"Raw" },
+	{ 1,	"Super Fine" },
+	{ 2,	"Fine" },
+	{ 3,	"Standard" },
+	{ 4,	"Economy" },
+	{ 5,	"Extra Fine" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Exposure Mode. */
-static struct descrip minolta_expprogram[] = {
-	{ 0, "Program AE" },
-	{ 1, "Aperture Priority" },
-	{ 2, "Shutter Priority" },
-	{ 3, "Manual" },
-	{ -1, "Unknown" },
+/* Exposure program. */
+
+static struct descrip minolta_expprog[] = {
+	{ 0,	"Program AE" },
+	{ 1,	"Aperture Priority" },
+	{ 2,	"Shutter Priority" },
+	{ 3,	"Manual" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Image Size. This valid only for 5Mpix cameras (D7's) but is wrong for D5 */
+/*
+ * Image size.
+ * This valid only for 5 megapixel cameras (D7's) but is wrong for D5.
+ */
+
 static struct descrip minolta_imgsize[] = {
-	{ 0, "2560x1920" }, 
-	{ 1, "1600x1200" }, 
-	{ 2, "1280x960" }, 
-	{ 3, "640x480" }, 
-	{ -1, "Unknown" },
+	{ 0,	"2560x1920" },
+	{ 1,	"1600x1200" },
+	{ 2,	"1280x960" },
+	{ 3,	"640x480" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Folder Name. */
-static struct descrip minolta_foldername[] = {
-	{ 0, "Standard" }, 
-	{ 1, "Date" }, 
-	{ -1, "Unknown" },
+/* Folder name. */
+
+static struct descrip minolta_folder[] = {
+	{ 0,	"Standard" },
+	{ 1,	"Date" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Data Imprinting. */
+/* Data imprinting. */
+
 static struct descrip minolta_imprint[] = {
-	{ 0, "None" },
-	{ 1, "DataTime Y/M/D" },
-	{ 2, "DataTime M/D H:M" },
-	{ 3, "Text" },
-	{ 4, "Text + ID" },
-	{ -1, "Unknown" },
+	{ 0,	"None" },
+	{ 1,	"DataTime Y/M/D" },
+	{ 2,	"DataTime M/D H:M" },
+	{ 3,	"Text" },
+	{ 4,	"Text + ID" },
+	{ -1,	"Unknown" },
 };
 
 
-/* Camera Model */
-//TODO: Add more entries
-static struct descrip minolta_cameramodel[] = {
-	{ 0, "DiMAGE 7" },
-	{ 1, "DiMAGE 5" },
-	{ 4, "DiMAGE 7i" },
-	{ 5, "DiMAGE 7Hi" }, 
-	{ -1, "Unknown" },
+/* Camera model. */
+
+static struct descrip minolta_model[] = {
+	{ 0,	"DiMAGE 7" },
+	{ 1,	"DiMAGE 5" },
+	{ 4,	"DiMAGE 7i" },
+	{ 5,	"DiMAGE 7Hi" },
+	{ -1,	"Unknown" },
 };
 
 
-
-static struct exiftag minolta_makernote_tags[] = {
+static struct exiftag minolta_tags[] = {
 	{ 0x00, TIFF_SHORT, 1, ED_UNK, "MMN_TAG0" , NULL , NULL },	
  	{ 0x01, TIFF_SHORT, 1, ED_UNK, "MMN_TAG1" , NULL , NULL },
 	{ 0x03, TIFF_SHORT, 1, ED_UNK, "MMN_TAG3" , NULL , NULL },
@@ -387,7 +391,7 @@ static struct exiftag minolta_makernote_tags[] = {
 	{ 0x89, TIFF_SHORT, 1, ED_UNK, "MMN_TAG89" , NULL , NULL },
 	{ 0xe00, TIFF_SHORT, 1, ED_UNK, "MMN_TAGE00" , NULL , NULL },
 	{ MMN_UNKFLD_00, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_00" , NULL , NULL },
-	{ MMN_EXPPROGRAM, TIFF_SHORT, 1, ED_UNK, "MMN_EXPPROGRAM" , NULL , minolta_expprogram },
+	{ MMN_EXPPROGRAM, TIFF_SHORT, 1, ED_UNK, "MMN_EXPPROGRAM" , NULL , minolta_expprog },
 	{ MMN_FLASHMODE, TIFF_SHORT, 1, ED_VRB, "MMN_FLASHMODE" , "Flash Mode" , minolta_flashmode },
 	{ MMN_WB, TIFF_SHORT, 1, ED_IMG, "MMN_WB" , "White Balance" , minolta_wb },
 	{ MMN_IMAGESIZE, TIFF_SHORT, 1, ED_UNK, "MMN_IMAGESIZE", NULL , minolta_imgsize },
@@ -419,13 +423,13 @@ static struct exiftag minolta_makernote_tags[] = {
 	{ MMN_UNKFLD_30, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_30" , NULL , NULL },
 	{ MMN_COL, TIFF_SHORT, 1, ED_IMG, "MMN_COL" , "Saturation" , NULL },
 	{ MMN_CON, TIFF_SHORT, 1, ED_IMG, "MMN_CON" , "Contrast" , NULL },
-	{ MMN_SHARP, TIFF_SHORT, 1, ED_IMG, "MMN_SHARP" , "Sharp" , minolta_sharpnes },
+	{ MMN_SHARP, TIFF_SHORT, 1, ED_IMG, "MMN_SHARP" , "Sharp" , minolta_sharpness },
 	{ MMN_SCENE, TIFF_SHORT, 1, ED_IMG, "MMN_SCENE" , "Scene Capture Type" , minolta_scene },
 	{ MMN_FLACHCOMP, TIFF_SHORT, 1, ED_IMG, "MMN_FLACHCOMP" , "Flash Compensation" , NULL },
 	{ MMN_ISOSET, TIFF_SHORT, 1, ED_VRB, "MMN_ISOSET" , "ISO Camera Setting" , minolta_isoset },
-	{ MMN_CAMERAMODEL, TIFF_SHORT, 1, ED_UNK, "MMN_CAMERAMODEL" , NULL , minolta_cameramodel },
+	{ MMN_CAMERAMODEL, TIFF_SHORT, 1, ED_UNK, "MMN_CAMERAMODEL" , NULL , minolta_model },
 	{ MMN_INTERVALMODE, TIFF_SHORT, 1, ED_VRB, "MMN_INTERVALMODE" , "Interval Mode Engaged" , minolta_bool },
-	{ MMN_FOLDERNAME, TIFF_SHORT, 1, ED_VRB, "MMN_FOLDERNAME" , "Folder Naming" , minolta_foldername },
+	{ MMN_FOLDERNAME, TIFF_SHORT, 1, ED_VRB, "MMN_FOLDERNAME" , "Folder Naming" , minolta_folder },
 	{ MMN_COLORMODE, TIFF_SHORT, 1, ED_IMG, "MMN_COLORMODE" , "Color Mode" , minolta_colormode },
 	{ MMN_FIL, TIFF_SHORT, 1, ED_IMG, "MMN_FIL" , "Color Warming" , NULL },
 	{ MMN_BWFILTER, TIFF_SHORT, 1, ED_IMG, "MMN_BWFILTER" , "B&W Tone" , NULL },
@@ -465,7 +469,7 @@ minolta_propdump(struct exifprop *prop, char *off, struct exiftags *t)
  *
  */
 void
-minolta_prop3(struct exifprop *prop, char *off, struct exiftags *t)
+minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 {
 	int n;
 	struct exifprop *aprop;
@@ -478,24 +482,25 @@ minolta_prop3(struct exifprop *prop, char *off, struct exiftags *t)
 		aprop->tag=(MMN_CUSTOMTAG | n) ;
 		aprop->value=exif4byte(off + (4*n), BIG);
 
-		for (j = 0; minolta_makernote_tags[j].tag < EXIF_T_UNKNOWN && 
-			minolta_makernote_tags[j].tag != aprop->tag; j++);
+		for (j = 0; minolta_tags[j].tag < EXIF_T_UNKNOWN && 
+			minolta_tags[j].tag != aprop->tag; j++);
 
-		aprop->name=minolta_makernote_tags[j].name;
-		aprop->descr=minolta_makernote_tags[j].descr;
-		aprop->lvl=minolta_makernote_tags[j].lvl;
-		aprop->type=minolta_makernote_tags[j].type;
-		aprop->count=minolta_makernote_tags[j].count;
+		aprop->name=minolta_tags[j].name;
+		aprop->descr=minolta_tags[j].descr;
+		aprop->lvl=minolta_tags[j].lvl;
+		aprop->type=minolta_tags[j].type;
+		aprop->count=minolta_tags[j].count;
 
-		if (minolta_makernote_tags[j].table)
-			aprop->str=finddescr(minolta_makernote_tags[j].table,aprop->value);
-
+		if (minolta_tags[j].table)
+			aprop->str=finddescr(minolta_tags[j].table,aprop->value);
+#if 0
    		switch (aprop->tag)
      	{
       		case MMN_CAMERAMODEL:
 				CAMERA_MODEL=aprop->value;
         		break;
         }
+#endif
 	}
 }
 
@@ -508,11 +513,11 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 	{
    		int j;
 
-		for (j = 0; minolta_makernote_tags[j].tag < EXIF_T_UNKNOWN &&
-			minolta_makernote_tags[j].tag != prop->tag; j++);
+		for (j = 0; minolta_tags[j].tag < EXIF_T_UNKNOWN &&
+			minolta_tags[j].tag != prop->tag; j++);
         		
-		prop->name=minolta_makernote_tags[j].name;
-		prop->lvl=minolta_makernote_tags[j].lvl;
+		prop->name=minolta_tags[j].name;
+		prop->lvl=minolta_tags[j].lvl;
 	}
 
 	switch (prop->tag)
@@ -553,7 +558,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
          		break;
            	}
 			prop->str=strdup("Camera Settings");
-         	minolta_prop3(prop,t->btiff + prop->value, t);
+         	minolta_cprop(prop,t->btiff + prop->value, t);
 			break;	
 		}
 
@@ -571,7 +576,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
          		break;
            	}
 			prop->str=strdup("Camera Settings");
-			minolta_prop3(prop,t->btiff + prop->value, t);
+			minolta_cprop(prop,t->btiff + prop->value, t);
 			break;
 		}
 
@@ -854,3 +859,31 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 	}
 }
 
+
+/*
+ * Try to read a Minolta maker note IFD, which differ by model.
+ */
+
+struct ifd *
+minolta_ifd(u_int32_t offset, struct exiftags *t)
+{
+
+	/* DiMAGE E201. */
+
+	if (!strcmp(t->btiff + offset, "+M")) {
+		exifwarn("Minolta maker note version not supported");
+		return (NULL);
+	}
+
+	/*
+	 * Assume that if IFD num > 255, this isn't a real IFD.
+	 * Takes care of the unfortunate DiMAGE 2300.
+	 */
+
+	if (exif2byte(t->btiff + offset, t->tifforder) > 0xff) {
+		exifwarn("Minolta maker note version not supported");
+		return (NULL);
+	}
+
+	return (readifds(offset, t));
+}

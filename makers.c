@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.c,v 1.2 2003/01/11 06:35:11 ejohnst Exp $
+ * $Id: makers.c,v 1.3 2003/01/11 08:20:29 ejohnst Exp $
  */
 
 /*
@@ -49,6 +49,6 @@ struct makerfun makers[] = {
 	{ EXIF_MKR_FUJI, "fujifilm", fuji_prop, fuji_ifd },
 	{ EXIF_MKR_NIKON, "nikon", nikon_prop, nikon_ifd },
 	{ EXIF_MKR_CASIO, "casio", casio_prop, casio_ifd },
-	{ EXIF_MKR_MINOLTA, "minolta", minolta_prop, readifds },
+	{ EXIF_MKR_MINOLTA, "minolta", minolta_prop, minolta_ifd },
 	{ EXIF_MKR_UNKNOWN, "unknown", NULL, NULL },
 };

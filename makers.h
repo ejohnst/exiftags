@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.8 2003/01/11 06:35:11 ejohnst Exp $
+ * $Id: makers.h,v 1.9 2003/01/11 08:20:29 ejohnst Exp $
  */
 
 /*
@@ -86,5 +86,6 @@ extern void casio_prop(struct exifprop *prop, struct exiftags *t);
 extern struct ifd *casio_ifd(u_int32_t offset, struct exiftags *t);
 
 extern void minolta_prop(struct exifprop *prop, struct exiftags *t);
+extern struct ifd *minolta_ifd(u_int32_t offset, struct exiftags *t);
 
 #endif
