@@ -1,5 +1,5 @@
-exiftags-0.93
-20020831
+exiftags-0.94
+20020928
 Eric M. Johnston, emj@postal.net
 
 This utility spits out Exif tags from a digital camera JPEG file.  See
@@ -38,6 +38,6 @@ from you.
 
 Please report bugs, incompatibilities, successes, etc. to
 emj@postal.net.  The latest version of this software will be posted
-at http://emj.postal.net/sw/exifdump/.
+at http://johnst.org/sw/exifdump/.
 
-$Id: README,v 1.5 2002/08/31 11:10:05 ejohnst Exp $
+$Id: README,v 1.6 2002/09/28 20:50:19 ejohnst Exp $
