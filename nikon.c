@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.2 2002/07/11 07:17:22 ejohnst Exp $
+ * $Id: nikon.c,v 1.3 2002/08/01 03:08:48 ejohnst Exp $
  */
 
 /*
@@ -237,6 +237,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
 	u_int32_t a, b;
+	u_int16_t v = (u_int16_t)prop->value;
 
 	/* Lookup the field name (if known). */
 
@@ -263,22 +264,22 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	switch (prop->tag) {
 
 	case 0x0003:
-		prop->str = finddescr(nikon_quality, prop->value);
+		prop->str = finddescr(nikon_quality, v);
 		break;
 	case 0x0004:
-		prop->str = finddescr(nikon_color, prop->value);
+		prop->str = finddescr(nikon_color, v);
 		break;
 	case 0x0005:
-		prop->str = finddescr(nikon_adjust, prop->value);
+		prop->str = finddescr(nikon_adjust, v);
 		break;
 	case 0x0006:
-		prop->str = finddescr(nikon_ccd, prop->value);
+		prop->str = finddescr(nikon_ccd, v);
 		break;
 	case 0x0007:
-		prop->str = finddescr(nikon_white, prop->value);
+		prop->str = finddescr(nikon_white, v);
 		break;
 	case 0x000b:
-		prop->str = finddescr(nikon_convert, prop->value);
+		prop->str = finddescr(nikon_convert, v);
 		break;
 
 	/* Digital zoom. */

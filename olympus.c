@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.4 2002/07/11 02:06:41 ejohnst Exp $
+ * $Id: olympus.c,v 1.5 2002/08/01 03:08:48 ejohnst Exp $
  */
 
 /*
@@ -97,6 +97,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
 	u_int32_t a, b;
+	u_int16_t v = (u_int16_t)prop->value;
 	char *offset;
 	struct exifprop *aprop;
 
@@ -171,11 +172,11 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	case 0x0201:
-		prop->str = finddescr(olympus_quality, prop->value);
+		prop->str = finddescr(olympus_quality, v);
 		break;
 
 	case 0x0202:
-		prop->str = finddescr(olympus_macro, prop->value);
+		prop->str = finddescr(olympus_macro, v);
 		break;
 
 	/* Digital zoom. */

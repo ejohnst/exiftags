@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.2 2002/07/11 07:12:32 ejohnst Exp $
+ * $Id: fuji.c,v 1.3 2002/08/01 03:08:48 ejohnst Exp $
  */
 
 /*
@@ -202,6 +202,7 @@ void
 fuji_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
+	u_int16_t v = (u_int16_t)prop->value;
 
 	/*
 	 * Don't process properties we've created while looking at other
@@ -245,46 +246,46 @@ fuji_prop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	case 0x1001:
-		prop->str = finddescr(fuji_sharp, prop->value);
+		prop->str = finddescr(fuji_sharp, v);
 		break;
 
 	case 0x1002:
-		prop->str = finddescr(fuji_white, prop->value);
+		prop->str = finddescr(fuji_white, v);
 		break;
 
 	case 0x1003:
 	case 0x1004:
-		prop->str = finddescr(fuji_color, prop->value);
+		prop->str = finddescr(fuji_color, v);
 		break;
 
 	case 0x1010:
-		prop->str = finddescr(fuji_flmode, prop->value);
+		prop->str = finddescr(fuji_flmode, v);
 		break;
 
 	case 0x1020:
 	case 0x1030:
 	case 0x1100:
-		prop->str = finddescr(fuji_bool, prop->value);
+		prop->str = finddescr(fuji_bool, v);
 		break;
 
 	case 0x1021:
-		prop->str = finddescr(fuji_focus, prop->value);
+		prop->str = finddescr(fuji_focus, v);
 		break;
 
 	case 0x1031:
-		prop->str = finddescr(fuji_picture, prop->value);
+		prop->str = finddescr(fuji_picture, v);
 		break;
 
 	case 0x1300:
-		prop->str = finddescr(fuji_blurw, prop->value);
+		prop->str = finddescr(fuji_blurw, v);
 		break;
 
 	case 0x1301:
-		prop->str = finddescr(fuji_focusw, prop->value);
+		prop->str = finddescr(fuji_focusw, v);
 		break;
 
 	case 0x1302:
-		prop->str = finddescr(fuji_aew, prop->value);
+		prop->str = finddescr(fuji_aew, v);
 		break;
 	}
 }
