@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.11 2004/04/20 18:35:28 ejohnst Exp $
+ * $Id: exifcom.c,v 1.12 2004/04/30 16:54:21 ejohnst Exp $
  */
 
 /*
@@ -56,7 +56,7 @@ int getopt(int, char * const [], const char *);
 #include "exif.h"
 
 
-static const char *version = "0.99a";
+static const char *version = "0.99";
 static int fnum, bflag, iflag, nflag, vflag; 
 static const char *com;
 static const char *delim = ": ";
@@ -117,7 +117,7 @@ printcom(const char *fname, struct exifprop *p, const unsigned char *btiff)
 	/* Print length and comment if it's supported. */
 
 	if (rc != 1 && rc != 3) {
-		printf("Length%s%d\n", delim, rc ? 0 : strlen(p->str));
+		printf("Length%s%d\n", delim, rc ? 0 : (int)strlen(p->str));
 		printf("Comment%s%s\n", delim, rc ? "" : p->str);
 	}
 

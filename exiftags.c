@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.22 2004/04/21 05:19:31 ejohnst Exp $
+ * $Id: exiftags.c,v 1.23 2004/04/30 16:54:21 ejohnst Exp $
  */
 
 /*
@@ -57,7 +57,7 @@ int getopt(int, char * const [], const char *);
 
 
 int quiet;
-static const char *version = "0.99a";
+static const char *version = "0.99";
 static int fnum;
 static const char *delim = ": ";
 

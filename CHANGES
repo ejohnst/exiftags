@@ -1,3 +1,4 @@
+20040430 version: exiftags 0.99
 20040420 added Panasonic maker note support (thanks: Tom Hughes)
 20040410 improved error messages in exifcom
 20040408 added exiftime utility to display and write date/time tags
@@ -11,7 +12,7 @@
 20040227 added Asahi/Pentax maker note support
 20031101 prevent looping when a tag refers to its own IFD
 20030815 version: exiftags 0.98
-20030807 fixed some Fuji, Minotla, Nikon byte order bugs/dependencies
+20030807 fixed some Fuji, Minolta, Nikon byte order bugs/dependencies
 20030806 internal code cleanup to nicely support multiple tag sets
 20030806 internal code cleanup to allow different IFD byte orders
 20030806 added Sanyo maker note support
@@ -66,4 +67,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.16 2004/04/20 22:18:56 ejohnst Exp $
+$Id: CHANGES,v 1.17 2004/04/30 16:54:21 ejohnst Exp $
