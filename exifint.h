@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.12 2002/11/03 23:41:35 ejohnst Exp $
+ * $Id: exifint.h,v 1.13 2003/01/20 21:38:32 ejohnst Exp $
  */
 
 /*
@@ -134,6 +134,7 @@ extern struct descrip filesrcs[];
 /* Utility functions from exifutil.c. */
 
 extern u_int16_t exif2byte(unsigned char *b, enum order o);
+extern int16_t exif2sbyte(unsigned char *b, enum order o);
 extern u_int32_t exif4byte(unsigned char *b, enum order o);
 extern int32_t exif4sbyte(unsigned char *b, enum order o);
 extern char *finddescr(struct descrip *table, u_int16_t val);

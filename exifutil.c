@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.12 2002/11/03 23:41:35 ejohnst Exp $
+ * $Id: exifutil.c,v 1.13 2003/01/20 21:38:32 ejohnst Exp $
  */
 
 /*
@@ -85,6 +85,20 @@ exifwarn2(const char *msg1, const char *msg2)
  */
 u_int16_t
 exif2byte(unsigned char *b, enum order o)
+{
+
+	if (o == BIG)
+		return ((b[0] << 8) | b[1]);
+	else
+		return ((b[1] << 8) | b[0]);
+}
+
+
+/*
+ * Read a signed 2-byte int from the buffer.
+ */
+int16_t
+exif2sbyte(unsigned char *b, enum order o)
 {
 
 	if (o == BIG)
