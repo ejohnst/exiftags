@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.34 2004/04/03 22:34:14 ejohnst Exp $
+ * $Id: exif.h,v 1.35 2004/04/08 05:57:27 ejohnst Exp $
  */
 
 /*
@@ -116,6 +116,7 @@ typedef __int32 int32_t;
 #define EXIF_T_PLANARCONFIG	0x011c
 #define EXIF_T_RESUNITS		0x0128
 #define EXIF_T_XFERFUNC		0x012d
+#define EXIF_T_DATETIME		0x0132
 #define EXIF_T_CHROMRATIO	0x0212
 #define EXIF_T_CHROMPOS		0x0213
 #define EXIF_T_EXPOSURE		0x829a
@@ -124,6 +125,8 @@ typedef __int32 int32_t;
 #define EXIF_T_GPSIFD		0x8825
 #define EXIF_T_ISOSPEED		0x8827
 #define EXIF_T_VERSION		0x9000
+#define EXIF_T_DATETIMEORIG	0x9003
+#define EXIF_T_DATETIMEDIGI	0x9004
 #define EXIF_T_COMPCONFIG	0x9101
 #define EXIF_T_SHUTTER		0x9201
 #define EXIF_T_LAPERTURE	0x9202
