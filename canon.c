@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.28 2003/02/11 15:32:19 ejohnst Exp $
+ * $Id: canon.c,v 1.29 2003/02/11 16:00:47 ejohnst Exp $
  */
 
 /*
@@ -70,6 +70,7 @@ static struct descrip canon_macro[] = {
 static struct descrip canon_focustype[] = {
 	{ 0,	"Manual" },
 	{ 1,	"Auto" },
+	{ 2,	"Auto" },
 	{ 3,	"Close-Up (Macro Mode)" },
 	{ 7,	"Infinity Mode" },
 	{ 8,	"Locked (Pan Mode)" },
@@ -455,6 +456,12 @@ static struct descrip ccstm_yesno[] = {
 	{ -1,	"Unknown" },
 };
 
+static struct descrip ccstm_noyes[] = {
+	{ 0,	"No" },
+	{ 1,	"Yes" },
+	{ -1,	"Unknown" },
+};
+
 static struct descrip ccstm_onoff[] = {
 	{ 0,	"On" },
 	{ 1,	"Off" },
@@ -562,12 +569,6 @@ static struct descrip ccstm_fscr[] = {
 	{ -1,	"Unknown" },
 };
 
-static struct descrip ccstm_finder[] = {
-	{ 0,	"No Viewfinder Display" },
-	{ 1,	"Finder Display On" },
-	{ -1,	"Unknown" },
-};
-
 
 /* D30/D60 custom functions. */
 
@@ -595,9 +596,9 @@ static struct ccstm canon_d30custom[] = {
 
 static struct ccstm canon_1dcustom[] = {
 	{ 0,	"Focusing screen", ccstm_fscr },
-	{ 1,	"Finder display during exposure", ccstm_finder },
+	{ 1,	"Finder display during exposure", ccstm_offon },
 	{ 2,	"Shutter release w/o CF card", ccstm_yesno },
-	{ 3,	"ISO speed expansion", ccstm_yesno },
+	{ 3,	"ISO speed expansion", ccstm_noyes },
 	{ 4,	"Shutter button/AEL button", ccstm_shutterael },
 	{ 5,	"Manual Tv/Av for M", ccstm_tvavform },
 	{ 6,	"Exposure level increments", ccstm_explvlinc },
@@ -610,7 +611,7 @@ static struct ccstm canon_1dcustom[] = {
 	{ 13,	"# AF points/spot metering", ccstm_afspot },
 	{ 14,	"Fill flash auto reduction", ccstm_endis },
 	{ 15,	"Shutter curtain sync", ccstm_shutsync },
-	{ 16,	"Safety shift in Av or Tv", ccstm_endis },
+	{ 16,	"Safety shift in Av or Tv", ccstm_disen },
 	{ 17,	"AF point activation area", ccstm_afact },
 	{ 18,	"Switch to registered AF point", ccstm_regaf },
 	{ 19,	"Lens AF stop button", ccstm_lensaf1 },
