@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sanyo.c,v 1.2 2003/08/08 06:21:07 ejohnst Exp $
+ * $Id: sanyo.c,v 1.3 2003/08/08 22:31:32 ejohnst Exp $
  */
 
 /*
@@ -264,7 +264,6 @@ sanyo_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i, j;
 	u_int32_t a, b;
-	unsigned char *offset;
 	char *c1, *c2;
 	struct exifprop *aprop;
 
@@ -297,7 +296,8 @@ sanyo_prop(struct exifprop *prop, struct exiftags *t)
 			aprop->lvl = sanyo_shoottags[j].lvl;
 			if (sanyo_shoottags[j].table)
 				aprop->str =
-				    finddescr(sanyo_shoottags[j].table, a);
+				    finddescr(sanyo_shoottags[j].table,
+				    (u_int16_t)a);
 
 			switch (aprop->tag) {
 			case 0x0001:
@@ -314,8 +314,9 @@ sanyo_prop(struct exifprop *prop, struct exiftags *t)
 	/* Image quality & resolution. */
 
 	case 0x0201:
-		c1 = finddescr(sanyo_quality, (prop->value >> 8) & 0xff);
-		c2 = finddescr(sanyo_res, prop->value & 0xff);
+		c1 = finddescr(sanyo_quality,
+		    (u_int16_t)((prop->value >> 8) & 0xff));
+		c2 = finddescr(sanyo_res, (u_int16_t)(prop->value & 0xff));
 		exifstralloc(&prop->str, strlen(c1) + strlen(c2) + 3);
 		sprintf(prop->str, "%s, %s", c1, c2);
 		free(c1);
@@ -337,7 +338,7 @@ sanyo_prop(struct exifprop *prop, struct exiftags *t)
 	/* Color adjust. */
 
 	case 0x0210:
-		prop->str = finddescr(sanyo_offon, !!prop->value);
+		prop->str = finddescr(sanyo_offon, (u_int16_t)(!!prop->value));
 		break;
 	}
 }

@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.24 2003/08/06 22:54:33 ejohnst Exp $
+ * $Id: minolta.c,v 1.25 2003/08/08 22:31:32 ejohnst Exp $
  *
  */ 
 
@@ -415,7 +415,7 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 	int32_t model;
 	double d;
 	char *valbuf;
-	unsigned char *cp, buf[8];
+	unsigned char buf[8];
 	struct exifprop *aprop;
 
 	valbuf = NULL;

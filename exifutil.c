@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.23 2003/08/06 02:26:42 ejohnst Exp $
+ * $Id: exifutil.c,v 1.24 2003/08/08 22:31:32 ejohnst Exp $
  */
 
 /*
@@ -132,10 +132,10 @@ byte4exif(u_int32_t n, unsigned char *b, enum byteorder o)
 
 	if (o == BIG)
 		for (i = 0; i < 4; i++)
-			b[3 - i] = (n >> (i * 8)) & 0xff;
+			b[3 - i] = (unsigned char)((n >> (i * 8)) & 0xff);
 	else
 		for (i = 0; i < 4; i++)
-			b[i] = (n >> (i * 8)) & 0xff;
+			b[i] = (unsigned char)((n >> (i * 8)) & 0xff);
 }
 
 
