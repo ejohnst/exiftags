@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.2 2002/10/15 03:08:06 ejohnst Exp $
+ * $Id: exifcom.c,v 1.3 2002/10/15 05:05:27 ejohnst Exp $
  */
 
 /*
@@ -313,7 +313,7 @@ void usage()
 {
 	fprintf(stderr, "Usage: %s [options] [-w string] file ...\n", progname);
 	fprintf(stderr, "Displays or sets Exif comment in the specified "
-	    "files.\n", progname);
+	    "files.\n");
 	fprintf(stderr, "Version: %s\n\n", version);
 	fprintf(stderr, "Available options:\n");
 	fprintf(stderr, "  -b\tOverwrite the comment tag with zeros.\n");
