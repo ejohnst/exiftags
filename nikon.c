@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.23 2004/12/28 07:12:00 ejohnst Exp $
+ * $Id: nikon.c,v 1.24 2004/12/28 20:42:16 ejohnst Exp $
  */
 
 /*
@@ -376,7 +376,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	case 0x0018:
 		exifstralloc(&prop->str, 10);
 		snprintf(prop->str, 9, "%.1f EV",
-		    (float)(prop->value >> 24) / 6);
+		    (int16_t)(prop->value >> 24) / 6.0);
 		break;
 
 	/* AE bracket compensation. */
