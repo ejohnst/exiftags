@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.11 2002/11/03 10:25:24 ejohnst Exp $
+ * $Id: exifint.h,v 1.12 2002/11/03 23:41:35 ejohnst Exp $
  */
 
 /*
@@ -143,6 +143,5 @@ extern struct ifd *readifds(u_int32_t offset, struct exiftags *t);
 extern u_int32_t readifd(unsigned char *b, struct ifd **dir,
     struct exiftags *t);
 extern u_int32_t gcd(u_int32_t a, u_int32_t b);
-extern u_int32_t sgcd(int32_t a, int32_t b);
 
 #endif

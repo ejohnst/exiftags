@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.11 2002/11/03 10:23:27 ejohnst Exp $
+ * $Id: exifutil.c,v 1.12 2002/11/03 23:41:35 ejohnst Exp $
  */
 
 /*
@@ -296,12 +296,4 @@ gcd(u_int32_t a, u_int32_t b)
 
 	if (!b) return (a);
 	return (gcd(b, a % b));
-}
-
-u_int32_t
-sgcd(int32_t a, int32_t b)
-{
-
-	if (!b) return ((u_int32_t)a);
-	return (sgcd(b, a % b));
 }
