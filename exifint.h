@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.26 2003/08/06 02:26:42 ejohnst Exp $
+ * $Id: exifint.h,v 1.27 2004/04/03 09:42:08 ejohnst Exp $
  */
 
 /*
@@ -99,7 +99,7 @@ struct ifd {
 	else if (abs((n)) > abs((d))) snprintf((str), 31, "%.1f", \
 	    (double)(n) / (double)(d)); \
 	else if (abs((d)) > 2 && abs((n)) > 1 && \
-	    ((double)(n) / (double)(d)) >= 0.1) \
+	    (fabs((double)(n) / (double)(d))) >= 0.1) \
 		snprintf((str), 31, "%.1f", (double)(n) / (double)(d)); \
 	else snprintf((str), 31, "%d/%d", (n), (d)); \
 }
