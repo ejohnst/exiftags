@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.7 2003/01/21 05:31:08 ejohnst Exp $
+ * $Id: minolta.c,v 1.8 2003/01/21 05:55:11 ejohnst Exp $
  *
  */ 
 
@@ -315,7 +315,7 @@ static struct exiftag minolta_0TLM[] = {
 	  "Image Quality", minolta_quality },
 	{ 6,  TIFF_LONG, 1, ED_IMG, "MinoltaDriveMode",
 	  "Drive Mode", minolta_drive },
-	{ 7,  TIFF_LONG, 1, ED_UNK, "MinoltaMeterMode",
+	{ 7,  TIFF_LONG, 1, ED_IMG, "MinoltaMeterMode",
 	  "Metering Mode", minolta_metermode },
 	{ 8,  TIFF_LONG, 1, ED_UNK, "MinoltaFilmSpeed",
 	  "Film Speed", NULL },
@@ -327,7 +327,7 @@ static struct exiftag minolta_0TLM[] = {
 	  "Macro", minolta_bool },
 	{ 12, TIFF_LONG, 1, ED_IMG, "MinoltaDigiZoom",
 	  "Digital Zoom", minolta_bool },
-	{ 13, TIFF_LONG, 1, ED_VRB, "MinoltaExpComp",
+	{ 13, TIFF_LONG, 1, ED_UNK, "MinoltaExpComp",
 	  "Exposure Compensation", NULL },
 	{ 14, TIFF_LONG, 1, ED_IMG, "MinoltaBracketStep",
 	  "Bracketing Step", minolta_brackstep },
