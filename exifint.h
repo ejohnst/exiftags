@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.1 2002/07/01 08:31:18 ejohnst Exp $
+ * $Id: exifint.h,v 1.2 2002/07/11 02:04:34 ejohnst Exp $
  */
 
 /*
@@ -125,7 +125,7 @@ struct fieldtype {
 };
 
 
-/* An Image File Directory (IFD) entry (12 bytes). */
+/* A raw Image File Directory (IFD) entry (12 bytes). */
  
 struct field {
 	unsigned char tag[2];
