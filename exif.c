@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.17 2002/09/28 20:52:35 ejohnst Exp $
+ * $Id: exif.c,v 1.18 2002/10/05 00:46:10 ejohnst Exp $
  */
 
 /*
@@ -78,18 +78,6 @@ hexprint(unsigned char *b, int len)
 
 	for (i = 0; i < len; i++)
 		printf(" %02X", b[i]);
-}
-
-
-/*
- * Lookup a property entry.
- */
-static struct exifprop *
-findprop(struct exifprop *prop, u_int16_t tag)
-{
-
-	for (; prop && prop->tag != tag; prop = prop->next);
-	return (prop);
 }
 
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.7 2002/07/11 18:00:18 ejohnst Exp $
+ * $Id: exifutil.c,v 1.8 2002/10/05 00:46:10 ejohnst Exp $
  */
 
 /*
@@ -102,6 +102,18 @@ finddescr(struct descrip *table, u_int16_t val)
 		exifdie((const char *)strerror(errno));
 	strcpy(c, table[i].descr);
 	return (c);
+}
+
+
+/*
+ * Lookup a property entry.
+ */
+struct exifprop *
+findprop(struct exifprop *prop, u_int16_t tag)
+{
+
+	for (; prop && prop->tag != tag; prop = prop->next);
+	return (prop);
 }
 
 
