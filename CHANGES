@@ -1,4 +1,5 @@
-20030203 version: exiftags 0.97
+20030204 version: exiftags 0.97
+20030204 fixed byte order bug displaying Exif version
 20030128 assign bad or senseless tags separate dump level
 20030124 internal code cleanups
 20030123 assign overridden tags separate dump level
@@ -41,4 +42,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.12 2003/02/04 07:16:15 ejohnst Exp $
+$Id: CHANGES,v 1.13 2003/02/05 08:09:41 ejohnst Exp $
