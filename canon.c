@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.51 2005/01/11 20:11:01 ejohnst Exp $
+ * $Id: canon.c,v 1.52 2005/01/11 20:12:35 ejohnst Exp $
  */
 
 /*
@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "makers.h"
 
