@@ -29,7 +29,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $Id: exifcom.1,v 1.1 2002/10/08 07:51:46 ejohnst Exp $
+.\" $Id: exifcom.1,v 1.2 2002/10/15 03:29:55 ejohnst Exp $
 .\"
 .SH NAME
 .B exifcom
@@ -37,7 +37,7 @@
 .SH SYNOPSIS
 .B exifcom
 [
-.B \-bifv
+.B \-bfinv
 ] [
 .B \-w
 .I comment
@@ -59,7 +59,7 @@ fixed-length and supports multi-byte character sets (though
 .B exifcom
 does not).  Note that not all cameras will include the tag.
 
-The utility is conservative to its approach in writing the UserComment tag.
+The utility is conservative in its approach to writing the UserComment tag.
 It does not modify, extend, or otherwise adulterate an image's Exif
 metadata structure.  When writing the tag it merely changes pre-allocated
 bytes.  Therefore,
@@ -88,14 +88,20 @@ for confirmation.
 Write a prompt to standard error before overwriting or blanking an
 existing or unsupported comment.  If the response from the standard
 input begins with 'y' or 'Y', the comment is overwritten.  This option
-takes precedence over the
+is default behavior.
+.IP -n
+Do not overwrite or blank existing or unsupported comments and do not
+prompt for confirmation (i.e., automatically answer 'no' to a confirmation
+prompt).  This option takes precedence over both the
 .B \-f
-option and is default behavior.
+and
+.B \-i
+options.
 .IP -v
 Be verbose when printing the contents of the UserComment tag.  Besides
 the comment itself (if present and supported),
 .B exifcom
-will display the maximum supported comment length, the character code of
+will display the maximum comment length supported, the character code of
 the comment, and the length of the comment.
 .IP -w
 Set UserComment to the ASCII string
