@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: leica.c,v 1.2 2004/04/03 22:07:40 ejohnst Exp $
+ * $Id: leica.c,v 1.3 2004/04/20 21:49:48 ejohnst Exp $
  */
 
 /*
@@ -146,15 +146,15 @@ static struct exiftag leica_tags[] = {
 	  "White Balance", leica_white },
 	{ 0x0007, TIFF_SHORT, 1, ED_IMG, "LeicaFocusMode",
 	  "Focus Mode", leica_focus },
-	{ 0x000F, TIFF_SHORT, 1, ED_IMG, "LeicaSpotAF",
+	{ 0x000f, TIFF_SHORT, 1, ED_IMG, "LeicaSpotAF",
 	  "Spot Autofocus", leica_spotaf },
-	{ 0x001C, TIFF_SHORT, 1, ED_IMG, "LeicaMacro",
+	{ 0x001c, TIFF_SHORT, 1, ED_IMG, "LeicaMacro",
 	  "Macro Mode", leica_bool },
-	{ 0x001F, TIFF_SHORT, 1, ED_IMG, "LeicaAperture",
+	{ 0x001f, TIFF_SHORT, 1, ED_IMG, "LeicaAperture",
 	  "Aperture Mode", leica_aperture },
 	{ 0x0024, TIFF_SHORT, 1, ED_IMG, "LeicaFlashEV",
 	  "Flash Compensation", leica_flashev },
-	{ 0x002C, TIFF_SHORT, 1, ED_IMG, "LeicaContrast",
+	{ 0x002c, TIFF_SHORT, 1, ED_IMG, "LeicaContrast",
 	  "Contrast", leica_contrast },
 	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "LeicaUnknown",
 	  "Leica Unknown", NULL },
@@ -190,7 +190,7 @@ leica_prop(struct exifprop *prop, struct exiftags *t)
 
 	/* Contrast. */
 
-	case 0x002C:
+	case 0x002c:
 		prop->override = EXIF_T_CONTRAST;
 		break;
 	}
