@@ -1,3 +1,14 @@
+20021006 version: exiftags 0.95
+20021007 added exifcom utility to display and write UserComment
+20021006 fixed read of max len UserComment
+20021006 internal code cleanup to allow additional utilities
+20021006 made ISO setting image-specific
+20021005 internal change to value description lookups
+20021005 added support for Canon D30 (and D60?) custom functions
+20021005 added new Canon maker note tags
+20021005 added -l option for removable lens cameras
+20021004 made shutter speed verbose when exposure time available
+20021004 smarter rational type handling
 20020928 version: exiftags 0.94
 20020928 support ASCII UserComment (thanks: Alan Judge)
 20020831 version: exiftags 0.93
@@ -12,4 +23,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.6 2002/09/28 20:48:44 ejohnst Exp $
+$Id: CHANGES,v 1.7 2002/10/15 03:35:28 ejohnst Exp $
