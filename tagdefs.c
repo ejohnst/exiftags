@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.7 2002/08/01 03:10:35 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.8 2002/09/28 20:51:27 ejohnst Exp $
  */
 
 /*
@@ -197,7 +197,7 @@ struct exiftag tags[] = {
 	{ 0x927c, TIFF_UNDEF, 0,  ED_UNK,
 	    "MakerNote", "Manufacturer Notes" },
 	{ 0x9286, TIFF_UNDEF, 0,  ED_UNK,
-	    "UserComment", "Comments" },
+	    "UserComment", "Comment" },
 	{ 0x9290, TIFF_ASCII, 0,  ED_IMG,
 	    "SubsecTime", "DateTime Second Fraction" },
 	{ 0x9291, TIFF_ASCII, 0,  ED_IMG,
@@ -253,6 +253,19 @@ struct makerfun makers[] = {
 	{ EXIF_MKR_FUJI, "fujifilm", fuji_prop, fuji_ifd },
 	{ EXIF_MKR_NIKON, "nikon", nikon_prop, nikon_ifd },
 	{ EXIF_MKR_UNKNOWN, "unknown", NULL, NULL },
+};
+
+
+/*
+ * User comment types.  All should be 8 bytes.
+ */
+
+struct descrip ucomment[] = {
+	{ TIFF_ASCII, "ASCII\0\0\0" },
+	{ TIFF_UNDEF, "JIS\0\0\0\0\0" },
+	{ TIFF_UNDEF, "UNICODE\0" },
+	{ TIFF_UNDEF, "\0\0\0\0\0\0\0\0" },
+	{ TIFF_UNDEF, NULL },
 };
 
 

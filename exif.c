@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.16 2002/08/31 11:07:58 ejohnst Exp $
+ * $Id: exif.c,v 1.17 2002/09/28 20:52:35 ejohnst Exp $
  */
 
 /*
@@ -152,6 +152,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
 		 * WinXP Picture Viewer bug (err, liberty).  When you rotate
 		 * a picture in the viewer, it modifies the IFD1 (thumbnail)
 		 * tags to UserComment without changing the type appropriately.
+		 * (At least we're able to ID invalid comments...)
 		 */
 
 		if (tags[i].type && tags[i].type != prop->type
@@ -384,7 +385,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 {
 	int i;
 	u_int16_t v = (u_int16_t)prop->value;
-	char buf[32], *c;
+	char buf[32], *c, *d;
 
 	switch (prop->tag) {
 
@@ -466,6 +467,48 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 		t->mkrval = i;
 
 		/* Keep processing (ASCII value). */
+		break;
+
+	/*
+	 * Handle user comment.  According to the spec, the first 8 bytes
+	 * of the comment indicate what charset follows.  For now, we
+	 * just support ASCII.
+	 */
+
+	case EXIF_T_USERCOMMENT:
+
+		/* Ignore the 'comments' WinXP creates when rotating. */
+#ifdef WINXP_BUGS
+		for (i = 0; tags[i].tag < EXIF_T_UNKNOWN &&
+		    tags[i].tag != EXIF_T_USERCOMMENT; i++);
+		if (tags[i].type && tags[i].type != prop->type)
+			break;
+#endif
+		/* Lookup the comment type. */
+
+		for (i = 0; ucomment[i].descr; i++)
+			if (!memcmp(ucomment[i].descr,
+			    t->btiff + prop->value, 8))
+				break;
+
+		/* Handle an ASCII comment; strip any trailing whitespace. */
+
+		if (ucomment[i].val == TIFF_ASCII &&
+		    (prop->value + prop->count <
+		    (u_int32_t)(t->etiff - t->btiff))) {
+			c = t->btiff + prop->value + 8;
+			d = c + strlen(c);
+
+			/* XXX Extra byte when no whitespace. */
+			while (d > c && isspace((int)*(d - 1))) --d;
+
+			if (!(prop->str = (char *)malloc(d - c + 1)))
+				exifdie((const char *)strerror(errno));
+			strncpy(prop->str, c, d - c);
+			prop->str[d - c] = '\0';
+			prop->lvl = prop->str[0] ? ED_IMG : ED_VRB;
+			return (TRUE);
+		}
 		break;
 
 	/* Lookup strings for various values. */

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.3 2002/07/12 21:16:17 ejohnst Exp $
+ * $Id: exifint.h,v 1.4 2002/09/28 20:51:43 ejohnst Exp $
  */
 
 /*
@@ -147,6 +147,8 @@ struct ifd {
 
 extern struct fieldtype ftypes[];
 extern struct exiftag tags[];
+
+extern struct descrip ucomment[];
 
 extern struct descrip compresss[];
 extern struct descrip pixelcomps[];
