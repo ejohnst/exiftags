@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.5 2002/10/05 00:46:10 ejohnst Exp $
+ * $Id: exifint.h,v 1.6 2002/10/05 17:12:40 ejohnst Exp $
  */
 
 /*
@@ -64,6 +64,7 @@
 #define EXIF_T_COMPRESS		0x0103
 #define EXIF_T_PHOTOINTERP	0x0106
 #define EXIF_T_EQUIPMAKE	0x010f
+#define EXIF_T_MODEL		0x0110
 #define EXIF_T_ORIENT		0x0112
 #define EXIF_T_XRES		0x011a
 #define EXIF_T_YRES		0x011b
