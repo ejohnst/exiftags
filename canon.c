@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.44 2004/10/09 01:12:23 ejohnst Exp $
+ * $Id: canon.c,v 1.45 2004/10/09 01:15:36 ejohnst Exp $
  */
 
 /*
@@ -37,6 +37,7 @@
  * Developed from http://www.burren.cx/david/canon.html.
  * EOS 1D and 1Ds contributions from Stan Jirman <stanj@phototrek.org>.
  * EOS 10D contributions from Jason Montojo <jason.montojo@rogers.com>.
+ * EOS 20D contributions from Per Kristian Hove <Per.Hove@math.ntnu.no>.
  *
  */
 
@@ -1157,7 +1158,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 {
 	unsigned char *offset;
 	u_int16_t flmin = 0, flmax = 0, flunit = 0;
-	u_int32_t v;
+	u_int32_t v, w;
 	struct exifprop *tmpprop;
 
 	switch (prop->tag) {
@@ -1217,10 +1218,52 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		}
 		break;
 
+	/* Number of actuations. */
+
 	case 0x0093:
+		/*
+		 * Alas, meanings of these fields seem to differ according
+		 * to camera model.  For the 1D, 1Ds, and 1D2, they are total
+		 * number of actuations.  For the 20D, they're the image
+		 * number.  For now, we'll make the former behavior default
+		 * and the latter an exception.
+		 */
+
+		if (!t->model) {
+			exifwarn("Canon model unset; please report to author");
+			break;
+		}
+
 		if (!canon_subval(prop, t, canon_tags93, NULL))
 			break;
 		v = 0;
+
+		if (strstr(t->model, "20D")) {
+
+			/* Image number is in two shorts... */
+
+			if ((tmpprop = findprop(t->props, canon_tags93, 1))) {
+				v = tmpprop->value >> 6;
+				w = (tmpprop->value & 0x3f) << 8;
+
+				if ((tmpprop = findprop(prop, canon_tags93, 2)))
+					w += tmpprop->value;
+				else {
+					v = 0;
+					w = 0;
+				}
+			}
+
+			if (v) {
+				tmpprop = childprop(prop);
+				tmpprop->name = "ImgNum";
+				tmpprop->descr = "Image Number";
+				tmpprop->lvl = ED_IMG;
+				exifstralloc(&tmpprop->str, 32);
+				snprintf(tmpprop->str, 31, "%03d-%04d", v, w);
+			}
+			break;
+		}
 
 		/* Number of acuations is in two shorts... */
 
@@ -1245,6 +1288,8 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 	/* Image number. */
 
 	case 0x0008:
+		if (!prop->value)
+			prop->lvl = ED_VRB;
 		exifstralloc(&prop->str, 32);
 		snprintf(prop->str, 31, "%03d-%04d", prop->value / 10000,
 		    prop->value % 10000);
