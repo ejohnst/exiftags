@@ -25,13 +25,10 @@
  *
  * Lifted from FreeBSD: src/bin/date/vary.c,v 1.15
  *
- * $Id: timevary.c,v 1.5 2004/04/20 18:05:47 ejohnst Exp $
+ * $Id: timevary.c,v 1.6 2004/04/20 18:45:48 ejohnst Exp $
  *
  */
 
-#ifndef WIN32
-#include <sys/cdefs.h>
-#endif
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
