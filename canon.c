@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.10 2002/10/05 22:59:36 ejohnst Exp $
+ * $Id: canon.c,v 1.11 2002/10/05 23:46:49 ejohnst Exp $
  */
 
 /*
@@ -254,7 +254,7 @@ static struct exiftag canon_tags[] = {
 	  "Owner Name", NULL },
 	{ 0x000c, TIFF_LONG,  1,  ED_CAM, "Serial",
 	  "Serial Number", NULL },
-	{ 0x000f, TIFF_SHORT, 0,  ED_IMG, "CustomFunc",
+	{ 0x000f, TIFF_SHORT, 0,  ED_VRB, "CustomFunc",
 	  "Custom Function", NULL },
 	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "Unknown",
 	  "Canon Unknown", NULL },
@@ -771,7 +771,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 	case 0x000c:
 		if (!(prop->str = (char *)malloc(32)))
 			exifdie((const char *)strerror(errno));
-		snprintf(prop->str, 31, "%04X-%05d", prop->value >> 16,
+		snprintf(prop->str, 31, "%04X%05d", prop->value >> 16,
 		    prop->value & 0xffff);
 		prop->str[31] = '\0';
 		break;
