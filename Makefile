@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2004/04/03 11:38:37 ejohnst Exp $
+# $Id: Makefile,v 1.18 2004/04/10 07:49:02 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
@@ -28,7 +28,7 @@ HDRS=exif.h exifint.h jpeg.h makers.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 
-all: exiftags exifcom
+all: exiftags exifcom exiftime
 
 exiftags: exiftags.o $(OBJS) $(MKRS) $(HDRS)
 	$(CC) $(CFLAGS) -o $@ exiftags.o $(OBJS) $(MKRS) -lm
@@ -36,8 +36,12 @@ exiftags: exiftags.o $(OBJS) $(MKRS) $(HDRS)
 exifcom: exifcom.o $(OBJS) $(NOMKRS) $(HDRS)
 	$(CC) $(CFLAGS) -o $@ exifcom.o $(OBJS) $(NOMKRS) -lm
 
+exiftime: exiftime.o timevary.o $(OBJS) $(NOMKRS) $(HDRS)
+	$(CC) $(CFLAGS) -o $@ exiftime.o timevary.o $(OBJS) $(NOMKRS) -lm
+
 clean:
-	@rm -f $(OBJS) $(MKRS) $(NOMKRS) exiftags.o exifcom.o exiftags exifcom
+	@rm -f $(OBJS) $(MKRS) $(NOMKRS) exiftags.o exifcom.o exiftime.o \
+	timevary.o exiftags exifcom exiftime
 
 install: all
 	cp exiftags exifcom $(PREFIX)/bin
