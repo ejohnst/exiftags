@@ -1,6 +1,6 @@
 .TH EXIFTAGS 1
 .\"
-.\" Copyright (c) 2001, 2002, 2003, Eric M. Johnston <emj@postal.net>
+.\" Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $Id: exiftags.1,v 1.17 2003/01/14 05:58:00 ejohnst Exp $
+.\" $Id: exiftags.1,v 1.18 2003/01/20 22:49:14 ejohnst Exp $
 .\"
 .SH NAME
 .B exiftags
@@ -37,7 +37,10 @@
 .SH SYNOPSIS
 .B exiftags
 [
-.B \-acdiquv
+.B \-acdilquv
+] [
+.B \-s
+.I delim
 ] [
 .I file ...
 ]
@@ -69,6 +72,10 @@ Make lens characteristics image-specific.  Useful for higher-end cameras
 that have removable lenses (i.e., not "point-and-shoot" cameras).
 .IP -q
 Suppress output of a property section header.
+.IP -s
+Separate field name and value with the string
+.IR delim  .
+The default is ': '.
 .IP -u
 Output unknown or unsupported properties contained in the file.
 .IP -v

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.16 2003/01/11 06:27:00 ejohnst Exp $
+ * $Id: exiftags.c,v 1.17 2003/01/20 22:49:14 ejohnst Exp $
  */
 
 /*
@@ -57,8 +57,9 @@ int getopt(int, char * const [], const char *);
 
 
 int quiet;
-static char *version = "0.96";
+static const char *version = "0.97";
 static int fnum;
+static const char *delim = ": ";
 
 
 static void
@@ -99,9 +100,9 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 		if (list->lvl == lvl) {
 			n = list->descr ? list->descr : list->name;
 			if (list->str)
-				printf("%s: %s\n", n, list->str);
+				printf("%s%s%s\n", n, delim, list->str);
 			else
-				printf("%s: %d\n", n, list->value);
+				printf("%s%s%d\n", n, delim, list->value);
 		}
 
 		list = list->next;
@@ -183,6 +184,8 @@ void usage()
 	fprintf(stderr, "  -l\tCamera has a removable lens.\n");
 	fprintf(stderr, "  -d\tDisplay parse debug information.\n");
 	fprintf(stderr, "  -q\tSuppress section headers.\n");
+	fprintf(stderr, "  -s\tSet delimiter to provided string "
+	    "(default: \": \").\n");
 
 	exit(1);
 }
@@ -206,7 +209,7 @@ main(int argc, char **argv)
 	mode = "r";
 #endif
 
-	while ((ch = getopt(argc, argv, "acivuldq")) != -1)
+	while ((ch = getopt(argc, argv, "acivuldqs:")) != -1)
 		switch (ch) {
 		case 'a':
 			dumplvl |= (ED_CAM | ED_IMG | ED_VRB);
@@ -231,6 +234,9 @@ main(int argc, char **argv)
 			break;
 		case 'q':
 			quiet = TRUE;
+			break;
+		case 's':
+			delim = optarg;
 			break;
 		case '?':
 		default:
