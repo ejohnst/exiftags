@@ -1,3 +1,6 @@
+20030112 added Minolta maker note support (thanks: Javier Crespo)
+20030104 removed spurious Exif header warning (thanks: Kevin Layer)
+20030104 Canon ISO values (thanks: Alan Murphy)
 20021103 version: exiftags 0.96
 20021103 internal mechanism for one tag to override another
 20021102 reduce fractions (e.g., exposure time)
@@ -31,4 +34,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.9 2002/11/04 07:23:50 ejohnst Exp $
+$Id: CHANGES,v 1.10 2003/01/14 05:46:34 ejohnst Exp $
