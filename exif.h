@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.2 2002/01/20 23:59:08 ejohnst Exp $
+ * $Id: exif.h,v 1.3 2002/02/17 03:43:21 ejohnst Exp $
  */
 
 /*
@@ -93,6 +93,7 @@
 #define EXIF_T_LIGHTSRC		0x9208
 #define EXIF_T_FLASH		0x9209
 #define EXIF_T_FOCALLEN		0x920a
+#define EXIF_T_USERCOMMENT	0x9286
 #define EXIF_T_COLORSPC		0xa001
 #define EXIF_T_FPXRES		0xa20e
 #define EXIF_T_FPYRES		0xa20f
