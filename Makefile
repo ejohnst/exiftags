@@ -1,38 +1,37 @@
-# $Id: Makefile,v 1.4 2002/06/30 09:01:20 ejohnst Exp $
+# $Id: Makefile,v 1.5 2002/07/03 07:31:01 ejohnst Exp $
 
-OBJ=.
-SRC=.
+#
+# Add any new maker note modules here.
+#
+MKRS=canon.o olympus.o
+
+#
+# A few parameters...
+#
+CC=cc
+DEBUG=-g
+CFLAGS=-Wall -O2 $(DEBUG)
+PREFIX=/usr/local
+
+OBJS=exiftags.o exif.o tagdefs.o exifutil.o jpeg.o $(MKRS)
+HDRS=exif.h exifint.h exiftags.h jpeg.h makers.h
+
+
+.SUFFIXES: .o .c
+.c.o:
+	$(CC) $(CFLAGS) -o $@ -c $<
+
 
 all: exiftags
 
+exiftags: $(OBJS) $(HDRS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) -lm
+
 clean:
-	rm *.o
-	rm exiftags
+	@rm -f $(OBJS) exiftags
 
-objs = $(OBJ)/exif.o $(OBJ)/jpeg.o $(OBJ)/exiftags.o $(OBJ)/tagdefs.o \
-	$(OBJ)/exifutil.o $(OBJ)/canon.o $(OBJ)/olympus.o
-
-./exiftags.o: ./exiftags.c
-	cc -O3 -Wall -c -g $< -o $@
-
-./exif.o: ./exif.c
-	cc -O3 -Wall -c -g $< -o $@
-
-./tagdefs.o: ./tagdefs.c
-	cc -O3 -Wall -c -g $< -o $@
-
-./exifutil.o: ./exifutil.c
-	cc -O3 -Wall -c -g $< -o $@
-
-./jpeg.o: ./jpeg.c
-	cc -O3 -Wall -c -g $< -o $@
-
-./canon.o: ./canon.c
-	cc -O3 -Wall -c -g $< -o $@
-
-./olympus.o: ./olympus.c
-	cc -O3 -Wall -c -g $< -o $@
-
-exiftags: $(objs) exiftags.h jpeg.h exif.h
-	cc -g -o exiftags $(objs) -lm
-
+install: exiftags
+	cp exiftags $(PREFIX)/bin
+	chmod a+x $(PREFIX)/bin
+	cp exiftags.1 $(PREFIX)/man/man1
+	chmod a+r $(PREFIX)/man/man1/exiftags.1
