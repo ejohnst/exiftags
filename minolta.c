@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.11 2003/01/25 08:00:29 ejohnst Exp $
+ * $Id: minolta.c,v 1.12 2003/01/25 09:27:36 ejohnst Exp $
  *
  */ 
 
@@ -411,7 +411,7 @@ void
 minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
     struct exiftag *thetags)
 {
-	int i, j, k;
+	unsigned int i, j, k;
 	u_int32_t v;
 	int32_t model;
 	double d;
@@ -449,7 +449,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 		aprop->lvl = thetags[j].lvl;
 		if (thetags[j].table)
 			aprop->str = finddescr(thetags[j].table,
-			    aprop->value);
+			    (u_int16_t)aprop->value);
 
 		dumpprop(aprop, NULL);
 
@@ -522,8 +522,8 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 		case 8:
 			aprop->str = valbuf;
 			valbuf = NULL;
-			v = pow(2, ((double)aprop->value / 8) - 1) *
-			    (double)3.125;
+			v = (u_int16_t)(pow(2, ((double)aprop->value / 8) -
+			    1) * (double)3.125);
 			snprintf(aprop->str, 15, "%d", v);
 			break;
 
