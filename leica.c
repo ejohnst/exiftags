@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: leica.c,v 1.3 2004/04/20 21:49:48 ejohnst Exp $
+ * $Id: leica.c,v 1.4 2004/04/20 22:12:51 ejohnst Exp $
  */
 
 /*
@@ -53,9 +53,9 @@ static struct descrip leica_white[] = {
 	{ 2,	"Sunshine" },
 	{ 3,	"Cloudy" },
 	{ 4,	"Halogen" },
+	{ 5,	"Manual" },
 	{ 8,	"Electronic Flash" },
 	{ 10,	"Black & White" },
-	{ 5,	"Manual" },
 	{ -1,	"Unknown" },
 };
 
