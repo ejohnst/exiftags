@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.21 2002/10/05 22:49:38 ejohnst Exp $
+ * $Id: exif.c,v 1.22 2002/10/05 23:54:06 ejohnst Exp $
  */
 
 /*
@@ -384,6 +384,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 {
 	int i;
 	u_int16_t v = (u_int16_t)prop->value;
+	u_int32_t un, ud;
+	int32_t sn, sd;
 	char buf[32], *c, *d;
 
 	/* Set description if we have a lookup table. */
@@ -546,7 +548,11 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 		return (TRUE);
 	}
 
-	/* Rational types.  (Note that we'll redo some in our later pass.) */
+	/*
+	 * Rational types.  (Note that we'll redo some in our later pass.)
+	 * We'll try to be semi-smart about the fraction, but make no attempt
+	 * to reduce it.
+	 */
 
 	if ((prop->type == TIFF_RTNL || prop->type == TIFF_SRTNL) &&
 	    (prop->value + prop->count * 8 <=
@@ -555,17 +561,23 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 		if (!(prop->str = (char *)malloc(32)))
 			exifdie((const char *)strerror(errno));
 
-		if (prop->type == TIFF_RTNL)
-			snprintf(prop->str, 31, "%d/%d",
-			    exif4byte(t->btiff + prop->value, t->tifforder),
-			    exif4byte(t->btiff + prop->value + 4,
-			    t->tifforder));
-		else
-			snprintf(prop->str, 31, "%d/%d",
-			    exif4sbyte(t->btiff + prop->value, t->tifforder),
-			    exif4sbyte(t->btiff + prop->value + 4,
-			    t->tifforder));
+		if (prop->type == TIFF_RTNL) {
+			un = exif4byte(t->btiff + prop->value, t->tifforder);
+			ud = exif4byte(t->btiff + prop->value + 4,
+			    t->tifforder);
 
+			if (un == ud) sprintf(prop->str, "1");
+			else if (ud == 1) snprintf(prop->str, 31, "%d", un);
+			else snprintf(prop->str, 31, "%d/%d", un, ud);
+		} else {
+			sn = exif4sbyte(t->btiff + prop->value, t->tifforder);
+			sd = exif4sbyte(t->btiff + prop->value + 4,
+			    t->tifforder);
+
+			if (sn == sd) sprintf(prop->str, "1");
+			else if (sd == 1) snprintf(prop->str, 31, "%d", sn);
+			else snprintf(prop->str, 31, "%d/%d", sn, sd);
+		}
 		prop->str[31] = '\0';
 		return (TRUE);
 	}
