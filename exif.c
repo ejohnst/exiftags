@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.65 2004/09/15 23:32:12 ejohnst Exp $
+ * $Id: exif.c,v 1.66 2004/12/18 01:42:40 ejohnst Exp $
  */
 
 /*
@@ -418,9 +418,28 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 	if (prop->type == TIFF_ASCII &&
 	    (prop->lvl & (ED_CAM | ED_IMG | ED_PAS))) {
 		c = prop->str;
-		while (c && *c && isspace((int)*c)) c++;
+		while (c && *c && (isspace((int)*c) || *c < ' ')) c++;
 		if (!c || !*c)
 			prop->lvl = ED_VRB;
+	}
+
+	/*
+	 * Don't let unprintable characters slip through -- we'll just replace
+	 * them with '_'.  (Can see this with some corrupt maker notes.)
+	 * Remove trailing whitespace while we're at it.
+	 */
+
+	if (prop->str && prop->type == TIFF_ASCII) {
+		c = prop->str;
+		while (*c) {
+			if (*c < ' ')
+				*c = '_';
+			c++;
+		}
+
+		c = prop->str + strlen(prop->str);
+		while (c > prop->str && isspace((int)*(c - 1))) --c;
+		*c = '\0';
 	}
 
 	/*
