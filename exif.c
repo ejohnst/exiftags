@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.13 2002/07/12 21:18:38 ejohnst Exp $
+ * $Id: exif.c,v 1.14 2002/07/12 21:34:53 ejohnst Exp $
  */
 
 /*
@@ -310,7 +310,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		fval = (float)exif4byte(t->btiff + prop->value, o) /
 		    (float)exif4byte(t->btiff + prop->value + 4, o);
 		/* sqrt(2)^aperture */
-		snprintf(prop->str, 31, "f/%.1f", powf(1.4142, fval));
+		snprintf(prop->str, 31, "f/%.1f", pow(1.4142, (double)fval));
 		prop->str[31] = '\0';
 		break;
 
@@ -358,7 +358,7 @@ tweaklvl(struct exifprop *prop)
 	if (prop->type == TIFF_ASCII &&
 	    (prop->lvl == ED_CAM || prop->lvl == ED_IMG)) {
 		c = prop->str;
-		while (c && *c && isspace(*c)) c++;
+		while (c && *c && isspace((int)*c)) c++;
 		if (!c || !*c)
 			prop->lvl = ED_VRB;
 	}
