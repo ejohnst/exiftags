@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.19 2004/12/27 21:05:36 ejohnst Exp $
+ * $Id: nikon.c,v 1.20 2004/12/27 22:27:47 ejohnst Exp $
  */
 
 /*
@@ -341,12 +341,22 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	/*
 	 * ISO values.  Two shorts stuffed into the value; we only care
 	 * about the second one.  (First is always zero?)
+	 *
+	 * XXX Well, this is messy.  Nikon stuffs the two shorts into
+	 * the tag value, rather than referencing an offset.  Byte order
+	 * screws with us here...  (Need to fix!)
 	 */
 
 	case 0x0002:
 	case 0x0013:
-		snprintf(prop->str, 31, "%d",
-		    (u_int16_t)(prop->value & 0xffff));
+		exifstralloc(&prop->str, 32);
+
+		if (t->mkrmd.order == LITTLE)
+			snprintf(prop->str, 31, "%d",
+			    (u_int16_t)((prop->value >> 16) & 0xffff));
+		else
+			snprintf(prop->str, 31, "%d",
+			    (u_int16_t)(prop->value & 0xffff));
 		break;
 
 	/* White balance. */
@@ -628,8 +638,8 @@ nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 
 	if (!strcmp((const char *)b, "Nikon")) {
 		b += 6;
-		switch (exif2byte(b, md->order)) {
-		case 0x0001:
+		switch (exif2byte(b, BIG)) {
+		case 0x0100:
 			readifd(offset + 8, &myifd, nikon_tags0, md);
 			return (myifd);
 
