@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.4 2002/07/01 08:27:19 ejohnst Exp $
+ * $Id: exifutil.c,v 1.5 2002/07/11 02:04:04 ejohnst Exp $
  */
 
 /*
@@ -52,6 +52,7 @@
 u_int16_t
 exif2byte(unsigned char *b, enum order o)
 {
+
 	if (o == BIG)
 		return ((b[0] << 8) | b[1]);
 	else
@@ -65,6 +66,7 @@ exif2byte(unsigned char *b, enum order o)
 u_int32_t
 exif4byte(unsigned char *b, enum order o)
 {
+
 	if (o == BIG)
 		return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
 	else
@@ -78,6 +80,7 @@ exif4byte(unsigned char *b, enum order o)
 int32_t
 exif4sbyte(unsigned char *b, enum order o)
 {
+
 	if (o == BIG)
 		return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
 	else
@@ -120,7 +123,9 @@ newprop(void)
 
 
 /*
- * Given a parent, create a new child Exif property.
+ * Given a parent, create a new child Exif property.  These are typically
+ * used by maker note modules when a single tab may contain multiple
+ * items of interest.
  */
 struct exifprop *
 childprop(struct exifprop *parent)
