@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.23 2004/12/28 06:39:21 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.24 2004/12/28 07:13:01 ejohnst Exp $
  */
 
 /*
