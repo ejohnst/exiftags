@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.16 2002/11/03 01:58:04 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.17 2002/11/03 05:41:06 ejohnst Exp $
  */
 
 /*
@@ -223,12 +223,22 @@ struct descrip lightsrcs[] = {
 	{ 1,	"Daylight" },
 	{ 2,	"Fluorescent" },
 	{ 3,	"Tungsten" },
+	{ 4,	"Flash" },
+	{ 9,	"Fine Weather" },
+	{ 10,	"Cloudy Weather" },
+	{ 11,	"Shade" },
+	{ 12,	"Daylight Fluorescent" },
+	{ 13,	"Day White Fluorescent" },
+	{ 14,	"Cool White Fluorescent" },
+	{ 15,	"White Fluorescent" },
 	{ 17,	"Standard Light A" },
 	{ 18,	"Standard Light B" },
 	{ 19,	"Standard Light C" },
 	{ 20,	"D55" },
 	{ 21,	"D65" },
 	{ 22,	"D75" },
+	{ 23,	"D50" },
+	{ 24,	"ISO Studio Tungsten" },
 	{ 255,	"Other" },
 	{ -1,	"Unknown" },
 };
@@ -298,6 +308,87 @@ struct descrip filesrcs[] = {
 
 struct descrip scenetypes[] = {
 	{ 1,	"Directly Photographed" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Custom rendering. */
+
+struct descrip customrend[] = {
+	{ 0,	"Normal" },
+	{ 1,	"Custom" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Exposure mode. */
+
+struct descrip expmode[] = {
+	{ 0,	"Auto" },
+	{ 1,	"Manual" },
+	{ 2,	"Auto Bracket" },
+	{ -1,	"Unknown" },
+};
+
+
+/* White balance. */
+
+struct descrip whitebal[] = {
+	{ 0,	"Auto" },
+	{ 1,	"Manual" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Scene capture type. */
+
+struct descrip scenecaptypes[] = {
+	{ 0,	"Standard" },
+	{ 1,	"Landscape" },
+	{ 2,	"Portrait" },
+	{ 3,	"Night Scene" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Gain control. */
+
+struct descrip gainctrl[] = {
+	{ 0,	"None" },
+	{ 1,	"Low Gain Up" },
+	{ 2,	"High Gain Up" },
+	{ 3,	"Low Gain Down" },
+	{ 4,	"High Gain Down" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Contrast & sharpness. */
+
+struct descrip processrange[] = {
+	{ 0,	"Normal" },
+	{ 1,	"Soft" },
+	{ 2,	"Hard" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Saturation. */
+
+struct descrip saturate[] = {
+	{ 0,	"Normal" },
+	{ 1,	"Low" },
+	{ 2,	"High" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Subject distance range. */
+
+struct descrip subjdist[] = {
+	{ 1,	"Macro" },
+	{ 2,	"Close View" },
+	{ 3,	"Distant View" },
 	{ -1,	"Unknown" },
 };
 
@@ -429,6 +520,8 @@ struct exiftag tags[] = {
 	    "Flash", "Flash", NULL },
 	{ 0x920a, TIFF_RTNL,  1,  ED_IMG,		/* mm */
 	    "FocalLength", "Focal Length", NULL },
+	{ 0x9214, TIFF_SHORT,  0,  ED_UNK,
+	    "SubjectArea", "Subject Area", NULL },
 	{ 0x927c, TIFF_UNDEF, 0,  ED_UNK,
 	    "MakerNote", "Manufacturer Notes", NULL },
 	{ 0x9286, TIFF_UNDEF, 0,  ED_UNK,
@@ -473,6 +566,32 @@ struct exiftag tags[] = {
 	    "SceneType", "Scene Type", scenetypes },
 	{ 0xa302, TIFF_UNDEF, 0,  ED_CAM,
 	    "CFAPattern", "Color Filter Array Pattern", NULL },
+	{ 0xa401, TIFF_SHORT, 1,  ED_IMG,
+	    "CustomRendered", "Rendering", customrend },
+	{ 0xa402, TIFF_SHORT, 1,  ED_IMG,
+	    "ExposureMode", "Exposure Mode", expmode },
+	{ 0xa403, TIFF_SHORT, 1,  ED_IMG,
+	    "WhiteBalance", "White Balance", whitebal },
+	{ 0xa404, TIFF_RTNL, 1,  ED_IMG,
+	    "DigitalZoomRatio", "Digital Zoom Ratio", NULL },
+	{ 0xa405, TIFF_SHORT, 1,  ED_PAS,		/* mm */
+	    "FocalLenIn35mmFilm", "Focal Length (35mm Equiv)", NULL },
+	{ 0xa406, TIFF_SHORT, 1,  ED_IMG,
+	    "SceneCaptureType", "Scene Capture Type", scenecaptypes },
+	{ 0xa407, TIFF_SHORT, 1,  ED_IMG,		/* XXX typo in spec? */
+	    "GainControl", "Gain Control", gainctrl },
+	{ 0xa408, TIFF_SHORT, 1,  ED_IMG,
+	    "Contrast", "Contrast", processrange },
+	{ 0xa409, TIFF_SHORT, 1,  ED_IMG,
+	    "Saturation", "Saturation", saturate },
+	{ 0xa40a, TIFF_SHORT, 1,  ED_IMG,
+	    "Sharpness", "Sharpness", processrange },
+	{ 0xa40b, TIFF_UNDEF, 0,  ED_UNK,
+	    "DeviceSettingDescr", "Device Settings", NULL },
+	{ 0xa40c, TIFF_SHORT, 1,  ED_IMG,
+	    "SubjectDistRange", "Subject Distance Range", subjdist },
+	{ 0xa420, TIFF_ASCII, 33,  ED_IMG,
+	    "ImageUniqueID", "Unique Image ID", NULL },
 	{ 0xffff, TIFF_UNKN,  0,  ED_UNK,
 	    "Unknown", NULL, NULL },
 };
