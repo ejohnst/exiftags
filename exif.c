@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.64 2004/08/20 22:31:45 ejohnst Exp $
+ * $Id: exif.c,v 1.65 2004/09/15 23:32:12 ejohnst Exp $
  */
 
 /*
@@ -58,6 +58,7 @@
 
 #define OLYMPUS_BUGS		/* Work around Olympus stupidity. */
 #define WINXP_BUGS		/* Work around Windows XP stupidity. */
+#define SIGMA_BUGS		/* Work around Sigma stupidity. */
 #define UNCREDITED_BUGS		/* Work around uncredited stupidity. */
 
 
@@ -141,10 +142,18 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 		    )
 			exifwarn2("field type mismatch", prop->name);
 
-		/* Check the field count. */
+		/*
+		 * Check the field count.
+		 * XXX For whatever the reason, Sigma doesn't follow the
+		 * spec on count for FileSource.
+		 */
 
 		if (prop->tagset[i].count && prop->tagset[i].count !=
+#ifdef SIGMA_BUGS
+		    prop->count && prop->tag != EXIF_T_FILESRC)
+#else
 		    prop->count)
+#endif
 			exifwarn2("field count mismatch", prop->name);
 	}
 
@@ -183,11 +192,15 @@ readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
 
 	if (debug) {
 		if (dir->par && dir->par->tag != EXIF_T_UNKNOWN) {
-			printf("Processing %s directory, %d entries\n",
-			    dir->par->name, dir->num);
+			printf("Processing %s directory, %d entries, "
+			    "%s-endian\n",
+			    dir->par->name, dir->num, dir->md.order == BIG ?
+			    "big" : "little");
 		} else
-			printf("Processing directory %d, %d entries\n",
-			    seq, dir->num);
+			printf("Processing directory %d, %d entries, "
+			    "%s-endian\n",
+			    seq, dir->num, dir->md.order == BIG ? "big" :
+			    "little");
 	}
 
 	for (i = 0; i < dir->num; i++)
