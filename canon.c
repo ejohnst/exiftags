@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.15 2002/10/07 00:57:31 ejohnst Exp $
+ * $Id: canon.c,v 1.16 2002/11/04 07:08:19 ejohnst Exp $
  */
 
 /*
@@ -525,8 +525,7 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 				aprop->lvl = ED_VRB;
 				break;
 			}
-			if ((tmpprop = findprop(t->props, EXIF_T_METERMODE)))
-				tmpprop->lvl = ED_VRB;
+			aprop->override = EXIF_T_METERMODE;
 			break;
 		case 23:
 			flmax = v;
@@ -610,6 +609,9 @@ canon_prop4(struct exifprop *prop, char *off, enum order o)
 		/* Further process known properties. */
 
 		switch (i) {
+		case 7:
+			aprop->override = EXIF_T_WHITEBAL;
+			break;
 		case 9:
 			aprop->lvl = v ? ED_IMG : ED_VRB;
 			break;
@@ -778,8 +780,6 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 
 	case 0x000f:
 		canon_custom(prop, t->btiff + prop->value, t);
-		/* Set parent tag to verbose after children finished. */
-		prop->lvl = ED_VRB;
 		break;
 	}
 }

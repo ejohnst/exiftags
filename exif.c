@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.33 2002/11/04 02:01:53 ejohnst Exp $
+ * $Id: exif.c,v 1.34 2002/11/04 07:08:19 ejohnst Exp $
  */
 
 /*
@@ -267,8 +267,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 
 	/*
 	 * Shutter speed doesn't seem all that useful.  It's usually the
-	 * same as exposure time and when it's not, it's wrong.  In the
-	 * presence of an exposure time we'll make it ED_VRB.
+	 * same as exposure time and when it's not, it's wrong.
+	 * Exposure time overrides it.
 	 */
 
 	case EXIF_T_SHUTTER:
@@ -279,14 +279,13 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		snprintf(prop->str, 31, "1/%d",
 		    (int)floor(pow(2, (double)fval) + 0.5));
 		prop->str[31] = '\0';
-
-		if (findprop(h, EXIF_T_EXPOSURE))
-			prop->lvl = ED_VRB;
 		/* FALLTHROUGH */
 
 	case EXIF_T_EXPOSURE:
 		if (strlen(prop->str) > 27) break;
 		strcat(prop->str, " sec");
+		if (prop->tag == EXIF_T_EXPOSURE)
+			prop->override = EXIF_T_SHUTTER;
 		break;
 
 	case EXIF_T_FNUMBER:
@@ -379,14 +378,15 @@ postprop(struct exifprop *prop, struct exiftags *t)
  * property values after all properties are established.
  */
 static void
-tweaklvl(struct exifprop *prop)
+tweaklvl(struct exifprop *prop, struct exiftags *t)
 {
 	char *c;
+	struct exifprop *tmpprop;
 
 	/* Change any ASCII properties to verbose if they're empty. */
 
 	if (prop->type == TIFF_ASCII &&
-	    (prop->lvl == ED_CAM || prop->lvl == ED_IMG)) {
+	    (prop->lvl & (ED_CAM | ED_IMG | ED_PAS))) {
 		c = prop->str;
 		while (c && *c && isspace((int)*c)) c++;
 		if (!c || !*c)
@@ -397,6 +397,12 @@ tweaklvl(struct exifprop *prop)
 
 	if (prop->ifdseq == 1 && prop->lvl != ED_UNK)
 		prop->lvl = ED_VRB;
+
+	if (prop->override && (tmpprop = findprop(t->props, prop->override))) {
+		if (tmpprop->lvl & (ED_CAM | ED_IMG | ED_PAS))
+			tmpprop->lvl = ED_VRB;
+printf("%s (%d) overrode %s (%d)\n", prop->name, prop->tag, tmpprop->name, tmpprop->tag);
+	}
 }
 
 
@@ -734,7 +740,7 @@ exifparse(unsigned char *b, int len)
 	curprop = t->props;
 	while (curprop) {
 		postprop(curprop, t);
-		tweaklvl(curprop);
+		tweaklvl(curprop, t);
 		curprop = curprop->next;
 	}
 

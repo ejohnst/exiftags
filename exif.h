@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.16 2002/11/03 10:26:28 ejohnst Exp $
+ * $Id: exif.h,v 1.17 2002/11/04 07:08:19 ejohnst Exp $
  */
 
 /*
@@ -137,6 +137,7 @@ typedef __int32 int32_t;
 #define EXIF_T_IMGSENSOR	0xa217
 #define EXIF_T_FILESRC		0xa300
 #define EXIF_T_SCENETYPE	0xa301
+#define EXIF_T_WHITEBAL		0xa403
 #define EXIF_T_DIGIZOOM		0xa404
 #define EXIF_T_FOCALLEN35	0xa405
 
@@ -159,6 +160,7 @@ struct exifprop {
 	unsigned short lvl;	/* Verbosity level. */
 	int ifdseq;		/* Sequence number of parent IFD. */
 	u_int16_t ifdtag;	/* Parent IFD tag association. */
+	u_int16_t override;	/* Override display of another tag. */
 	struct exifprop *next;
 };
 
