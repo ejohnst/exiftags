@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.24 2002/10/07 02:28:52 ejohnst Exp $
+ * $Id: exif.c,v 1.25 2002/10/08 07:45:46 ejohnst Exp $
  */
 
 /*
@@ -64,7 +64,8 @@
 
 /* Function prototypes. */
 
-static int parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t);
+static int parsetag(struct exifprop *prop, struct ifd *dir,
+    struct exiftags *t, int domkr);
 
 
 /*
@@ -84,7 +85,8 @@ hexprint(unsigned char *b, int len)
  * Create an Exif property from the raw IFD field data.
  */
 static void
-readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
+readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
+    int domkr)
 {
 	int i, j;
 	struct exifprop *prop, *tmpprop;
@@ -177,7 +179,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
 	 * to our list if it's not an IFD pointer.
 	 */
 
-	if (parsetag(prop, dir, t)) {
+	if (parsetag(prop, dir, t, domkr)) {
 		if ((tmpprop = t->props)) {
 			while (tmpprop->next)
 				tmpprop = tmpprop->next;
@@ -202,7 +204,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
  * maker note we set our byte order to little endian.
  */
 static void
-readtags(struct ifd *dir, int seq, struct exiftags *t)
+readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
 {
 	int i;
 #ifdef FUJI_BUGS
@@ -225,7 +227,7 @@ readtags(struct ifd *dir, int seq, struct exiftags *t)
 	}
 
 	for (i = 0; i < dir->num; i++)
-		readtag(&(dir->fields[i]), seq, dir, t);
+		readtag(&(dir->fields[i]), seq, dir, t, domkr);
 
 #ifdef FUJI_BUGS
 	if (dir->tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
@@ -379,7 +381,7 @@ tweaklvl(struct exifprop *prop)
  * Fetch the data for an Exif tag.
  */
 static int
-parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
+parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 {
 	int i;
 	u_int16_t v = (u_int16_t)prop->value;
@@ -440,6 +442,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 	/* Process a maker note. */
 
 	case EXIF_T_MAKERNOTE:
+		if (!domkr)
+			return (TRUE);
+
 		while (dir->next)
 			dir = dir->next;
 
@@ -608,7 +613,7 @@ exiffree(struct exiftags *t)
  * Scan the Exif section.
  */
 struct exiftags *
-exifscan(unsigned char *b, int len)
+exifscan(unsigned char *b, int len, int domkr)
 {
 	int seq;
 	u_int32_t ifdoff;
@@ -671,7 +676,7 @@ exifscan(unsigned char *b, int len)
 	/* Now, let's parse the fields... */
 
 	while ((tmpifd = curifd)) {
-		readtags(curifd, seq++, t);
+		readtags(curifd, seq++, t, domkr);
 		curifd = curifd->next;
 		free(tmpifd);		/* No need to keep it around... */
 	}
@@ -691,7 +696,7 @@ exifparse(unsigned char *b, int len)
 
 	/* Find the section and scan it. */
 
-	t = exifscan(b, len);
+	t = exifscan(b, len, TRUE);
 
 	/* Make field values pretty. */
 
