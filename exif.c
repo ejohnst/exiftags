@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.72 2005/01/04 20:43:59 ejohnst Exp $
+ * $Id: exif.c,v 1.73 2005/01/04 21:25:45 ejohnst Exp $
  */
 
 /*
@@ -695,17 +695,25 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	}
 
 	/*
-	 * ASCII types: sanity check the offset.
-	 * (InteroperabilityOffset has an odd ASCII value.)
+	 * ASCII types.
 	 */
 
-	if (prop->type == TIFF_ASCII &&
-	    (prop->value + prop->count <=
-	    (u_int32_t)(dir->md.etiff - btiff))) {
-		exifstralloc(&prop->str, prop->count + 1);
-		strncpy(prop->str, (const char *)(btiff + prop->value),
-		    prop->count);
-		return;
+	if (prop->type == TIFF_ASCII) {
+		/* Should fit in the value field. */
+		if (prop->count < 5) {
+			exifstralloc(&prop->str, 5);
+			byte4exif(prop->value, prop->str, o);
+			return;
+		}
+
+		/* Sanity check the offset. */
+		if ((prop->value + prop->count <=
+		    (u_int32_t)(dir->md.etiff - btiff))) {
+			exifstralloc(&prop->str, prop->count + 1);
+			strncpy(prop->str, (const char *)(btiff + prop->value),
+			    prop->count);
+			return;
+		}
 	}
 
 	/*
