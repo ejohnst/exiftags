@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.9 2002/10/05 22:49:38 ejohnst Exp $
+ * $Id: canon.c,v 1.10 2002/10/05 22:59:36 ejohnst Exp $
  */
 
 /*
@@ -464,7 +464,7 @@ static void
 canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 {
 	int i, j;
-	u_int16_t v, flmin, flmax, flunit;
+	u_int16_t v, flmin = 0, flmax = 0, flunit = 0;
 	struct exifprop *aprop, *tmpprop;
 	enum order o = t->tifforder;
 
@@ -522,7 +522,11 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 				aprop->str = finddescr(canon_dzoom, v);
 			break;
 		case 17:
-			/* Maker meter mode overrides standard one. */
+			/* Maker meter mode overrides standard one if known. */
+			if (!strcmp(aprop->str, "Unknown")) {
+				aprop->lvl = ED_VRB;
+				break;
+			}
 			if ((tmpprop = findprop(t->props, EXIF_T_METERMODE)))
 				tmpprop->lvl = ED_VRB;
 			break;
@@ -554,20 +558,23 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 	 * existing focal length Exif tag).
 	 */
 
-	aprop = childprop(prop);
-	aprop->name = "CanonLensSz";
-	aprop->descr = "Lens Size";
-	if (!(aprop->str = (char *)malloc(32)))
-		exifdie((const char *)strerror(errno));
+	if (flunit && (flmin || flmax)) {
+		aprop = childprop(prop);
+		aprop->name = "CanonLensSz";
+		aprop->descr = "Lens Size";
+		if (!(aprop->str = (char *)malloc(32)))
+			exifdie((const char *)strerror(errno));
 
-	if (flmin == flmax) {
-		snprintf(aprop->str, 31, "%.2f mm",
-		    (float)flmax / (float)flunit);
-		aprop->lvl = ED_VRB;
-	} else {
-		snprintf(aprop->str, 31, "%.2f - %.2f mm",
-		    (float)flmin / (float)flunit, (float)flmax / (float)flunit);
-		aprop->lvl = ED_PAS;
+		if (flmin == flmax) {
+			snprintf(aprop->str, 31, "%.2f mm",
+			    (float)flmax / (float)flunit);
+			aprop->lvl = ED_VRB;
+		} else {
+			snprintf(aprop->str, 31, "%.2f - %.2f mm",
+			    (float)flmin / (float)flunit,
+			    (float)flmax / (float)flunit);
+			aprop->lvl = ED_PAS;
+		}
 	}
 }
 
