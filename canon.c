@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.24 2003/01/28 22:34:40 ejohnst Exp $
+ * $Id: canon.c,v 1.25 2003/01/30 07:23:51 ejohnst Exp $
  */
 
 /*
@@ -229,6 +229,7 @@ static struct descrip canon_expmode[] = {
 	{ 3,	"Av-Priority" },
 	{ 4,	"Manual" },
 	{ 5,	"A-DEP" },
+	{ 6,	"DEP" },
 	{ -1,	"Unknown" },
 };
 
