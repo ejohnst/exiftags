@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.38 2003/08/08 20:40:55 ejohnst Exp $
+ * $Id: canon.c,v 1.39 2004/04/03 22:04:23 ejohnst Exp $
  */
 
 /*
@@ -342,7 +342,7 @@ static struct exiftag canon_tags04[] = {
 	  "Autofocus Point", NULL },
 	{ 15, TIFF_SHORT, 0, ED_VRB, "CanonFlashBias",
 	  "Flash Bias", canon_fbias },
-	{ 19, TIFF_SHORT, 0, ED_UNK, "CanonSubjDst",
+	{ 19, TIFF_SHORT, 0, ED_IMG, "CanonSubjDst",
 	  "Subject Distance", NULL },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "Canon04Unknown",
 	  "Canon Tag4 Unknown", NULL },
@@ -768,7 +768,7 @@ static struct exiftag canon_10dcustom[] = {
  */
 static int
 canon_prop01(struct exifprop *aprop, struct exifprop *prop,
-    unsigned char *off, enum byteorder o)
+    unsigned char *off, struct exiftags *t)
 {
 	u_int16_t v = (u_int16_t)aprop->value;
 
@@ -781,7 +781,7 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
 	case 5:
 		/* Change "Single" to "Timed" if #2 > 0. */
 
-		if (!v && exif2byte(off + 2 * 2, o))
+		if (!v && exif2byte(off + 2 * 2, t->md.order))
 			strcpy(aprop->str, "Timed");
 		break;
 	case 12:
@@ -795,8 +795,8 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
 		if (v == 3 && prop->count >= 37) {
 			exifstralloc(&aprop->str, 32);
 			snprintf(aprop->str, 31, "x%.1f", 2 *
-			    (float)exif2byte(off + 37 * 2, o) /
-			    (float)exif2byte(off + 36 * 2, o));
+			    (float)exif2byte(off + 37 * 2, t->md.order) /
+			    (float)exif2byte(off + 36 * 2, t->md.order));
 		} else
 			aprop->str = finddescr(canon_dzoom, v);
 		break;
@@ -829,16 +829,63 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
  */
 static int
 canon_prop04(struct exifprop *aprop, struct exifprop *prop,
-    unsigned char *off, enum byteorder o)
+    unsigned char *off, struct exiftags *t)
 {
+	struct exiftag *model;
+	struct exifprop *tmpprop;
+	u_int16_t v = (u_int16_t)aprop->value;
+	int d;
 
 	switch (aprop->tag) {
 	case 7:
 		aprop->override = EXIF_T_WHITEBAL;
 		break;
 	case 9:
-		aprop->lvl = aprop->value ? ED_IMG : ED_VRB;
+		aprop->lvl = v ? ED_IMG : ED_VRB;
 		break;
+
+	/*
+	 * Sigh.  Some cameras have a standard Exif subject distance tag,
+	 * some do not.  Some express this in mm, some in cm.  (I cannot
+	 * for the life of me figure out how to tell what the units are.)
+	 * It looks like maybe some of the newer models stick to cm; we'll
+	 * assume cm and consider mm by exception.  In any case, we'll only
+	 * display the value in the absence of the standard Exif value.
+	 * Needless to say, this is pretty ugly.
+	 */
+
+	case 19:
+		exifstralloc(&aprop->str, 32);
+
+		if (!v) {
+			aprop->lvl = ED_VRB;
+			strcpy(aprop->str, "Unknown");
+			break;
+		}
+
+		if (t->model && (!strcmp(t->model, "Canon PowerShot A10") ||
+		    !strcmp(t->model, "Canon PowerShot S110") ||
+		    !strcmp(t->model, "Canon PowerShot S30") ||
+		    !strcmp(t->model, "Canon PowerShot S40") ||
+		    !strcmp(t->model, "Canon EOS 10D")))
+			d = 1000;
+		else
+			d = 100;
+
+		if (v == 0xffff)
+			strcpy(aprop->str, "Infinity");
+		else
+			snprintf(aprop->str, 31, "%.3f m",
+			    (float)v / (float)d);
+
+		if ((tmpprop = findprop(t->props, tags, EXIF_T_DISTANCE))) {
+			if (strcmp(tmpprop->str, "Unknown"))
+				aprop->lvl = ED_VRB;
+			else
+				aprop->override = EXIF_T_DISTANCE;
+		}
+		break;
+
 	default:
 		return (FALSE);
 	}
@@ -852,7 +899,7 @@ canon_prop04(struct exifprop *aprop, struct exifprop *prop,
  */
 static int
 canon_propA0(struct exifprop *aprop, struct exifprop *prop,
-    unsigned char *off, enum byteorder o)
+    unsigned char *off, struct exiftags *t)
 {
 
 	switch (aprop->tag) {
