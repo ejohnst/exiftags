@@ -30,15 +30,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: panasonic.c,v 1.4 2004/04/21 19:30:59 ejohnst Exp $
+ * $Id: panasonic.c,v 1.5 2004/10/10 03:50:39 ejohnst Exp $
  *
  */ 
 
 /*
  * Exif tag definitions for Panasonic Lumix maker notes.
- * Tags deciphered by Tom Hughes <tom@compton.nu>.
+ * Tags deciphered by Tom Hughes <tom@compton.nu>; updated for FZ20
+ * by Laurent Monin <zas@norz.org>.
  *
- * Tested models: DMC-FZ10.
+ * Tested models: DMC-FZ10, DMC-FZ20.
  *
  */
 
@@ -103,6 +104,7 @@ static struct descrip panasonic_macro[] = {
 
 static struct descrip panasonic_shoot[] = {
 	{ 2,	"Portrait" },
+	{ 3,	"Scenery" },
 	{ 4,	"Sports" },
 	{ 5,	"Night Portrait" },
 	{ 6,	"Program" },
@@ -111,6 +113,10 @@ static struct descrip panasonic_shoot[] = {
 	{ 9,	"Macro" },
 	{ 11,	"Manual" },
 	{ 13,	"Panning" },
+	{ 18,	"Fireworks" },
+	{ 19,	"Party" },
+	{ 20,	"Snow" },
+	{ 21,	"Night Scenery" },
 	{ -1,	"Unknown" },
 };
 
@@ -169,6 +175,7 @@ static struct descrip panasonic_color[] = {
 	{ 2,	"Warm" },
 	{ 3,	"Cool" },
 	{ 4,	"Black & White" },
+	{ 5,	"Sepia" },
 	{ -1,	"Unknown" },
 };
 
