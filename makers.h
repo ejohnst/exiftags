@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.5 2002/11/02 22:18:02 ejohnst Exp $
+ * $Id: makers.h,v 1.6 2002/11/03 02:01:09 ejohnst Exp $
  */
 
 /*
@@ -60,11 +60,11 @@ extern struct makerfun makers[];
 
 /* Maker note defines. */
 
-#define EXIF_MKR_CANON		0
-#define EXIF_MKR_OLYMPUS	1
-#define EXIF_MKR_FUJI		2
-#define EXIF_MKR_NIKON		3
-#define EXIF_MKR_CASIO		4
+#define EXIF_MKR_CANON		1
+#define EXIF_MKR_OLYMPUS	2
+#define EXIF_MKR_FUJI		3
+#define EXIF_MKR_NIKON		4
+#define EXIF_MKR_CASIO		5
 #define EXIF_MKR_UNKNOWN	-1
 
 
