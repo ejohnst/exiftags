@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.2 2003/01/11 08:20:29 ejohnst Exp $
+ * $Id: minolta.c,v 1.3 2003/01/11 18:52:30 ejohnst Exp $
  *
  */ 
 
@@ -60,23 +60,6 @@
 
 
 /*
- * Minolta Dimage7 maker note tags:
- *
- *  0x00 char[4]	'MLT0'
- *  0x03 long[56]	Camera Settings for D7u, D7i, D7Hi
- *  0x01 long[56]	Camera Settings for D5, D7
- *  0x10 byte[11492]	Unknown
- *  0x20 byte[394]	Unknown
- *  0x40 long[1]	Compressed Image Size
- *  0x88 long[1]	Thumbnail Offset
- *  0x89 long[1]	Thumbnail Length
- *  0x0e00 byte[40]	PIM (Print Image Management)
- *
- * This module parses only tags 0x01 and 0x03.
- */
-
-
-/*
  * Uncomment this to overwrite standard tags with more appropriate values 
  *
  * i.e.  Exposure Program: Not Defined
@@ -95,74 +78,6 @@
 #define REDEFINE_STANDARD TRUE
 
 
-/* Standard Tags not defined in exif.c, defined here for overriding */
-#define EXIF_T_CONTRAST 0xa408
-#define EXIF_T_SATURATION 0xa409
-#define EXIF_T_SCENECAPTURETYPE 0xa406
-
-
-enum MINOLTA_TAG_0x03 {
-	MMN_CUSTOMTAG=0x0300,
- 	MMN_UNKFLD_00=MMN_CUSTOMTAG,
-	MMN_EXPPROGRAM,		// Output level set to Unknown, no sense
-	MMN_FLASHMODE,
-	MMN_WB,
-	MMN_IMAGESIZE,		// Output level set to Unknown, no sense
-	MMN_IMAGEQUALITY,
-	MMN_DRIVEMODE,
-	MMN_METERMODE,		// not implemented yet, no sense
-	MMN_ISO,			// Output level set to Unknown, no sense
-	MMN_EXPOSURETIME,	// Output level set to Unknown, no sense
-	MMN_APERTURE,		// Output level set to Unknown, no sense
-	MMN_MACRO,
-	MMN_DIGZOOM,
-	MMN_EXPCOMP,		// Output level set to Unknown, no sense
-	MMN_BRACKETSTEP,
-	MMN_UNKFLD_15,
-	MMN_INTERVALTIME,
-	MMN_INTERVALPICS,
-	MMN_FOCALLENGHT,	// Output level set to Unknown, no sense
-	MMN_FOCUSDISTANCE,
-	MMN_FLASH,
-	MMN_DATE,
-	MMN_TIME,
-	MMN_MAXAPERTURE,	// Output level set to Unknown, no sense
-	MMN_UNKFLD_24,
-	MMN_UNKFLD_25,
-	MMN_REMEMBERFILENUMBERING,
-	MMN_SEQNUMBER,
-	MMN_UNKFLD_28,
-	MMN_UNKFLD_29,
-	MMN_UNKFLD_30,
-	MMN_COL,
-	MMN_CON,
-	MMN_SHARP,
-	MMN_SCENE,
-	MMN_FLACHCOMP,
-	MMN_ISOSET,
-	MMN_CAMERAMODEL,	// Output level set to Unknown, no sense
-	MMN_INTERVALMODE,	//<------------------------------------- Last Field for D5, D7
-	MMN_FOLDERNAME,
-	MMN_COLORMODE,
-	MMN_FIL,
-	MMN_BWFILTER,
-	MMN_INTFLASH,
-	MMN_UNKFLD_44,
-	MMN_FOCUSX,
-	MMN_FOCUSY,
-	MMN_WFOCUSZONE,
-	MMN_FOCUSMODE,
-	MMN_AUTOFOCUSAREA,
-	MMN_BRACKETMODE,
-	MMN_DATAIMPRINT,
-	MMN_UNKFLD_52,
-	MMN_UNKFLD_53,
-	MMN_UNKFLD_54,
-	MMN_UNKFLD_55,		//<------------------------------------- Last Field for D7i
-	MMN_UNKFLD_56		//<------------------------------------- Last Field for D7Hi
-};
-
-
 /* Bracketing mode. */
 
 static struct descrip minolta_brackmode[] = {
@@ -176,7 +91,7 @@ static struct descrip minolta_brackmode[] = {
 
 /* Bracketing step. */
 
-static struct descrip minolta_bracketstep[] = {
+static struct descrip minolta_brackstep[] = {
 	{ 0,	"1/3" },
 	{ 1,	"1/2" },
 	{ 2,	"1" },
@@ -186,7 +101,7 @@ static struct descrip minolta_bracketstep[] = {
 
 /* Sharpness. */
 
-static struct descrip minolta_sharpness[] = {
+static struct descrip minolta_sharp[] = {
 	{ 0,	"Normal" },
 	{ 1,	"Hard" },
 	{ 2,	"Soft" },
@@ -196,7 +111,7 @@ static struct descrip minolta_sharpness[] = {
 
 /* Color mode. */
 
-static struct descrip minolta_colormode[] = {
+static struct descrip minolta_color[] = {
 	{ 0,	"Natural Color" },
 	{ 1,	"Black & White" },
 	{ 2,	"Vivid Color" },
@@ -208,7 +123,7 @@ static struct descrip minolta_colormode[] = {
 
 /* ISO. */
 
-static struct descrip minolta_isoset[] = {
+static struct descrip minolta_iso[] = {
 	{ 0,	"100" },
 	{ 1,	"200" },
 	{ 2,	"400" },
@@ -247,7 +162,7 @@ static struct descrip minolta_focusarea[] = {
 
 /* Wide area focus zone. */
 
-static struct descrip minolta_wfocuszone[] = {
+static struct descrip minolta_widefocus[] = {
 	{ 0,	"No Zone" },
 	{ 1,	"Center" },
 	{ 3,	"Left" },
@@ -272,7 +187,7 @@ static struct descrip minolta_drive[] = {
 
 /* White balance. */
 
-static struct descrip minolta_wb[] = {
+static struct descrip minolta_whitebal[] = {
 	{ 0,	"Auto" },
 	{ 1,	"Daylight" },
 	{ 2,	"Cloudy" },
@@ -288,7 +203,7 @@ static struct descrip minolta_wb[] = {
 
 /* Flash mode. */
 
-static struct descrip minolta_flashmode[] = {
+static struct descrip minolta_flash[] = {
 	{ 0,	"Fill Flash" },
 	{ 1,	"Red-Eye Reduction" },
 	{ 2,	"Rear Sync" },
@@ -325,7 +240,7 @@ static struct descrip minolta_quality[] = {
 
 /* Exposure program. */
 
-static struct descrip minolta_expprog[] = {
+static struct descrip minolta_prog[] = {
 	{ 0,	"Program AE" },
 	{ 1,	"Aperture Priority" },
 	{ 2,	"Shutter Priority" },
@@ -339,7 +254,7 @@ static struct descrip minolta_expprog[] = {
  * This valid only for 5 megapixel cameras (D7's) but is wrong for D5.
  */
 
-static struct descrip minolta_imgsize[] = {
+static struct descrip minolta_size[] = {
 	{ 0,	"2560x1920" },
 	{ 1,	"1600x1200" },
 	{ 2,	"1280x960" },
@@ -380,482 +295,465 @@ static struct descrip minolta_model[] = {
 };
 
 
+/* Maker note IFD tags. */
+
 static struct exiftag minolta_tags[] = {
-	{ 0x00, TIFF_SHORT, 1, ED_UNK, "MMN_TAG0" , NULL , NULL },	
- 	{ 0x01, TIFF_SHORT, 1, ED_UNK, "MMN_TAG1" , NULL , NULL },
-	{ 0x03, TIFF_SHORT, 1, ED_UNK, "MMN_TAG3" , NULL , NULL },
-	{ 0x10, TIFF_SHORT, 1, ED_UNK, "MMN_TAG10" , NULL , NULL },
-	{ 0x20, TIFF_SHORT, 1, ED_UNK, "MMN_TAG20" , NULL , NULL },
-	{ 0x40, TIFF_SHORT, 1, ED_UNK, "MMN_TAG40" , NULL , NULL },
-	{ 0x88, TIFF_SHORT, 1, ED_UNK, "MMN_TAG88" , NULL , NULL },
-	{ 0x89, TIFF_SHORT, 1, ED_UNK, "MMN_TAG89" , NULL , NULL },
-	{ 0xe00, TIFF_SHORT, 1, ED_UNK, "MMN_TAGE00" , NULL , NULL },
-	{ MMN_UNKFLD_00, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_00" , NULL , NULL },
-	{ MMN_EXPPROGRAM, TIFF_SHORT, 1, ED_UNK, "MMN_EXPPROGRAM" , NULL , minolta_expprog },
-	{ MMN_FLASHMODE, TIFF_SHORT, 1, ED_VRB, "MMN_FLASHMODE" , "Flash Mode" , minolta_flashmode },
-	{ MMN_WB, TIFF_SHORT, 1, ED_IMG, "MMN_WB" , "White Balance" , minolta_wb },
-	{ MMN_IMAGESIZE, TIFF_SHORT, 1, ED_UNK, "MMN_IMAGESIZE", NULL , minolta_imgsize },
-	{ MMN_IMAGEQUALITY, TIFF_SHORT, 1, ED_IMG, "MMN_IMAGEQUALITY" , "Image Quality" , minolta_quality },
-	{ MMN_DRIVEMODE, TIFF_SHORT, 1, ED_IMG, "MMN_DRIVEMODE" , "Drive Mode" , minolta_drive },
-	{ MMN_METERMODE, TIFF_SHORT, 1, ED_UNK, "MMN_METERMODE" , NULL , NULL },
-	{ MMN_ISO, TIFF_SHORT, 1, ED_UNK, "MMN_ISO" , NULL , NULL },
-	{ MMN_EXPOSURETIME, TIFF_SHORT, 1, ED_UNK, "MMN_EXPOSURETIME" , NULL , NULL },
-	{ MMN_APERTURE, TIFF_SHORT, 1, ED_UNK, "MMN_APERTURE" , NULL , NULL },
-	{ MMN_MACRO, TIFF_SHORT, 1, ED_IMG, "MMN_MACRO" , "Macro" , minolta_bool },
-	{ MMN_DIGZOOM, TIFF_SHORT, 1, ED_IMG, "MMN_DIGZOOM" , "Digital Zoom" , minolta_bool },
-	{ MMN_EXPCOMP, TIFF_SHORT, 1, ED_UNK, "MMN_EXPCOMP" , NULL , NULL },
-	{ MMN_BRACKETSTEP, TIFF_SHORT, 1, ED_IMG, "MMN_BRACKETSTEP" , "Bracketing Step" , minolta_bracketstep },
-	{ MMN_UNKFLD_15, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_15" , NULL , NULL },
-	{ MMN_INTERVALTIME, TIFF_SHORT, 1, ED_VRB, "MMN_INTERVALTIME" , "Interval Time" , NULL },
-	{ MMN_INTERVALPICS, TIFF_SHORT, 1, ED_VRB, "MMN_INTERVALPICS" , "Interval Pics" , NULL },
-	{ MMN_FOCALLENGHT, TIFF_SHORT, 1, ED_UNK, "MMN_FOCALLENGHT" , NULL , NULL },
-	{ MMN_FOCUSDISTANCE, TIFF_SHORT, 1, ED_IMG, "MMN_FOCUSDISTANCE" , "Focus Distance" , NULL },
-	{ MMN_FLASH, TIFF_SHORT, 1, ED_VRB, "MMN_FLASH" , "Flash Fired" , minolta_bool },
-	{ MMN_DATE, TIFF_SHORT, 1, ED_VRB, "MMN_DATE" , "Date" , NULL },
-	{ MMN_TIME, TIFF_SHORT, 1, ED_VRB, "MMN_TIME" , "Time" , NULL },
-	{ MMN_MAXAPERTURE, TIFF_SHORT, 1, ED_UNK, "MMN_MAXAPERTURE" , NULL , NULL },
-	{ MMN_UNKFLD_24, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_24" , NULL , NULL },
-	{ MMN_UNKFLD_25, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_25" , NULL , NULL },
-	{ MMN_REMEMBERFILENUMBERING, TIFF_SHORT, 1, ED_VRB, "MMN_REMEMBERFILENUMBERING" , "File Number Memory" , minolta_bool },
-	{ MMN_SEQNUMBER, TIFF_SHORT, 1, ED_VRB, "MMN_SEQNUMBER" , "Sequence Number" , NULL },
-	{ MMN_UNKFLD_28, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_28" , NULL , NULL },
-	{ MMN_UNKFLD_29, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_29" , NULL , NULL },
-	{ MMN_UNKFLD_30, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_30" , NULL , NULL },
-	{ MMN_COL, TIFF_SHORT, 1, ED_IMG, "MMN_COL" , "Saturation" , NULL },
-	{ MMN_CON, TIFF_SHORT, 1, ED_IMG, "MMN_CON" , "Contrast" , NULL },
-	{ MMN_SHARP, TIFF_SHORT, 1, ED_IMG, "MMN_SHARP" , "Sharp" , minolta_sharpness },
-	{ MMN_SCENE, TIFF_SHORT, 1, ED_IMG, "MMN_SCENE" , "Scene Capture Type" , minolta_scene },
-	{ MMN_FLACHCOMP, TIFF_SHORT, 1, ED_IMG, "MMN_FLACHCOMP" , "Flash Compensation" , NULL },
-	{ MMN_ISOSET, TIFF_SHORT, 1, ED_VRB, "MMN_ISOSET" , "ISO Camera Setting" , minolta_isoset },
-	{ MMN_CAMERAMODEL, TIFF_SHORT, 1, ED_UNK, "MMN_CAMERAMODEL" , NULL , minolta_model },
-	{ MMN_INTERVALMODE, TIFF_SHORT, 1, ED_VRB, "MMN_INTERVALMODE" , "Interval Mode Engaged" , minolta_bool },
-	{ MMN_FOLDERNAME, TIFF_SHORT, 1, ED_VRB, "MMN_FOLDERNAME" , "Folder Naming" , minolta_folder },
-	{ MMN_COLORMODE, TIFF_SHORT, 1, ED_IMG, "MMN_COLORMODE" , "Color Mode" , minolta_colormode },
-	{ MMN_FIL, TIFF_SHORT, 1, ED_IMG, "MMN_FIL" , "Color Warming" , NULL },
-	{ MMN_BWFILTER, TIFF_SHORT, 1, ED_IMG, "MMN_BWFILTER" , "B&W Tone" , NULL },
-	{ MMN_INTFLASH, TIFF_SHORT, 1, ED_VRB, "MMN_INTFLASH" , "Internal Flash" , minolta_bool },
-	{ MMN_UNKFLD_44, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_44" , NULL , NULL },
-	{ MMN_FOCUSX, TIFF_SHORT, 1, ED_VRB, "MMN_FOCUSX" , "AF Point X" , NULL },
-	{ MMN_FOCUSY, TIFF_SHORT, 1, ED_VRB, "MMN_FOCUSY" , "AF Point Y" , NULL },
-	{ MMN_WFOCUSZONE, TIFF_SHORT, 1, ED_VRB, "MMN_WFOCUSZONE" , "AF Zone" , minolta_wfocuszone },
-	{ MMN_FOCUSMODE, TIFF_SHORT, 1, ED_IMG, "MMN_FOCUSMODE" , "Focus Mode" , minolta_focusmode },
-	{ MMN_AUTOFOCUSAREA, TIFF_SHORT, 1, ED_IMG, "MMN_AUTOFOCUSAREA" , "Wide Focus Area" , minolta_focusarea },
-	{ MMN_BRACKETMODE, TIFF_SHORT, 1, ED_IMG, "MMN_BRACKETMODE" , "Bracketing Mode" , minolta_brackmode },
-	{ MMN_DATAIMPRINT, TIFF_SHORT, 1, ED_VRB, "MMN_DATAIMPRINT" , "Data Imprint" , minolta_imprint },
-	{ MMN_UNKFLD_52, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_52" , NULL , NULL },
-	{ MMN_UNKFLD_53, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_53" , NULL , NULL },
-	{ MMN_UNKFLD_54, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_54" , NULL , NULL },
-	{ MMN_UNKFLD_55, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_55" , NULL , NULL },
-	{ MMN_UNKFLD_56, TIFF_SHORT, 1, ED_UNK, "MMN_UNKFLD_56" , NULL , NULL },
-	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "MinoltaUnknown" , "Minolta Tag Unknown" , NULL },
+	{ 0x0000, TIFF_UNDEF, 4, ED_UNK, "MinoltaMakerType",
+	  "Minolta Maker Note Type", NULL },
+	{ 0x0001, TIFF_UNDEF, 0, ED_UNK, "Minolta1Tag",
+	  "Minolta Tag1 Offset", NULL },
+	{ 0x0003, TIFF_UNDEF, 0, ED_UNK, "Minolta3Tag",
+	  "Minolta Tag3 Offset", NULL },
+	{ 0x0040, TIFF_LONG, 1, ED_UNK, "MinoltaCompImgSz",
+	  "Minolta Compressed Image Size", NULL },
+	{ 0x0088, TIFF_LONG, 1, ED_UNK, "MinoltaThumbOff",
+	  "Minolta Thumbnail Offset", NULL },
+	{ 0x0089, TIFF_LONG, 1, ED_UNK, "MinoltaThumbLen",
+	  "Minolta Thumbnail Length", NULL },
+	{ 0x0e00, TIFF_UNDEF, 0, ED_UNK, "MinoltaPIM",
+	  "Minolta Print Image Management", NULL },
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
+	  "Minolta Unknown", NULL },
 };
 
 
-/* Just dump bulk data in hexadecimal */
-void
-minolta_propdump(struct exifprop *prop, char *off, struct exiftags *t)
-{
-	int n;
+/* Fields under tags 0x0001 and 0x0003. */
 
+static struct exiftag minolta_0TLM[] = {
+	{ 1,  TIFF_LONG, 1, ED_UNK, "MinoltaExpProg",
+	  NULL, minolta_prog },
+	{ 2,  TIFF_LONG, 1, ED_VRB, "MinoltaFlashMode",
+	  "Flash Mode", minolta_flash },
+	{ 3,  TIFF_LONG, 1, ED_IMG, "MinoltaWhiteB",
+	  "White Balance", minolta_whitebal },
+	{ 4,  TIFF_LONG, 1, ED_UNK, "MinoltaSize",
+	  NULL, minolta_size },
+	{ 5,  TIFF_LONG, 1, ED_IMG, "MinoltaQuality",
+	  "Image Quality", minolta_quality },
+	{ 6,  TIFF_LONG, 1, ED_IMG, "MinoltaDriveMode",
+	  "Drive Mode", minolta_drive },
+	{ 7,  TIFF_LONG, 1, ED_UNK, "MinoltaMeterMode",
+	  NULL, NULL },
+	{ 8,  TIFF_LONG, 1, ED_UNK, "MinoltaISO",
+	  NULL, NULL },
+	{ 9,  TIFF_LONG, 1, ED_UNK, "MinoltaExpTime",
+	  NULL, NULL },
+	{ 10, TIFF_LONG, 1, ED_UNK, "MinoltaAperture",
+	  NULL, NULL },
+	{ 11, TIFF_LONG, 1, ED_IMG, "MinoltaMacro",
+	  "Macro", minolta_bool },
+	{ 12, TIFF_LONG, 1, ED_IMG, "MinoltaDigiZoom",
+	  "Digital Zoom", minolta_bool },
+	{ 13, TIFF_LONG, 1, ED_UNK, "MinoltaExpComp",
+	  NULL, NULL },
+	{ 14, TIFF_LONG, 1, ED_IMG, "MinoltaBracketStep",
+	  "Bracketing Step", minolta_brackstep },
+	{ 16, TIFF_LONG, 1, ED_VRB, "MinoltaIntrvlTime",
+	  "Interval Time", NULL },
+	{ 17, TIFF_LONG, 1, ED_VRB, "MinoltaIntrvlPics",
+	  "Interval Pics", NULL },
+	{ 18, TIFF_LONG, 1, ED_UNK, "MinoltaFocalLen",
+	  NULL, NULL },
+	{ 19, TIFF_LONG, 1, ED_IMG, "MinoltaFocusDist",
+	  "Focus Distance", NULL },
+	{ 20, TIFF_LONG, 1, ED_VRB, "MinoltaFlash",
+	  "Flash Fired", minolta_bool },
+	{ 21, TIFF_LONG, 1, ED_VRB, "MinoltaDate",
+	  "Date", NULL },
+	{ 22, TIFF_LONG, 1, ED_VRB, "MinoltaTime",
+	  "Time", NULL },
+	{ 23, TIFF_LONG, 1, ED_UNK, "MinoltaMaxAperture",
+	  NULL, NULL },
+	{ 26, TIFF_LONG, 1, ED_VRB, "MinoltaRmbrFileNum",
+	  "File Number Memory", minolta_bool },
+	{ 27, TIFF_LONG, 1, ED_VRB, "MinoltaSequence",
+	  "Sequence Number", NULL },
+	{ 31, TIFF_LONG, 1, ED_IMG, "MinoltaSaturate",
+	  "Saturation", NULL },
+	{ 32, TIFF_LONG, 1, ED_IMG, "MinoltaContrast",
+	  "Contrast", NULL },
+	{ 33, TIFF_LONG, 1, ED_IMG, "MinoltaSharpness",
+	  "Sharp", minolta_sharp },
+	{ 34, TIFF_LONG, 1, ED_IMG, "MinoltaScene",
+	  "Scene Capture Type", minolta_scene },
+	{ 35, TIFF_LONG, 1, ED_IMG, "MinoltaFlashComp",
+	  "Flash Compensation", NULL },
+	{ 36, TIFF_LONG, 1, ED_VRB, "MinoltaISO",
+	  "ISO Speed Rating", minolta_iso },
+	{ 37, TIFF_LONG, 1, ED_UNK, "MinoltaModel",
+	  NULL, minolta_model },
+	{ 38, TIFF_LONG, 1, ED_VRB, "MinoltaIntervalMode",
+	  "Interval Mode", minolta_bool },
+	{ 39, TIFF_LONG, 1, ED_VRB, "MinoltaFolder",
+	  "Folder Name", minolta_folder },
+	{ 40, TIFF_LONG, 1, ED_IMG, "MinoltaColorMode",
+	  "Color Mode", minolta_color },
+	{ 41, TIFF_LONG, 1, ED_IMG, "MinoltaColorFilt",
+	  "Color Warming", NULL },
+	{ 42, TIFF_LONG, 1, ED_IMG, "MinoltaBWFilt",
+	  "Black & White Tone", NULL },
+	{ 43, TIFF_LONG, 1, ED_VRB, "MinoltaIntFlash",
+	  "Internal Flash", minolta_bool },
+	{ 45, TIFF_LONG, 1, ED_VRB, "MinoltaFocusX",
+	  "AF Point X", NULL },
+	{ 46, TIFF_LONG, 1, ED_VRB, "MinoltaFocusY",
+	  "AF Point Y", NULL },
+	{ 47, TIFF_LONG, 1, ED_VRB, "MinoltaWFocusZone",
+	  "AF Zone", minolta_widefocus },
+	{ 48, TIFF_LONG, 1, ED_IMG, "MinoltaFocusMode",
+	  "Focus Mode", minolta_focusmode },
+	{ 49, TIFF_LONG, 1, ED_IMG, "MinoltaAFArea",
+	  "Wide Focus Area", minolta_focusarea },
+	{ 50, TIFF_LONG, 1, ED_IMG, "MinoltaBracketMode",
+	  "Bracketing Mode", minolta_brackmode },
+	{ 51, TIFF_LONG, 1, ED_VRB, "MinoltaDataImprint",
+	  "Data Imprint", minolta_imprint },
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "MinoltaUnknown",
+	  "Minolta Field Unknown", NULL },
+};
+
+
+/* Display debug information about the propery. */
+
+void
+minolta_pdump(struct exifprop *prop, int custom)
+{
+	int i, n;
+	static int once = 0;	/* XXX Breaks on multiple files. */
+
+	if (!once) {
+		printf("Processing Minolta Maker Note\n");
+		once = 1;
+	}
+
+	for (i = 0; ftypes[i].type &&
+	    ftypes[i].type != prop->type; i++);
+	printf("   %s (0x%04X): %s, %d, %d\n", prop->name,
+	    custom ? prop->tag & (MMN_CUSTOMTAG ^ 0xffff) : prop->tag,
+	    ftypes[i].name, prop->count, prop->value);
+
+#if 0
 	if (!(prop->str=(char *)calloc((5*(prop->count))+1,sizeof(char))))
 		exifdie((const char *)strerror(errno));
 
 	for (n=0;n<prop->count;n++)
 		snprintf (prop->str+(n*5),6,"0x%02x ",(unsigned char) off[n]);
+#endif
 }
 
 
-/* Process MakerNote TAGs 0x01 and 0x03 fields
- *
+/*
+ * Process maker note tag 0x0001 and 0x0003 values.
  */
+
 void
 minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 {
-	int n;
+	int i, j;
 	struct exifprop *aprop;
 
-	for (n=0;(4*n)<prop->count;n++)
-	{
-		int j;
+	for (i = 0; i * 4 < prop->count; n++) {
+		aprop = childprop(prop);
 
-		aprop=childprop(prop);
-		aprop->tag=(MMN_CUSTOMTAG | n) ;
-		aprop->value=exif4byte(off + (4*n), BIG);
+		/* Note: these are big-endian regardless. */
+		aprop->value = exif4byte(off + (4 * i), BIG);
 
-		for (j = 0; minolta_tags[j].tag < EXIF_T_UNKNOWN && 
-			minolta_tags[j].tag != aprop->tag; j++);
+		/* Lookup property name and description. */
 
-		aprop->name=minolta_tags[j].name;
-		aprop->descr=minolta_tags[j].descr;
-		aprop->lvl=minolta_tags[j].lvl;
-		aprop->type=minolta_tags[j].type;
-		aprop->count=minolta_tags[j].count;
+		for (j = 0; minolta_0TLM[j].tag < EXIF_T_UNKNOWN &&
+			minolta_0TLM[j].tag != i; j++);
+		aprop->name = minolta_0TLM[j].name;
+		aprop->descr = minolta_0TLM[j].descr;
+		aprop->lvl = minolta_0TLM[j].lvl;
+		if (minolta_0TLM[j].table)
+			aprop->str = finddescr(minolta_0TLM[j].table,
+			    aprop->value);
 
-		if (minolta_tags[j].table)
-			aprop->str=finddescr(minolta_tags[j].table,aprop->value);
+		if (debug)
+			printf("     %s (%d): %d\n", aprop->name, i,
+			    aprop->value);
+
+		/* Further process known properties. */
+
+		switch (i) {
+
+		/* Interval time and sequence number. */
+
+		case 16:
+		case 27:
+			prop->value += 1;
+			break;
+
+		/* Exposure and flash compensation. */
+
+		case 13:
+		case 35:
+			prop->str = strdup("-0.7");
+			if (prop->value != 6)
+				snprintf(prop->str, 5, "%0.1f",
+				    ((double)prop->value - 6) / 3);
+			else
+				strcpy(prop->str, "0");
+			break;
+
+		/* Focal length. */
+
+		case 18:
+			prop->str = strdup("11.11");
+			snprintf(prop->str, 6, "%02f", (double)prop->value / 256);
+			break;
 #if 0
-   		switch (aprop->tag)
-     	{
-      		case MMN_CAMERAMODEL:
-				CAMERA_MODEL=aprop->value;
-        		break;
-        }
+		case MMN_UNKFLD_28:
+		case MMN_UNKFLD_29:
+		case MMN_UNKFLD_30:
+			prop->str=(char *)calloc(12,sizeof(char));
+			snprintf(prop->str,12,"%0.6f",(double)prop->value/256);
+			break;
 #endif
+		/* ISO setting. */
+
+		case 36:
+			unsigned int a=pow(2,((double)prop->value/8)-1)*(double)3.125;
+			prop->str=(char *)calloc(4,sizeof(char));
+			snprintf(prop->str,4,"%d",a);
+			break;
+
+		/* Aperture and max aperture. */
+
+		case 10:
+		case 23:
+			double a=pow(2,((double)prop->value/16)-0.5);
+			prop->str=(char *)calloc(20,sizeof(char));
+			snprintf(prop->str,20,"%0.1f",a);
+			break;
+
+		/* Exposure time. */
+
+		case 9:
+			double a=(double)pow(2,((double)abs(48-prop->value))/8);
+			prop->str=(char *)calloc(20,sizeof(char));
+
+			//1 sec limit
+			if (prop->value<56)
+				snprintf(prop->str,20,"%0.1f",a);
+			else
+				snprintf(prop->str,20,"1/%d",(unsigned int)a);
+
+			/* Bulb mode D7i bug, always recorded as 30secs in standard EXIF
+			 * Replace EXIF_T_EXPOSURE data with correct value
+			 */
+			if (prop->value<32) {
+				struct exifprop *tmpprop;
+
+				tmpprop=findprop((struct exifprop *)t->props,EXIF_T_EXPOSURE);
+				if (!tmpprop)
+					break;
+
+				free(tmpprop->str);
+				tmpprop->str=strdup(prop->str);
+			}
+			break;
+
+		/* Focus distance. */
+
+		case 19:
+			if (!(prop->str=(char *)calloc(20,sizeof(char))))
+				exifdie((const char *)strerror(errno));
+			if (prop->value==0)
+				strcpy(prop->str,"Infinite");
+			else
+				snprintf(prop->str,20,"%.1f",(float)(prop->value/(float)1000));
+			prop->value/=100;
+			break;
+
+		/*
+		 * Flash mode.
+		 * Add Flash mode info to standard EXIF_T_FLASH
+		 * i.e. Flash. Compulsory (Fill Flash)
+		 */
+
+		case 2:
+			if (REDEFINE_STANDARD) {
+				struct exifprop *tmpprop;
+
+				tmpprop=findprop( (struct exifprop *) t->props, EXIF_T_FLASH );
+				if (!tmpprop)
+					break;
+
+				/* Flash fired */
+				if (tmpprop->value & 0x01) {
+					if ( !(tmpprop->str=realloc(tmpprop->str,
+						(strlen(tmpprop->str) + strlen(prop->str) + 4) * sizeof(char) )) )
+					exifdie((const char *)strerror(errno));
+					strcat(tmpprop->str," (");
+					strcat(tmpprop->str,prop->str);
+					strcat(tmpprop->str,")");
+				}
+			}
+			break;
+
+		/*
+		 * Exposure program.
+		 * Redefine EXIF_T_EXPPROG in benefict of custom Exposure Program field
+		 * with scene info.
+		 */
+
+		case 1:
+			if (prop->value==0 && REDEFINE_STANDARD) {
+				struct exifprop *tmpprop;
+				char *ptr;
+
+				/* Find MinoltaScene. */
+				if (!(tmpprop=findprop((struct exifprop *)t->props, 34)))
+					break;
+
+				if ( !(ptr=finddescr(minolta_scene, tmpprop->value)))
+					break;
+
+				if (!(tmpprop=findprop((struct exifprop *)t->props,EXIF_T_EXPPROG)))
+					break;
+
+				free(tmpprop->str);
+				if ( !(tmpprop->str=(char *)calloc(strlen(prop->str) + strlen(ptr) + 4, sizeof(char))))
+					exifdie((const char *)strerror(errno));
+
+				sprintf(tmpprop->str,"%s (%s)",prop->str,ptr);
+			}
+			break;
+
+		/* Date. */
+
+		case 21:
+			unsigned char *ptr = (unsigned char *)&prop->value;
+
+			if (!(prop->str = (char *)calloc(11, sizeof(char))))
+				exifdie((const char *)strerror(errno));
+			snprintf(prop->str, 11, "%02d/%02d/%04d", ptr[0], ptr[1], ptr[3] << 8 | ptr[2]);
+			break;
+
+		/* Time. */
+
+		case 22:
+			unsigned char *ptr = (unsigned char *)&prop->value;
+
+			if (!(prop->str = (char *)calloc(9, sizeof(char))))
+				exifdie((const char *)strerror(errno));
+			snprintf(prop->str, 9, "%02d:%02d:%02d", ptr[2], ptr[1], ptr[0]);
+			break;
+
+		/* White balance. */
+
+		case 3:
+			prop->override = EXIF_T_WHITEBAL;
+			break;
+
+		/* Color filter. */
+
+		case 41:
+			prop->str=strdup(" 0");
+			prop->value-=3;
+			if (prop->value!=0)
+				snprintf(prop->str,3,"%+d",prop->value);
+			break;
+
+		/* Scene. */
+
+		case 34:
+			prop->override = EXIF_T_SCENECAPTYPE;
+			break;
+
+		/* Contrast. */
+
+		case 32:
+			prop->str = strdup(" 0");
+			prop->value -= 3;
+			if (prop->value != 0)
+				snprintf(prop->str, 3, "%+d", prop->value);
+			prop->override = EXIF_T_CONTRAST;
+			break;
+
+		/* Saturation. */
+
+		case 31:
+			prop->str=strdup(" 0");
+			prop->value -= 3;
+			if (prop->value != 0)
+				snprintf(prop->str, 3, "%+d", prop->value);
+			prop->override = EXIF_T_SATURATION;
+			break;
+		}
+		if (debug)
+			minolta_pdump(prop, 1);
 	}
 }
 
 
-/* Process Maker Note TAGS and new childs created */
+/* Process Minolta maker note tags. */
+
 void
 minolta_prop(struct exifprop *prop, struct exiftags *t)
 {
-	if (!(prop->tag & MMN_CUSTOMTAG))
-	{
-   		int j;
+	int i;
 
-		for (j = 0; minolta_tags[j].tag < EXIF_T_UNKNOWN &&
-			minolta_tags[j].tag != prop->tag; j++);
-        		
-		prop->name=minolta_tags[j].name;
-		prop->lvl=minolta_tags[j].lvl;
-	}
-
-	switch (prop->tag)
-	{
-		/* CHAR.
-		 * 4 bytes long, just M L T 0
-		 */
-		case 0x00:
-		{
-			if (!(prop->str=(char *)calloc(5,sizeof(char))))
-				exifdie((const char *)strerror(errno));
-
-			strncpy(prop->str,(char *)&prop->value,4);
-			if (strncmp(prop->str,"0TLM",4) &&	//D7i, D7Hi, S304
-   				strncmp(prop->str,"mlt0",4))	//D5, D7, S404
-//     			strncmp(prop->str,"MLT0",4))	//F100, X
-			{
-				char str[255];
-				sprintf (str,"Unsupported Minolta Makernote version %s",prop->str);
-				exifwarn(str);
-				return;
-			}
-			break;
-		}
-
-
-		/* Camera Settings for D5, D7
-  		 * Variable Length:		D5		long[39]
-     	 *						D7		long[39]
-       	 *						S304	long[43]
-       	 *						S404	long[43]
-  		 */
-		case 0x01:
-		{
-   			if (prop->count!=39*4)
-      		{
-      			exifwarn ("Unsupported Minolta MakerNote format");
-         		break;
-           	}
-			prop->str=strdup("Camera Settings");
-         	minolta_cprop(prop,t->btiff + prop->value, t);
-			break;	
-		}
-
-
-		/* CHAR. Camera Settings in D7u, D7i, D7Hi
-  		 * Variable Length:		D7i		long[56]
-		 * 						D7Hi    long[57]
-		 */
-		case 0x03:
-		{
-   			if (prop->count!=56*4 &&
-      			prop->count!=57*4)
-         	{
-      			exifwarn ("Unsupported Minolta MakerNote format");
-         		break;
-           	}
-			prop->str=strdup("Camera Settings");
-			minolta_cprop(prop,t->btiff + prop->value, t);
-			break;
-		}
-
-
-		/* CHAR. Unknown, probably image
-		 * 11492 bytes long
-		 */
-		case 0x10:
-		{
-			/* Too long for dumping */
-			if (debug)
-				prop->str=strdup("Too long for dumping");
-				//minolta_propdump(prop,t->btiff + prop->value, t);
-			break;
-		} 
-
-
-		/* CHAR. Unknown 
-		 * 394 bytes long
-		 */
-		case 0x20:
-		{
-			if (debug)
-				minolta_propdump(prop,t->btiff + prop->value, t);
-			break;
-		}
-
-
-		case 0x40: /* LONG. CompressedImageSize */
-		case 0x88: /* LONG. ThumbOffset */
-		case 0x89: /* LONG. ThumbLenght */
-			break;
-
-
-		/* CHAR. Epson PIM 
-		 * 40 bytes long
-		 */
-		case 0x0E00:
-		{
-			if (debug)
-				minolta_propdump(prop,t->btiff + prop->value, t);
-			break;
-		}
-	}
-
-
-
-	/* All childs generated. Go with them.
-	 * Now we do the adjustment to some fields.
-	 *
+	/*
+	 * Don't process properties we've created while looking at other
+	 * maker note tags.
 	 */
-	if (prop->tag & MMN_CUSTOMTAG)
-	{
-		/* Dumps unknown tags values in hex */
-		if (prop->lvl==ED_UNK && prop->str==NULL)
-		{
-			char ptr[1024];
-			snprintf (ptr,sizeof(ptr),"%d (0x%02x)",prop->value,prop->value);
-			prop->str=strdup(ptr);
+
+	if (prop->tag == EXIF_T_UNKNOWN)
+		return;
+
+	/* Lookup the field name (if known). */
+
+	for (i = 0; minolta_tags[i].tag < EXIF_T_UNKNOWN &&
+	    minolta_tags[i].tag != prop->tag; i++);
+	prop->name = minolta_tags[i].name;
+	prop->descr = minolta_tags[i].descr;
+	prop->lvl = minolta_tags[i].lvl;
+
+	if (debug)
+		minolta_pdump(prop, 0);
+
+	switch (prop->tag) {
+
+	/* Maker note type. */
+
+	case 0x0000:
+		if (!(prop->str = (char *)malloc(prop->count + 1)))
+			exifdie((const char *)strerror(errno));
+		strncpy(prop->str, (const char *)&prop->value, prop->count);
+		prop->str[prop->count] = '\0';
+
+		/* We recognize two types: 0TLM and mlt0. */
+
+		if (strcmp(prop->str, "0TLM") && strcmp(prop->str, "mlt0")) {
+			exifwarn2("Minolta maker note version not supported",
+			    prop->str);
+			t->mkrinfo = 0;
+		} else
+			t->mkrinfo = 1;
+		break;
+
+	/*
+	 * Various image data.
+	 * For now, we only trust specifically-sized tags.
+	 */
+
+	case 0x0001:
+		if (prop->count != 39 * 4) {
+			exifwarn("Minolta maker note version not supported");
+			break;
 		}
+		minolta_cprop(prop, t->btiff + prop->value, t);
+		break;
 
-		switch (prop->tag)
-		{
-			case MMN_INTERVALTIME:			
-			case MMN_SEQNUMBER:
-			{
-				prop->value+=1;
-				break;
-			}
-
-			case MMN_FLACHCOMP:
-			case MMN_EXPCOMP:
-			{
-				prop->str=strdup("-0.7");
-
-				if (prop->value!=6)
-					snprintf(prop->str,5,"%0.1f",((double)prop->value-6)/3);
-				else
-					strcpy(prop->str,"0");
-				break;
-			}
-
-			case MMN_FOCALLENGHT:
-			{
-				prop->str=strdup("11.11");
-				snprintf(prop->str,6,"%02f",(double)prop->value/256);
-				break;
-			}
-
-			case MMN_UNKFLD_28:
-			case MMN_UNKFLD_29:
-			case MMN_UNKFLD_30:
-			{
-				prop->str=(char *)calloc(12,sizeof(char));
-				snprintf(prop->str,12,"%0.6f",(double)prop->value/256);
-				break;
-			}
-
-			case MMN_ISO:
-			{
-				unsigned int a=pow(2,((double)prop->value/8)-1)*(double)3.125;
-				prop->str=(char *)calloc(4,sizeof(char));
-				snprintf(prop->str,4,"%d",a);
-				break;				
-			}
-
-
-			case MMN_APERTURE:
-			case MMN_MAXAPERTURE:
-			{
-				double a=pow(2,((double)prop->value/16)-0.5);
-				prop->str=(char *)calloc(20,sizeof(char));
-				snprintf(prop->str,20,"%0.1f",a);
-				break;
-			}
-		 		
-			case MMN_EXPOSURETIME:
-			{
-				double a=(double)pow(2,((double)abs(48-prop->value))/8);
-				prop->str=(char *)calloc(20,sizeof(char));
-	
-				//1 sec limit
-				if (prop->value<56)
-					snprintf(prop->str,20,"%0.1f",a);
-				else
-					snprintf(prop->str,20,"1/%d",(unsigned int)a);
-		 					
-				/* Bulb mode D7i bug, always recorded as 30secs in standard EXIF
-				 * Replace EXIF_T_EXPOSURE data with correct value
-				 */
-				if (prop->value<32)
-				{
-					struct exifprop *tmpprop;
-
-					tmpprop=findprop((struct exifprop *)t->props,EXIF_T_EXPOSURE);
-					if (!tmpprop)
-				break;
-			
-					free(tmpprop->str);
-					tmpprop->str=strdup(prop->str);
-				}
-				break;
-			}
-
-			case MMN_FOCUSDISTANCE: //Focus distance
-			{
-				if (!(prop->str=(char *)calloc(20,sizeof(char))))
-					exifdie((const char *)strerror(errno));
-				if (prop->value==0)
-					strcpy(prop->str,"Infinite");
-				else	
-					snprintf(prop->str,20,"%.1f",(float)(prop->value/(float)1000));
-				prop->value/=100;
-				break;
-			}
-
-
-			/* Add Flash mode info to standard EXIF_T_FLASH
-			 * 			i.e. Flash. Compulsory (Fill Flash)
-			 */
-			case MMN_FLASHMODE:
-			{
-				if (REDEFINE_STANDARD)
-				{
-					struct exifprop *tmpprop;
-	
-					tmpprop=findprop( (struct exifprop *) t->props, EXIF_T_FLASH );
-					if (!tmpprop)
-				break;
-
-					/* Flash fired */
-					if (tmpprop->value & 0x01)
-					{
-				if ( !(tmpprop->str=realloc(tmpprop->str,
-						(strlen(tmpprop->str) + strlen(prop->str) + 4) * sizeof(char) )) )
-				exifdie((const char *)strerror(errno));
-				strcat(tmpprop->str," (");
-				strcat(tmpprop->str,prop->str);
-				strcat(tmpprop->str,")");			
-					}
-				}
-				break;
-			}
-
-
-			/* Redefine EXIF_T_EXPPROG in benefict of custom Exposure Program field
-			 * with scene info
-			 */
-			case MMN_EXPPROGRAM:
-			{
-				if (prop->value==0 && REDEFINE_STANDARD)
-				{
-					struct exifprop *tmpprop;
-					char *ptr;
-	
-					if (!(tmpprop=findprop((struct exifprop *)t->props,MMN_SCENE)))
-				break;
-	
-					if ( !(ptr=finddescr(minolta_scene, tmpprop->value)))
-				break;
-
-					if (!(tmpprop=findprop((struct exifprop *)t->props,EXIF_T_EXPPROG)))
-				break;
-
-					free(tmpprop->str);
-					if ( !(tmpprop->str=(char *)calloc(strlen(prop->str) + strlen(ptr) + 4, sizeof(char))))
-				exifdie((const char *)strerror(errno));
-
-					sprintf(tmpprop->str,"%s (%s)",prop->str,ptr);
-				}
-				break;
-			}
-
-			case MMN_DATE:
-			{
-				unsigned char *ptr=(unsigned char *)&prop->value;
-	
-				if (!(prop->str=(char *)calloc(11,sizeof(char))))
-					exifdie((const char *)strerror(errno));
-				snprintf (prop->str,11,"%02d/%02d/%04d",ptr[0],ptr[1],ptr[3]<<8 | ptr[2]);
-				break;
-			}
-
-			case MMN_TIME:
-			{
-				unsigned char *ptr=(unsigned char *)&prop->value;
-
-				if (!(prop->str=(char *)calloc(9,sizeof(char))))
-					exifdie((const char *)strerror(errno));
-				snprintf (prop->str,9,"%02d:%02d:%02d",ptr[2],ptr[1],ptr[0]);
-				break;
-			}
-			
-			case MMN_WB:
-			{
-				prop->override=EXIF_T_WHITEBAL;
-				break;
-			}
-
-			case MMN_FIL:
-			{
-				prop->str=strdup(" 0");
-				prop->value-=3;
-				if (prop->value!=0)
-					snprintf(prop->str,3,"%+d",prop->value);
-				break;
-			}
-
-			/* Replace standard field. More types than supported in standard */
-			case MMN_SCENE:
-			{
-				prop->override=EXIF_T_SCENECAPTURETYPE;
-				break;
-			}
-
-			/* Replace standard field. More types than supported in standard */
-			case MMN_CON:
-			{
-				prop->str=strdup(" 0");
-				prop->value-=3;
-				if (prop->value!=0)
-					snprintf(prop->str,3,"%+d",prop->value);
-				prop->override=EXIF_T_CONTRAST;
-				break;
-			}
-
-			/* Replace standard field. More types than supported in standard */
-			case MMN_COL:
-			{
-				prop->str=strdup(" 0");
-				prop->value-=3;
-				if (prop->value!=0)
-					snprintf(prop->str,3,"%+d",prop->value);
-				prop->override=EXIF_T_SATURATION;
-				break;
-			}
+	case 0x0003:
+		if (prop->count != 56 * 4 && prop->count != 57 * 4) {
+			exifwarn("Minolta maker note version not supported");
+			break;
 		}
-		if (debug)
-			printf(" %s (%d): %d\n", prop->name, prop->tag & (MMN_CUSTOMTAG^0xffff), prop->value);
+		minolta_cprop(prop, t->btiff + prop->value, t);
+		break;
 	}
 }
 
