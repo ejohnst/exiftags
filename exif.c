@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -7,8 +7,15 @@
  * are met:
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
- * 2. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *      This product includes software developed by Eric M. Johnston.
+ * 4. Neither the name of the author nor the names of any co-contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -22,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.3 2002/02/17 03:42:22 ejohnst Exp $
+ * $Id: exif.c,v 1.4 2002/06/30 08:50:51 ejohnst Exp $
  */
 
 /*
@@ -51,7 +58,8 @@
 
 
 static struct exifprop *head;	/* Start of our property list. */
-static void (*makerprop)();	/* Function for maker note. */
+static void (*mkrprop)();	/* Function for maker note properties. */
+static struct ifd *(*mkrifd)();	/* Function for maker note IFDs. */
 
 
 /* A handful of global variables (used by maker note modules). */
@@ -118,20 +126,27 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir)
 		exifdie("unknown TIFF field type");
 
 	/*
-	 * XXX Ignoring UserComment is a hack to get around an apparent
-	 * Windows XP Picture Viewer bug (err, liberty).  When you rotate
-	 * a picture in the viewer, it modifies the IFD1 (thumbnail) tags
-	 * to UserComment without changing the type appropriately.
+	 * Ignore sanity checking on maker note tags -- we'll get to them
+	 * later.
 	 */
 
-	if (tags[i].type && tags[i].type != prop->type &&
-	   prop->tag != EXIF_T_USERCOMMENT)
-		exifwarn2("field type mismatch", prop->name);
+	if (prop->ifdtag != EXIF_T_MAKERNOTE) {
+		/*
+		 * XXX Ignore UserComment -- a hack to get around an apparent
+		 * WinXP Picture Viewer bug (err, liberty).  When you rotate
+		 * a picture in the viewer, it modifies the IFD1 (thumbnail)
+		 * tags to UserComment without changing the type appropriately.
+		 */
 
-	/* Check the field count. */
+		if (tags[i].type && tags[i].type != prop->type &&
+		   prop->tag != EXIF_T_USERCOMMENT)
+			exifwarn2("field type mismatch", prop->name);
 
-	if (tags[i].count && tags[i].count != prop->count)
-		exifwarn2("field count mismatch", prop->name);
+		/* Check the field count. */
+
+		if (tags[i].count && tags[i].count != prop->count)
+			exifwarn2("field count mismatch", prop->name);
+	}
 
 	if (debug)
 		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
@@ -187,71 +202,6 @@ readtags(struct ifd *dir, int seq)
 
 
 /*
- * Allocate and read an individual IFD.  Takes the beginning and end of the
- * Exif buffer, returns the IFD and an offset to the next IFD.
- */
-static u_int32_t
-readifd(unsigned char *b, struct ifd **dir)
-{
-	u_int32_t ifdsize;
-
-	*dir = (struct ifd *)malloc(sizeof(struct ifd));
-	if (!*dir)
-		exifdie((const char *)strerror(errno));
-
-	(*dir)->next = NULL;
-	(*dir)->num = exif2byte(b);
-	(*dir)->tag = EXIF_T_UNKNOWN;
-	ifdsize = (*dir)->num * sizeof(struct field);
-	b += 2;
-
-	/*
-	 * Sanity check our sizes.
-	 * XXX We could be doing more here, especially for maker notes that
-	 * aren't IFDs...
-	 */
-
-	if (b + ifdsize + 4 > etiff) {
-		free(*dir);
-		*dir = NULL;
-		return (0);
-	}
-
-	/* Point to our array of fields. */
-
-	(*dir)->fields = (struct field *)b;
-
-	/* While we're in here, find the offset to the next IFD. */
-
-	return (exif4byte(b + ifdsize));
-}
-
-
-/*
- * Read a chain of IFDs.  Takes the IFD offset and returns the first
- * node in a chain of IFDs.  Can return NULL (from readifd()).
- */
-static struct ifd *
-readifds(u_int32_t offset)
-{
-	struct ifd *firstifd, *curifd;
-
-	/* Fetch our first one. */
-
-	offset = readifd(btiff + offset, &firstifd);
-	curifd = firstifd;
-
-	/* Fetch any remaining ones. */
-
-	while (offset) {
-		offset = readifd(btiff + offset, &(curifd->next));
-		curifd = curifd->next;
-	}
-	return (firstifd);
-}
-
-
-/*
  * Post-process property values.
  */
 static void
@@ -264,8 +214,8 @@ postprop(struct exifprop *prop)
 
 	/* Process maker note tags specially... */
 
-	if (prop->ifdtag == EXIF_T_MAKERNOTE && makerprop) {
-		makerprop(prop);
+	if (prop->ifdtag == EXIF_T_MAKERNOTE && mkrprop) {
+		mkrprop(prop);
 		return;
 	}
 
@@ -387,34 +337,74 @@ parsetag(struct exifprop *prop, struct ifd *dir)
 	case EXIF_T_EXIFIFD:
 	case EXIF_T_GPSIFD:
 	case EXIF_T_INTEROP:
-	case EXIF_T_MAKERNOTE:
 		while (dir->next)
 			dir = dir->next;
 
 		/*
-		 * We can get a NULL result if the maker note is not an IFD.
-		 * If this is the case, process it like a normal tag.
+		 * XXX Olympus cameras don't seem to include a proper offset
+		 * at the end of the ExifOffset IFD, so just read one IFD.
 		 */
 
-		dir->next = readifds(prop->value);
+		if (prop->tag == EXIF_T_EXIFIFD)
+			readifd(btiff + prop->value, &dir->next);
+		else
+			dir->next = readifds(prop->value);
+
 		if (!dir->next) {
-			if (prop->tag == EXIF_T_MAKERNOTE)
+
+			/*
+			 * XXX Ignore the case where interoperability offset
+			 * is invalid.  This appears to be the case with some
+			 * Olympus cameras, and we don't want to abort things
+			 * things on an IFD we don't really care about anyway.
+			 */
+
+			if (prop->tag == EXIF_T_INTEROP)
 				break;
+
 			exifdie("invalid Exif format (IFD length mismatch)");
 		}
 
 		dir->next->tag = prop->tag;
 		return (FALSE);		/* No need to add to property list. */
 
-	/* Lookup function for maker note. */
+	/* Process a maker note. */
+
+	case EXIF_T_MAKERNOTE:
+		while (dir->next)
+			dir = dir->next;
+
+		/*
+		 * Try to process maker note IFDs.  If we have a special
+		 * function for reading them, use it.  Otherwise, read it
+		 * normally.  If we don't get anything, just process the
+		 * tag like any other.
+		 *
+		 * XXX Note that for this to work right, we have to see
+		 * the manufacturer tag first to figure out makerifd().
+		 */
+
+		if (mkrifd)
+			dir->next = mkrifd(prop->value);
+		else
+			dir->next = readifds(prop->value);
+
+		if (!dir->next)
+			break;
+
+		dir->next->tag = prop->tag;
+		return (FALSE);		/* No need to add to property list. */
+
+	/* Lookup functions for maker note. */
 
 	case EXIF_T_EQUIPMAKE:
 		for (i = 0; makers[i].val != -1; i++)
-			if (!strncmp(btiff + prop->value, makers[i].name,
+			if (!strncasecmp(btiff + prop->value, makers[i].name,
 			    strlen(makers[i].name)))
 				break;
-		makerprop = makers[i].fun;
-		if (!makerprop)
+		mkrprop = makers[i].propfun;
+		mkrifd = makers[i].ifdfun;
+		if (!mkrprop)
 			exifwarn2("no maker note support for ",
 			    btiff + prop->value);
 
@@ -572,7 +562,7 @@ exifscan(unsigned char *b, int len)
 	ifdoff = exif4byte(b);
 	ifd0 = readifds(ifdoff);
 	if (!ifd0)
-		exifdie("invalid Exif format (IFD length mismatch)");
+		exifdie("invalid Exif format (IFD0 length mismatch)");
 
 	/* Now, let's parse the fields... */
 
