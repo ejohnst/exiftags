@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.15 2002/08/01 18:17:52 ejohnst Exp $
+ * $Id: exif.c,v 1.16 2002/08/31 11:07:58 ejohnst Exp $
  */
 
 /*
@@ -420,7 +420,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 			if (prop->tag == EXIF_T_INTEROP)
 				break;
 #endif
-			exifdie("invalid Exif format (IFD length mismatch)");
+			exifwarn("invalid Exif format (IFD length mismatch)");
+			break;
 		}
 
 		dir->next->tag = prop->tag;
@@ -613,8 +614,11 @@ exifscan(unsigned char *b, int len)
 
 	/* Make sure we've got the proper Exif header. */
 
-	if (memcmp(b, "Exif\0\0", 6))
-		exifdie("invalid Exif header");
+	if (memcmp(b, "Exif\0\0", 6)) {
+		exifwarn("invalid Exif header");
+		exiffree(t);
+		return (NULL);
+	}
 	b += 6;
 
 	/* Determine endianness of the TIFF data. */
@@ -623,24 +627,33 @@ exifscan(unsigned char *b, int len)
 		t->tifforder = BIG;
 	else if (*((u_int16_t *)b) == 0x4949)
 		t->tifforder = LITTLE;
-	else
-		exifdie("invalid TIFF header");
+	else {
+		exifwarn("invalid TIFF header");
+		exiffree(t);
+		return (NULL);
+	}
 
 	t->btiff = b;		/* Beginning of TIFF. */
 	b += 2;
 
 	/* Verify the TIFF header. */
 
-	if (exif2byte(b, t->tifforder) != 42)
-		exifdie("invalid TIFF header");
+	if (exif2byte(b, t->tifforder) != 42) {
+		exifwarn("invalid TIFF header");
+		exiffree(t);
+		return (NULL);
+	}
 	b += 2;
 
 	/* Get the 0th IFD, where all of the good stuff should start. */
 
 	ifdoff = exif4byte(b, t->tifforder);
 	curifd = readifds(ifdoff, t);
-	if (!curifd)
-		exifdie("invalid Exif format (couldn't read IFD0)");
+	if (!curifd) {
+		exifwarn("invalid Exif format (couldn't read IFD0)");
+		exiffree(t);
+		return (NULL);
+	}
 
 	/* Now, let's parse the fields... */
 

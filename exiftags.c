@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.8 2002/08/01 18:19:07 ejohnst Exp $
+ * $Id: exiftags.c,v 1.9 2002/08/31 11:08:33 ejohnst Exp $
  */
 
 /*
@@ -127,7 +127,7 @@ printprops(struct exifprop *list, unsigned short lvl)
 }
 
 
-static void
+static int
 doit(FILE *fp, int dumplvl)
 {
 	int mark, gotapp1, first;
@@ -152,8 +152,11 @@ doit(FILE *fp, int dumplvl)
 			exifdie((const char *)strerror(errno));
 
 		rlen = fread(exifbuf, 1, len, fp);
-		if (rlen != len)
-			exifdie("error reading JPEG (length mismatch)");
+		if (rlen != len) {
+			exifwarn("error reading JPEG (length mismatch)");
+			free(exifbuf);
+			return (1);
+		}
 
 		gotapp1 = TRUE;
 		t = exifscan(exifbuf, len);
@@ -172,9 +175,12 @@ doit(FILE *fp, int dumplvl)
 		free(exifbuf);
 	}
 
-	if (!gotapp1)
-		exifdie("couldn't find Exif data");
-	/*if (jpeginfo());*/
+	if (!gotapp1) {
+		exifwarn("couldn't find Exif data");
+		return (1);
+	}
+
+	return (0);
 }
 
 
@@ -264,11 +270,14 @@ main(int argc, char **argv)
 			if (argc > 1)
 				printf("%s%s:\n", fnum == 1 ? "" : "\n", *argv);
 
-			doit(fp, dumplvl);
+			if (doit(fp, dumplvl))
+				eval = 1;
 			fclose(fp);
 		}
-        } else
-		doit(stdin, dumplvl);
+        } else {
+		if (doit(stdin, dumplvl))
+			eval = 1;
+	}
 
 	exit(eval);
 }
