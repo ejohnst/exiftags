@@ -1,3 +1,9 @@
+20021103 version: exiftags 0.96
+20021103 internal mechanism for one tag to override another
+20021102 reduce fractions (e.g., exposure time)
+20021102 updated for Exif 2.2 spec: new tags, some existing tags expanded
+20021102 made flash tag support safer (thanks: Christian Zuckschwerdt)
+20021102 save Exif version with file info
 20021101 added Casio maker note support
 20021101 fixed segfault on bad Exif data
 20021006 version: exiftags 0.95
@@ -25,4 +31,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.8 2002/11/02 22:18:02 ejohnst Exp $
+$Id: CHANGES,v 1.9 2002/11/04 07:23:50 ejohnst Exp $

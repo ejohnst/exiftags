@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.3 2002/10/15 05:05:27 ejohnst Exp $
+ * $Id: exifcom.c,v 1.4 2002/11/04 07:23:50 ejohnst Exp $
  */
 
 /*
@@ -56,7 +56,7 @@ int getopt(int, char * const [], const char *);
 #include "exif.h"
 
 
-static char *version = "0.10";
+static char *version = "0.96";
 static int fnum, bflag, iflag, nflag, vflag; 
 const char *com;
 
