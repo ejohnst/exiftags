@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.59 2003/08/16 02:25:09 ejohnst Exp $
+ * $Id: exif.c,v 1.60 2003/08/16 03:34:21 ejohnst Exp $
  */
 
 /*
@@ -119,7 +119,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	for (j = 0; ftypes[j].type && ftypes[j].type != prop->type; j++);
 	if (!ftypes[j].type) {
 		exifwarn2("unknown TIFF field type; discarding", prop->name);
-		free(tmpprop);
+		free(prop);
 		return;
 	}
 
