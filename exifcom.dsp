@@ -55,8 +55,8 @@ LINK32=link.exe
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "exifcom___Win32_Debug"
-# PROP BASE Intermediate_Dir "exifcom___Win32_Debug"
+# PROP BASE Output_Dir "Debug"
+# PROP BASE Intermediate_Dir "Debug"
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
@@ -85,10 +85,6 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\canon.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\exif.c
 # End Source File
 # Begin Source File
@@ -101,10 +97,6 @@ SOURCE=.\exifutil.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\fuji.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\getopt.c
 # End Source File
 # Begin Source File
@@ -113,11 +105,7 @@ SOURCE=.\jpeg.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\nikon.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\olympus.c
+SOURCE=.\makers_stub.c
 # End Source File
 # Begin Source File
 

@@ -117,6 +117,10 @@ SOURCE=.\jpeg.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\makers.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\nikon.c
 # End Source File
 # Begin Source File
