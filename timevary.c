@@ -25,7 +25,7 @@
  *
  * Lifted from FreeBSD: src/bin/date/vary.c,v 1.15
  *
- * $Id: timevary.c,v 1.3 2004/04/20 17:23:03 ejohnst Exp $
+ * $Id: timevary.c,v 1.4 2004/04/20 17:59:09 ejohnst Exp $
  *
  */
 
@@ -35,6 +35,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "timevary.h"
 #include "exif.h"
 
