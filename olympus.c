@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.9 2003/01/25 01:17:12 ejohnst Exp $
+ * $Id: olympus.c,v 1.10 2003/02/11 15:32:19 ejohnst Exp $
  */
 
 /*
@@ -97,7 +97,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	int i;
 	u_int32_t a, b;
 	u_int16_t v = (u_int16_t)prop->value;
-	char *offset;
+	unsigned char *offset;
 	struct exifprop *aprop;
 
 	/*
@@ -206,7 +206,7 @@ olympus_ifd(u_int32_t offset, struct exiftags *t)
 	 * try reading the IFD starting at offset + 8 ("OLYMP" + 3).
 	 */
 
-	if (!strcmp(t->btiff + offset, "OLYMP"))
+	if (!strcmp((const char *)(t->btiff + offset), "OLYMP"))
 		readifd(t->btiff + offset + strlen("OLYMP") + 3, &myifd, t);
 	else
 		readifd(t->btiff + offset, &myifd, t);

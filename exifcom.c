@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.6 2003/02/07 17:33:18 ejohnst Exp $
+ * $Id: exifcom.c,v 1.7 2003/02/11 15:32:19 ejohnst Exp $
  */
 
 /*
@@ -94,7 +94,7 @@ printcom(struct exifprop *p, const unsigned char *btiff)
 		if (memcmp(ASCCOM, btiff + p->value, 8)) {
 			if (!vflag)
 				exifwarn2("comment type not supported",
-				    btiff + p->value);
+				    (const char *)(btiff + p->value));
 			rc = 3;
 		}
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.47 2003/02/04 21:51:23 ejohnst Exp $
+ * $Id: exif.c,v 1.48 2003/02/11 15:32:19 ejohnst Exp $
  */
 
 /*
@@ -494,7 +494,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	/* Lookup functions for maker note. */
 
 	case EXIF_T_EQUIPMAKE:
-		strncpy(buf, t->btiff + prop->value, sizeof(buf));
+		strncpy(buf, (const char *)(t->btiff + prop->value),
+		    sizeof(buf));
 		buf[sizeof(buf) - 1] = '\0';
 		for (c = buf; *c; c++) *c = tolower(*c);
 
@@ -534,7 +535,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		if (ucomment[i].val == TIFF_ASCII &&
 		    (prop->value + prop->count <
 		    (u_int32_t)(t->etiff - t->btiff))) {
-			c = t->btiff + prop->value + 8;
+			c = (char *)(t->btiff + prop->value + 8);
 			d = strlen(c) < prop->count - 8 ? c + strlen(c) :
 			    c + prop->count - 8;
 
@@ -571,7 +572,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	    (prop->value + prop->count < (u_int32_t)(t->etiff - t->btiff))) {
 		if (!(prop->str = (char *)malloc(prop->count + 1)))
 			exifdie((const char *)strerror(errno));
-		strncpy(prop->str, t->btiff + prop->value, prop->count);
+		strncpy(prop->str, (const char *)(t->btiff + prop->value),
+		    prop->count);
 		prop->str[prop->count] = '\0';
 		return (TRUE);
 	}

@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.14 2003/02/07 17:33:18 ejohnst Exp $
+ * $Id: minolta.c,v 1.15 2003/02/11 15:32:19 ejohnst Exp $
  *
  */ 
 
@@ -408,14 +408,15 @@ static struct exiftag minolta_unkn[] = {
  * Process maker note tag 0x0001 and 0x0003 fields.
  */
 void
-minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
+minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
     struct exiftag *thetags)
 {
 	unsigned int i, j, k;
 	u_int32_t v;
 	int32_t model;
 	double d;
-	unsigned char *cp, *valbuf;
+	char *valbuf;
+	unsigned char *cp;
 	struct exifprop *aprop;
 
 	valbuf = NULL;
@@ -812,7 +813,7 @@ minolta_ifd(u_int32_t offset, struct exiftags *t)
 
 	/* DiMAGE E201. */
 
-	if (!strcmp(t->btiff + offset, "+M")) {
+	if (!strcmp((const char *)(t->btiff + offset), "+M")) {
 		exifwarn("Minolta maker note version not supported");
 		return (NULL);
 	}

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.27 2003/02/07 17:33:18 ejohnst Exp $
+ * $Id: canon.c,v 1.28 2003/02/11 15:32:19 ejohnst Exp $
  */
 
 /*
@@ -623,8 +623,8 @@ static struct ccstm canon_1dcustom[] = {
  * Process maker note tag 0x0001 values.
  */
 static int
-canon_prop01(struct exifprop *aprop, struct exifprop *prop, char *off,
-    enum order o)
+canon_prop01(struct exifprop *aprop, struct exifprop *prop,
+    unsigned char *off, enum order o)
 {
 	u_int16_t v = (u_int16_t)aprop->value;
 
@@ -688,8 +688,8 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop, char *off,
  * Process maker note tag 0x0004 values.
  */
 static int
-canon_prop04(struct exifprop *aprop, struct exifprop *prop, char *off,
-    enum order o)
+canon_prop04(struct exifprop *aprop, struct exifprop *prop,
+    unsigned char *off, enum order o)
 {
 
 	switch (aprop->subtag) {
@@ -711,8 +711,8 @@ canon_prop04(struct exifprop *aprop, struct exifprop *prop, char *off,
  * Process maker note tag 0x00a0 values.
  */
 static int
-canon_propA0(struct exifprop *aprop, struct exifprop *prop, char *off,
-    enum order o)
+canon_propA0(struct exifprop *aprop, struct exifprop *prop,
+    unsigned char *off, enum order o)
 {
 
 	switch (aprop->subtag) {
@@ -741,7 +741,7 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 	int i, j;
 	u_int16_t v;
 	struct exifprop *aprop;
-	char *off = t->btiff + prop->value;
+	unsigned char *off = t->btiff + prop->value;
 
 	/* Check size of tag (first value). */
 
@@ -789,7 +789,7 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
  * Process custom function tag values.
  */
 static void
-canon_custom(struct exifprop *prop, char *off, enum order o,
+canon_custom(struct exifprop *prop, unsigned char *off, enum order o,
     struct ccstm *table)
 {
 	int i, j = -1;
@@ -864,7 +864,7 @@ void
 canon_prop(struct exifprop *prop, struct exiftags *t)
 {
 	unsigned int i;
-	char *offset;
+	unsigned char *offset;
 	u_int16_t v, flmin = 0, flmax = 0, flunit = 0;
 	struct exifprop *tmpprop;
 

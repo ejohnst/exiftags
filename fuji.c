@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.7 2003/01/25 01:17:12 ejohnst Exp $
+ * $Id: fuji.c,v 1.8 2003/02/11 15:32:19 ejohnst Exp $
  */
 
 /*
@@ -262,7 +262,7 @@ fuji_ifd(u_int32_t offset, struct exiftags *t)
 	 * an IFD offset relative to the MakerNote tag.
 	 */
 
-	if (!strncmp(t->btiff + offset, "FUJIFILM", fujilen)) {
+	if (!strncmp((const char *)(t->btiff + offset), "FUJIFILM", fujilen)) {
 		fujioff = exif2byte(t->btiff + offset + fujilen, LITTLE);
 		readifd(t->btiff + offset + fujioff, &myifd, &fujit);
 	} else

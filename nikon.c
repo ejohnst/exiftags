@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.10 2003/01/25 08:00:51 ejohnst Exp $
+ * $Id: nikon.c,v 1.11 2003/02/11 15:32:19 ejohnst Exp $
  */
 
 /*
@@ -298,7 +298,7 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 	 * ("Nikon" + 3).
 	 */
 
-	if (!strcmp(t->btiff + offset, "Nikon")) {
+	if (!strcmp((const char *)(t->btiff + offset), "Nikon")) {
 
 		/* What a hack.  Indicates we need to use nikon_tags1[]. */
 		t->mkrinfo = 1;
