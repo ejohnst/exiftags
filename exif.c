@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.4 2002/06/30 08:50:51 ejohnst Exp $
+ * $Id: exif.c,v 1.5 2002/06/30 08:58:48 ejohnst Exp $
  */
 
 /*
@@ -53,7 +53,7 @@
 #include <math.h>
 #include <ctype.h>
 
-#include "exifdump.h"
+#include "exiftags.h"
 #include "exif.h"
 
 
