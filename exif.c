@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.28 2002/11/02 22:30:40 ejohnst Exp $
+ * $Id: exif.c,v 1.29 2002/11/03 01:59:20 ejohnst Exp $
  */
 
 /*
@@ -37,8 +37,7 @@
  *
  * Developed using the TIFF 6.0 specification:
  * (http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf)
- * and the EXIF 2.1 standard:
- * (http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF)
+ * and the EXIF 2.2 standard: (http://tsc.jeita.or.jp/avs/data/cp3451.pdf)
  *
  * Portions of this code were developed while referencing the public domain
  * 'Jhead' program (version 1.2) by Matthias Wandel <mwandel@rim.net>.
@@ -247,9 +246,9 @@ static void
 postprop(struct exifprop *prop, struct exiftags *t)
 {
 	struct exifprop *tmpprop;
+	u_int16_t v;
 	u_int32_t val;
 	float fval;
-	char slop[16];
 	enum order o = t->tifforder;
 	struct exifprop *h = t->props;
 
@@ -329,6 +328,16 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		prop->str[31] = '\0';
 		break;
 
+	/* Flash consists of a number of bits, which expanded with v2.2. */
+
+	case EXIF_T_FLASH:
+		if (t->exifmaj <= 2 && t->exifmin < 20)
+			v = (u_int16_t)(prop->value & 0x7);
+		else
+			v = (u_int16_t)(prop->value & 0x7F);
+		prop->str = finddescr(flashes, v);
+		break;
+
 	case EXIF_T_FOCALLEN:
 		fval = (float)exif4byte(t->btiff + prop->value, o) /
 		    (float)exif4byte(t->btiff + prop->value + 4, o);
@@ -336,19 +345,6 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		snprintf(prop->str, 31, "%.2f mm", fval);
 		prop->str[31] = '\0';
 		break;
-
-	case EXIF_T_VERSION:
-		/* These contortions are to make 0210 = 2.10. */
-		if (!(prop->str = (char *)malloc(8)))
-			exifdie((const char *)strerror(errno));
-		strncpy(slop, (const char *)(&prop->value), 2);
-		strncpy(slop + 3, (const char *)(&prop->value) + 2, 2);
-		slop[2] = slop[5] = prop->str[7] = '\0';
-		t->exifmaj = (short)atoi(slop);
-		t->exifmin = (short)atoi(slop + 3);
-		snprintf(prop->str, 7, "%d.%d", t->exifmaj, t->exifmin);
-		break;
-		
 	}
 }
 
@@ -440,6 +436,20 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 		dir->next->tag = prop->tag;
 		return (FALSE);		/* No need to add to property list. */
+
+	/* Record the Exif version. */
+
+	case EXIF_T_VERSION:
+		/* These contortions are to make 0220 = 2.20. */
+		if (!(prop->str = (char *)malloc(8)))
+			exifdie((const char *)strerror(errno));
+		strncpy(buf, (const char *)(&prop->value), 4);
+		buf[4] = prop->str[7] = '\0';
+		t->exifmin = (short)atoi(buf + 2);
+		buf[2] = '\0';
+		t->exifmaj = (short)atoi(buf);
+		snprintf(prop->str, 7, "%d.%d", t->exifmaj, t->exifmin);
+		break;
 
 	/* Process a maker note. */
 
