@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.4 2002/06/30 08:58:32 ejohnst Exp $
+ * $Id: canon.c,v 1.5 2002/06/30 23:27:09 ejohnst Exp $
  */
 
 /*
@@ -403,7 +403,7 @@ canon_prop(struct exifprop *prop)
 	case 0x0001:
 		offset = btiff + prop->value;
 		if (exif2byte(offset) != 2 * prop->count) {
-			exifwarn("Canon image prop 0x0001 length mismatch");
+			exifwarn("Canon maker note appears corrupt (0x0001)");
 			break;
 		}
 
@@ -413,7 +413,7 @@ canon_prop(struct exifprop *prop)
 	case 0x0004:
 		offset = btiff + prop->value;
 		if (exif2byte(offset) != 2 * prop->count) {
-			exifwarn("Canon image prop 0x0004 length mismatch");
+			exifwarn("Canon maker note appears corrupt (0x0004)");
 			break;
 		}
 
