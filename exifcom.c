@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.1 2002/10/08 07:51:46 ejohnst Exp $
+ * $Id: exifcom.c,v 1.2 2002/10/15 03:08:06 ejohnst Exp $
  */
 
 /*
@@ -57,12 +57,16 @@ int getopt(int, char * const [], const char *);
 
 
 static char *version = "0.10";
-static int fnum, vflag, iflag, bflag, fflag;
+static int fnum, bflag, iflag, nflag, vflag; 
 const char *com;
 
 #define ASCCOM		"ASCII\0\0\0"
 
 
+/*
+ * Display the comment.  This function just uses what's returned by
+ * exifscan() -- it doesn't touch the file.
+ */
 static int
 printcom(struct exifprop *p, const unsigned char *btiff)
 {
@@ -120,12 +124,15 @@ printcom(struct exifprop *p, const unsigned char *btiff)
 }
 
 
+/*
+ * Blank or write a comment.
+ */
 static int
 writecom(FILE *fp, const char *fname, long pos, struct exifprop *p,
     const unsigned char *buf, const unsigned char *btiff)
 {
-	int l, ch, checkch;
-	unsigned char *tbuf;
+	u_int32_t l;
+	int ch, checkch;
 	long psave;
 
 	/* No comment tag or it's zero length. */
@@ -145,6 +152,8 @@ writecom(FILE *fp, const char *fname, long pos, struct exifprop *p,
 	if (iflag && *(btiff + p->value)) {
 
 		if (memcmp(ASCCOM, btiff + p->value, 8)) {
+			if (nflag)
+				return (1);
 			fprintf(stderr, "overwrite %.8s comment in %s? "
 			    "(y/n [n]) ", btiff + p->value, fname);
 
@@ -157,6 +166,8 @@ writecom(FILE *fp, const char *fname, long pos, struct exifprop *p,
 			}
 
 		} else if (p->str && *(p->str)) {
+			if (nflag)
+				return (1);
 			fprintf(stderr, "overwrite comment in %s? (y/n [n]) ",
 			    fname);
 
@@ -176,43 +187,23 @@ writecom(FILE *fp, const char *fname, long pos, struct exifprop *p,
 	if (fseek(fp, pos + (btiff - buf) + p->value, SEEK_SET))
 		exifdie((const char *)strerror(errno));
 
-#ifdef DEBUG
-	printf("      before: ");
-	tbuf = (unsigned char *)malloc(p->count + 2);
-	fread(tbuf, 1, p->count + 2, fp);
-	for (l = 0; l < p->count + 2; l++, tbuf++) printf("%X ", *tbuf);
-	printf("\n");
-	if (fseek(fp, pos + (btiff - buf) + p->value, SEEK_SET))
-		exifdie((const char *)strerror(errno));
-#endif
-
 	/*
 	 * Blank it with zeros and then reset the position.
 	 * XXX Note that this is counter to the spec's recommendation:
 	 * "When a UserComment area is set aside, it is recommended that
 	 * the ID code be ASCII and that the following user comment part
-	 * be filled with blank characters [20.H]."  However, cameras seem
-	 * to make it all zero...
+	 * be filled with blank characters [20.H]."  However, cameras (Canon)
+	 * seem to make it all zero; the rationale is that one can restore
+	 * the image file to its original state.
 	 */
 
 	if (bflag) {
-		printf("doing a blank\n");
 		for (l = 0; l < p->count; l++)
 			if (fwrite("\0", 1, 1, fp) != 1)
 				exifdie((const char *)strerror(errno));
 		if (fseek(fp, pos + (btiff - buf) + p->value, SEEK_SET))
 			exifdie((const char *)strerror(errno));
 	}
-
-#ifdef DEBUG
-	printf("after blank: ");
-	tbuf = (unsigned char *)malloc(p->count + 2);
-	fread(tbuf, 1, p->count + 2, fp);
-	for (l = 0; l < p->count + 2; l++, tbuf++) printf("%X ", *tbuf);
-	printf("\n");
-	if (fseek(fp, pos + (btiff - buf) + p->value, SEEK_SET))
-		exifdie((const char *)strerror(errno));
-#endif
 
 	/* Write the character code and comment. */
 
@@ -236,24 +227,16 @@ writecom(FILE *fp, const char *fname, long pos, struct exifprop *p,
 		/*
 		 * Pad with spaces (this seems to be standard practice).
 		 * XXX For now we're not NUL terminating the string.
-		 * This shouldn't be required, but it's always possible
-		 * that something out there will break.
+		 * This doesn't appear to be required by the spec, but it's
+		 * always possible that something out there will break.
+		 * I've seen some utilities pad with spaces and set the
+		 * last byte to NUL.
 		 */
 
 		for (l = p->count - 8 - l; l; l--)
 			if (fwrite(" ", 1, 1, fp) != 1)
 				exifdie((const char *)strerror(errno));
 	}
-
-#ifdef DEBUG
-	if (fseek(fp, pos + (btiff - buf) + p->value, SEEK_SET))
-		exifdie((const char *)strerror(errno));
-	printf("after write: ");
-	tbuf = (unsigned char *)malloc(p->count + 2);
-	fread(tbuf, 1, p->count + 2, fp);
-	for (l = 0; l < p->count + 2; l++, tbuf++) printf("%X ", *tbuf);
-	printf("\n");
-#endif
 
 	/* Restore the file pointer. */
 
@@ -264,14 +247,16 @@ writecom(FILE *fp, const char *fname, long pos, struct exifprop *p,
 }
 
 
+/*
+ * Scan the JPEG file for Exif data and parse it.
+ */
 static int
 doit(FILE *fp, const char *fname)
 {
-	int mark, gotapp1, first;
+	int mark, gotapp1, first, rc;
 	unsigned int len, rlen;
 	unsigned char *exifbuf;
 	struct exiftags *t;
-	int rc;
 	long app1;
 
 	gotapp1 = FALSE;
@@ -334,6 +319,7 @@ void usage()
 	fprintf(stderr, "  -b\tOverwrite the comment tag with zeros.\n");
 	fprintf(stderr, "  -f\tAnswer 'yes' to any confirmation prompts.\n");
 	fprintf(stderr, "  -i\tConfirm overwrites (default).\n");
+	fprintf(stderr, "  -n\tAnswer 'no' to any confirmation prompts.\n");
 	fprintf(stderr, "  -v\tBe verbose about comment information.\n");
 	fprintf(stderr, "  -w\tSet comment to provided string.\n");
 
@@ -352,8 +338,8 @@ main(int argc, char **argv)
 	progname = argv[0];
 	eval = 0;
 	debug = FALSE;
-	vflag = bflag = fflag = FALSE;
-	iflag = -1;
+	bflag = nflag = vflag = FALSE;
+	iflag = TRUE;
 	com = NULL;
 #ifdef WIN32
 	rmode = "rb";
@@ -363,16 +349,19 @@ main(int argc, char **argv)
 	wmode = "r+";
 #endif
 
-	while ((ch = getopt(argc, argv, "bfivw:")) != -1)
+	while ((ch = getopt(argc, argv, "bfinvw:")) != -1)
 		switch (ch) {
 		case 'b':
 			bflag = TRUE;
 			break;
 		case 'f':
-			fflag = TRUE;
+			iflag = FALSE;
 			break;
 		case 'i':
 			iflag = TRUE;
+			break;
+		case 'n':
+			iflag = nflag = TRUE;
 			break;
 		case 'v':
 			vflag = TRUE;
@@ -387,57 +376,44 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	/*
-	 * iflag starts off as -1 (neither TRUE nor FALSE).  iflag should
-	 * be true unless fflag is set, and only in the absence of iflag
-	 * being explictly set.
-	 */
-
-	if (iflag == TRUE)
-		fflag = FALSE;
-	if (fflag == TRUE)
-		iflag = FALSE;
-	else
-		iflag = TRUE;
-
-	if (*argv) {
-		for (fnum = 0; *argv; ++argv) {
-
-			/* Only open for read/write if we need to. */
-
-			if ((fp = fopen(*argv,
-			    bflag || com ? wmode : rmode)) == NULL) {
-				exifwarn2(strerror(errno), *argv);
-				eval = 1;
-				continue;
-			}
-
-			fnum++;
-
-			if (argc > 1) {
-
-				/* Print filenames if more than one. */
-
-				if (vflag && !(bflag || com))
-					printf("%s%s:\n",
-					    fnum == 1 ? "" : "\n", *argv);
-				else if (!(bflag || com))
-					printf("%s: ", *argv);
-
-				/* Don't error blanks with multiple files. */
-
-				eval = (doit(fp, *argv) == 1 || eval);
-
-			} else
-				eval = doit(fp, *argv);
-
-			if (!vflag && !(bflag || com))
-				printf("\n");
-
-			fclose(fp);
-		}
-        } else
+	if (!*argv)
 		usage();
+
+	for (fnum = 0; *argv; ++argv) {
+
+		/* Only open for read/write if we need to. */
+
+		if ((fp = fopen(*argv,
+		    bflag || com ? wmode : rmode)) == NULL) {
+			exifwarn2(strerror(errno), *argv);
+			eval = 1;
+			continue;
+		}
+
+		fnum++;
+
+		if (argc > 1) {
+
+			/* Print filenames if more than one. */
+
+			if (vflag && !(bflag || com))
+				printf("%s%s:\n",
+				    fnum == 1 ? "" : "\n", *argv);
+			else if (!(bflag || com))
+				printf("%s: ", *argv);
+
+			/* Don't error >1 with multiple files. */
+
+			eval = (doit(fp, *argv) == 1 || eval);
+
+		} else
+			eval = doit(fp, *argv);
+
+		if (!vflag && !(bflag || com))
+			printf("\n");
+
+		fclose(fp);
+	}
 
 	return (eval);
 }
