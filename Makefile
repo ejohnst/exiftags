@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2002/11/02 22:18:02 ejohnst Exp $
+# $Id: Makefile,v 1.11 2002/11/02 22:18:57 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
@@ -31,7 +31,7 @@ exifcom: exifcom.o $(OBJS) $(MKRS) $(HDRS)
 	$(CC) $(CFLAGS) -o $@ exifcom.o $(OBJS) $(MKRS) -lm
 
 clean:
-	@rm -f $(OBJS) exiftags.o exifcom.o exiftags exifcom
+	@rm -f $(OBJS) $(MKRS) exiftags.o exifcom.o exiftags exifcom
 
 install: all
 	cp exiftags exifcom $(PREFIX)/bin
