@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.15 2003/08/06 02:26:42 ejohnst Exp $
+ * $Id: nikon.c,v 1.16 2003/08/06 22:54:33 ejohnst Exp $
  */
 
 /*
@@ -297,7 +297,7 @@ nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 	if (!strcmp((const char *)b, "Nikon")) {
 		b += 6;
 
-		switch (*((u_int16_t *)b)) {
+		switch (exif2byte(b, md->order)) {
 		case 0x0001:
 			readifd(offset + 8, &myifd, nikon_tags1, &mkrmd);
 			return (myifd);

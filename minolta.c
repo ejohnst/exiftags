@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.23 2003/08/06 02:26:42 ejohnst Exp $
+ * $Id: minolta.c,v 1.24 2003/08/06 22:54:33 ejohnst Exp $
  *
  */ 
 
@@ -301,7 +301,7 @@ static struct exiftag minolta_tags[] = {
 
 /* Fields under tags 0x0001 and 0x0003. */
 
-static struct exiftag minolta_0TLM[] = {
+static struct exiftag minolta_MLT0[] = {
 	{ 1,  TIFF_LONG, 1, ED_IMG, "MinoltaExpProg",
 	  "Exposure Program", minolta_prog },
 	{ 2,  TIFF_LONG, 1, ED_IMG, "MinoltaFlashMode",
@@ -415,7 +415,7 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 	int32_t model;
 	double d;
 	char *valbuf;
-	unsigned char *cp;
+	unsigned char *cp, buf[8];
 	struct exifprop *aprop;
 
 	valbuf = NULL;
@@ -429,7 +429,7 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 		 * skip #51.
 		 */
 
-		if (thetags == minolta_0TLM && i >= 51 && model == 5) {
+		if (thetags == minolta_MLT0 && i >= 51 && model == 5) {
 			if (i == 51) continue;
 			k = i - 1;
 		} else
@@ -462,7 +462,7 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 		 * tags passed in.
 		 */
 
-		if (thetags != minolta_0TLM)
+		if (thetags != minolta_MLT0)
 			continue;
 
 		if (!valbuf)
@@ -586,9 +586,9 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 		case 21:
 			aprop->str = valbuf;
 			valbuf = NULL;
-			cp = (unsigned char *)&aprop->value;
+			byte4exif(aprop->value, buf, LITTLE);
 			snprintf(aprop->str, 15, "%02d/%02d/%04d",
-			    cp[0], cp[1], cp[3] << 8 | cp[2]);
+			    buf[0], buf[1], buf[3] << 8 | buf[2]);
 			break;
 
 		/* Time. */
@@ -596,9 +596,9 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 		case 22:
 			aprop->str = valbuf;
 			valbuf = NULL;
-			cp = (unsigned char *)&aprop->value;
+			byte4exif(aprop->value, buf, LITTLE);
 			snprintf(aprop->str, 9, "%02d:%02d:%02d",
-			    cp[2], cp[1], cp[0]);
+			    buf[2], buf[1], buf[0]);
 			break;
 
 		/* White balance. */
@@ -692,12 +692,14 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 	/* Maker note type. */
 
 	case 0x0000:
+		if (prop->count < 4)
+			break;
 		exifstralloc(&prop->str, prop->count + 1);
-		strncpy(prop->str, (const char *)&prop->value, prop->count);
+		byte4exif(prop->value, (unsigned char *)prop->str, t->md.order);
 
-		/* We recognize two types: 0TLM and mlt0. */
+		/* We recognize two types: MLT0 and mlt0. */
 
-		if (strcmp(prop->str, "0TLM") && strcmp(prop->str, "mlt0"))
+		if (strcmp(prop->str, "MLT0") && strcmp(prop->str, "mlt0"))
 			exifwarn2("Minolta maker note version not supported",
 			    prop->str);
 		break;
@@ -712,7 +714,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			exifwarn("Minolta maker note not fully supported");
 			fielddefs = minolta_unkn;
 		} else
-			fielddefs = minolta_0TLM;
+			fielddefs = minolta_MLT0;
 		minolta_cprop(prop, t->md.btiff + prop->value, t, fielddefs);
 		break;
 
@@ -721,7 +723,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			exifwarn("Minolta maker note not fully supported");
 			fielddefs = minolta_unkn;
 		} else
-			fielddefs = minolta_0TLM;
+			fielddefs = minolta_MLT0;
 		minolta_cprop(prop, t->md.btiff + prop->value, t, fielddefs);
 		break;
 	}
