@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.16 2003/08/06 22:54:33 ejohnst Exp $
+ * $Id: nikon.c,v 1.17 2003/08/16 03:02:16 ejohnst Exp $
  */
 
 /*
@@ -171,7 +171,7 @@ static struct exiftag nikon_tags1[] = {
 static struct exiftag nikon_tags2[] = {
 	{ 0x0001, TIFF_UNDEF, 4, ED_VRB, "NikonVersion",
 	  "Nikon Note Version", NULL },
-	{ 0x0002, TIFF_SHORT, 2, ED_IMG, "NikonISOSetting",
+	{ 0x0002, TIFF_SHORT, 2, ED_UNK, "NikonISOSetting",
 	  "ISO Setting", NULL },
 	{ 0x0003, TIFF_ASCII, 0, ED_IMG, "NikonColor",
 	  "Color Mode", NULL },
@@ -302,7 +302,7 @@ nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 			readifd(offset + 8, &myifd, nikon_tags1, &mkrmd);
 			return (myifd);
 
-		case 0x0002:
+		case 0x0200:
 			b += 4;
 
 			/*
