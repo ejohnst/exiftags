@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.29 2002/11/03 01:59:20 ejohnst Exp $
+ * $Id: exif.c,v 1.30 2002/11/03 05:49:30 ejohnst Exp $
  */
 
 /*
@@ -321,8 +321,16 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	/* XXX How do you calculate ExposureBiasValue? */
 
 	case EXIF_T_DISTANCE:
-		fval = (float)exif4sbyte(t->btiff + prop->value, o) /
-		    (float)exif4sbyte(t->btiff + prop->value + 4, o);
+		if (exif4byte(t->btiff + prop->value, o) == 0xffffffff) {
+			strcpy(prop->str, "Infinity");
+			break;
+		}
+		if (exif4byte(t->btiff + prop->value + 4, o) == 0) {
+			strcpy(prop->str, "Unknown");
+			break;
+		}
+		fval = (float)exif4byte(t->btiff + prop->value, o) /
+		    (float)exif4byte(t->btiff + prop->value + 4, o);
 		if (isnan(fval)) fval = 0;
 		snprintf(prop->str, 31, "%.2f m", fval);
 		prop->str[31] = '\0';
@@ -344,6 +352,24 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		if (isnan(fval)) fval = 0;
 		snprintf(prop->str, 31, "%.2f mm", fval);
 		prop->str[31] = '\0';
+		break;
+
+	/* Digital zoom: set to verbose if numerator is 0 or fraction = 1. */
+
+	case EXIF_T_DIGIZOOM:
+		if (!exif4byte(t->btiff + prop->value, o))
+			strcpy(prop->str, "Unused");
+		else if (exif4byte(t->btiff + prop->value, o) !=
+		    exif4byte(t->btiff + prop->value + 4, o))
+			break;
+		prop->lvl = ED_VRB;
+		break;
+
+	case EXIF_T_FOCALLEN35:
+		if (!(prop->str = (char *)malloc(16)))
+			exifdie((const char *)strerror(errno));
+		snprintf(prop->str, 15, "%d mm", prop->value);
+		prop->str[15] = '\0';
 		break;
 	}
 }
@@ -582,7 +608,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			ud = exif4byte(t->btiff + prop->value + 4,
 			    t->tifforder);
 
-			if (un == ud) sprintf(prop->str, "1");
+			if (!un) sprintf(prop->str, "0");
+			else if (!ud) sprintf(prop->str, "Infinite");
+			else if (un == ud) sprintf(prop->str, "1");
 			else if (ud == 1) snprintf(prop->str, 31, "%d", un);
 			else snprintf(prop->str, 31, "%d/%d", un, ud);
 		} else {
@@ -590,7 +618,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			sd = exif4sbyte(t->btiff + prop->value + 4,
 			    t->tifforder);
 
-			if (sn == sd) sprintf(prop->str, "1");
+			if (!sn) sprintf(prop->str, "0");
+			else if (!sd) sprintf(prop->str, "Infinite");
+			else if (sn == sd) sprintf(prop->str, "1");
 			else if (sd == 1) snprintf(prop->str, 31, "%d", sn);
 			else snprintf(prop->str, 31, "%d/%d", sn, sd);
 		}
