@@ -1,3 +1,4 @@
+20040420 added Panasonic maker note support (thanks: Tom Hughes)
 20040410 improved error messages in exifcom
 20040408 added exiftime utility to display and write date/time tags
 20040403 added Leica maker note support
@@ -65,4 +66,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.15 2004/04/15 05:41:55 ejohnst Exp $
+$Id: CHANGES,v 1.16 2004/04/20 22:18:56 ejohnst Exp $

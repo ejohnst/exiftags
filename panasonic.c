@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2004, Tom Hughes <tom@compton.nu>
- * Copyright (c) 2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2004, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: panasonic.c,v 1.1 2004/04/20 21:51:19 ejohnst Exp $
+ * $Id: panasonic.c,v 1.2 2004/04/20 22:18:56 ejohnst Exp $
  *
  */ 
 
@@ -45,7 +45,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 #include "makers.h"
 
@@ -66,8 +65,8 @@ static struct descrip panasonic_whitebal[] = {
 	{ 2,	"Daylight" },
 	{ 3,	"Cloudy" },
 	{ 4,	"Halogen" },
-	{ 8,	"Flash" },
 	{ 5,	"Manual" },
+	{ 8,	"Flash" },
 	{ -1,	"Unknown" },
 };
 
@@ -81,7 +80,7 @@ static struct descrip panasonic_spot[] = {
 };
 
 
-/* OIS mode. */
+/* Optical Image Stabilizer mode. */
 
 static struct descrip panasonic_ois[] = {
 	{ 2,	"Mode 1" },
@@ -131,16 +130,16 @@ static struct descrip panasonic_fbias[] = {
 	{ 0x0000,	"0 EV" },
 	{ 0x0001,	"0.33 EV" },
 	{ 0x0002,	"0.67 EV" },
-	{ 0x0003,	"1.00 EV" },
+	{ 0x0003,	"1 EV" },
 	{ 0x0004,	"1.33 EV" },
 	{ 0x0005,	"1.67 EV" },
-	{ 0x0006,	"2.00 EV" },
-	{ 0xffff,	"-0.33 EV" },
-	{ 0xfffe,	"-0.67 EV" },
-	{ 0xfffd,	"-1.00 EV" },
-	{ 0xfffc,	"-1.33 EV" },
+	{ 0x0006,	"2 EV" },
+	{ 0xfffa,	"-2 EV" },
 	{ 0xfffb,	"-1.67 EV" },
-	{ 0xfffa,	"-2.00 EV" },
+	{ 0xfffc,	"-1.33 EV" },
+	{ 0xfffd,	"-1 EV" },
+	{ 0xfffe,	"-0.67 EV" },
+	{ 0xffff,	"-0.33 EV" },
 	{ -1,		"Unknown" },
 };
 
@@ -154,11 +153,11 @@ static struct descrip panasonic_wbadjust[] = {
 	{ 0x0003,	"+3" },
 	{ 0x0004,	"+4" },
 	{ 0x0005,	"+5" },
-	{ 0xffff,	"-1" },
-	{ 0xfffe,	"-2" },
-	{ 0xfffd,	"-3" },
-	{ 0xfffc,	"-4" },
 	{ 0xfffb,	"-5" },
+	{ 0xfffc,	"-4" },
+	{ 0xfffd,	"-3" },
+	{ 0xfffe,	"-2" },
+	{ 0xffff,	"-1" },
 	{ -1,		"Unknown" },
 };
 
@@ -184,7 +183,7 @@ static struct exiftag panasonic_tags0[] = {
 	{ 0x000f, TIFF_BYTE, 1, ED_IMG, "PanasonicSpotMode",
 	  "Spot Mode", panasonic_spot },
 	{ 0x001a, TIFF_SHORT, 1, ED_IMG, "PanasonicOIS",
-	  "OIS Mode", panasonic_ois },
+	  "Image Stabilizer", panasonic_ois },
 	{ 0x001c, TIFF_SHORT, 1, ED_IMG, "PanasonicMacroMode",
 	  "Macro Mode", panasonic_macro },
 	{ 0x001f, TIFF_SHORT, 1, ED_IMG, "PanasonicShootMode",
@@ -203,19 +202,36 @@ static struct exiftag panasonic_tags0[] = {
 
 
 /*
+ * Process Panasonic maker note tags.
+ */
+void
+panasonic_prop(struct exifprop *prop, struct exiftags *t)
+{
+
+	/* Override standard tags. */
+
+	switch (prop->tag) {
+
+	/* White balance. */
+
+	case 0x0003:
+		prop->override = EXIF_T_WHITEBAL;
+		break;
+	}
+}
+
+
+/*
  * Try to read a Panasonic maker note IFD.
  */
 struct ifd *
 panasonic_ifd(u_int32_t offset, struct tiffmeta *md)
 {
-	struct ifd *myifd;
 
 	if (memcmp("Panasonic\0\0\0", md->btiff + offset, 12)) {
 		exifwarn("Maker note format not supported");
 		return (NULL);
 	}
 
-	readifd(offset + 12, &myifd, panasonic_tags0, md);
-        
-	return (myifd);
+	return (readifds(offset + 12, panasonic_tags0, md));
 }

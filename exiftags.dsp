@@ -145,6 +145,10 @@ SOURCE=.\olympus.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\panasonic.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\sanyo.c
 # End Source File
 # Begin Source File

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.16 2004/04/04 21:09:15 ejohnst Exp $
+ * $Id: makers.h,v 1.17 2004/04/20 22:18:56 ejohnst Exp $
  */
 
 /*
@@ -37,7 +37,7 @@
  *
  * When adding a new module, include a #define, a property function,
  * and, if applicable, an IFD reading function.  These need to be included
- * in the makers table found in tagdefs.c.
+ * in the makers table found in makers.c.
  *
  */
 
@@ -58,7 +58,7 @@ struct makerfun {
 extern struct makerfun makers[];
 
 
-/* Maker note defines (must match makers[] in tagdefs.c). */
+/* Maker note defines (must match makers[] in makers.c). */
 
 #define EXIF_MKR_CANON		1
 #define EXIF_MKR_OLYMPUS	2
@@ -70,6 +70,7 @@ extern struct makerfun makers[];
 #define EXIF_MKR_ASAHI		8
 #define EXIF_MKR_PENTAX		9
 #define EXIF_MKR_LEICA		10
+#define EXIF_MKR_PANASONIC	11
 #define EXIF_MKR_UNKNOWN	-1
 
 
@@ -100,5 +101,8 @@ extern struct ifd *asahi_ifd(u_int32_t offset, struct tiffmeta *md);
 
 extern void leica_prop(struct exifprop *prop, struct exiftags *t);
 extern struct ifd *leica_ifd(u_int32_t offset, struct tiffmeta *md);
+
+extern void panasonic_prop(struct exifprop *prop, struct exiftags *t);
+extern struct ifd *panasonic_ifd(u_int32_t offset, struct tiffmeta *md);
 
 #endif
