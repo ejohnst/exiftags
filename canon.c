@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.21 2003/01/25 01:17:12 ejohnst Exp $
+ * $Id: canon.c,v 1.22 2003/01/25 05:41:35 ejohnst Exp $
  */
 
 /*
@@ -267,7 +267,9 @@ static struct exiftag canon_tags[] = {
 	  "Owner Name", NULL },
 	{ 0x000c, TIFF_LONG,  1,  ED_CAM, "Serial",
 	  "Serial Number", NULL },
-	{ 0x000f, TIFF_SHORT, 0,  ED_VRB, "CustomFunc",
+	{ 0x000f, TIFF_SHORT, 0,  ED_UNK, "CustomFunc",
+	  "Custom Function", NULL },
+	{ 0x0090, TIFF_SHORT, 0,  ED_UNK, "CustomFunc",
 	  "Custom Function", NULL },
 	{ 0x00a0, TIFF_SHORT, 0,  ED_UNK, "CanonA0Tag",
 	  "Canon TagA0 Offset", NULL },
@@ -458,6 +460,113 @@ static struct descrip ccstm_onoff[] = {
 	{ -1,	"Unknown" },
 };
 
+static struct descrip ccstm_afsel[] = {
+	{ 0,	"H=AF+Main/V=AF+Command" },
+	{ 1,	"H=Comp+Main/V=Comp+Command" },
+	{ 2,	"H=Command Only/V=Assist+Main" },
+	{ 3,	"H=FEL+Main/V=FEL+Command" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_afill[] = {
+	{ 0,	"On" },
+	{ 1,	"Off" },
+	{ 2,	"On Without Dimming" },
+	{ 3,	"Brighter" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_lcdpanels[] = {
+	{ 0,	"Remain. Shots/File No." },
+	{ 1,	"ISO/Remain. Shots" },
+	{ 2,	"ISO/File No." },
+	{ 3,	"Shots In Folder/Remain. Shots" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_usmmf[] = {
+	{ 0,	"Turns On After One-Shot AF" },
+	{ 1,	"Turns Off After One-Shot AF" },
+	{ 2,	"Always Turned Off" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_explvlinc[] = {
+	{ 0,	"1/3-Stop Set, 1/3-Stop Comp" },
+	{ 1,	"1-Stop Set, 1/3-Stop Comp" },
+	{ 2,	"1/2-Stop Set, 1/2-Stop Comp" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_tvavform[] = {
+	{ 0,	"Tv=Main/Av=Control" },
+	{ 1,	"Tv=Control/Av=Main" },
+	{ 2,	"Tv=Main/Av=Main w/o Lens" },
+	{ 3,	"Tv=Control/Av=Main w/o Lens" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_shutterael[] = {
+	{ 0,	"AF/AE Lock Stop" },
+	{ 1,	"AE Lock/AF" },
+	{ 2,	"AF/AF Lock, No AE Lock" },
+	{ 3,	"AE/AF, No AE Lock" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_afspot[] = {
+	{ 0,	"45/Center AF Point" },
+	{ 1,	"11/Active AF Point" },
+	{ 2,	"11/Center AF Point" },
+	{ 3,	"9/Active AF Point" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_afact[] = {
+	{ 0,	"Single AF Point" },
+	{ 1,	"Expanded (TTL. of 7 AF Points)" },
+	{ 2,	"Automatic Expanded (Max. 13)" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_regaf[] = {
+	{ 0,    "Assist + AF" },
+	{ 1,    "Assist" },
+	{ 2,    "Only While Pressing Assist" },
+	{ -1,   "Unknown" },
+};
+
+static struct descrip ccstm_lensaf1[] = {
+	{ 0,	"AF Stop" },
+	{ 1,	"AF Start" },
+	{ 2,	"AE Lock While Metering" },
+	{ 3,	"AF Point: M->Auto/Auto->Ctr" },
+	{ 4,	"AF Mode: ONESHOT<->SERVO" },
+	{ 5,	"IS Start" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_aisens[] = {
+	{ 0,	"Standard" },
+	{ 1,	"Slow" },
+	{ 2,	"Moderately Slow" },
+	{ 3,	"Moderately Fast" },
+	{ 4,	"Fast" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_fscr[] = {
+	{ 0,	"Ec-N, R" },
+	{ 1,	"Ec-A,B,C,CII,CIII,D,H,I,L" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_finder[] = {
+	{ 0,	"No Viewfinder Display" },
+	{ 1,	"Finder Display On" },
+	{ -1,	"Unknown" },
+};
+
 
 /* D30/D60 custom functions. */
 
@@ -477,6 +586,34 @@ static struct ccstm canon_d30custom[] = {
 	{ 13,	"Sensor cleaning", ccstm_disen },
 	{ 14,	"Superimposed display", ccstm_onoff },
 	{ 15,	"Shutter release w/o CF card", ccstm_yesno },
+	{ -1,	"Unknown function", NULL },
+};
+
+
+/* EOS-1D/1Ds custom functions. */
+
+static struct ccstm canon_1dcustom[] = {
+	{ 0,	"Focusing screen", ccstm_fscr },
+	{ 1,	"Finder display during exposure", ccstm_finder },
+	{ 2,	"Shutter release w/o CF card", ccstm_yesno },
+	{ 3,	"ISO speed expansion", ccstm_yesno },
+	{ 4,	"Shutter button/AEL button", ccstm_shutterael },
+	{ 5,	"Manual Tv/Av for M", ccstm_tvavform },
+	{ 6,	"Exposure level increments", ccstm_explvlinc },
+	{ 7,	"USM lens electronic MF", ccstm_usmmf },
+	{ 8,	"Top/back LCD panels", ccstm_lcdpanels },
+	{ 9,	"AEB sequence/auto cancellation", ccstm_aebseq },
+	{ 10,	"AF point illumination", ccstm_afill },
+	{ 11,	"AF point selection", ccstm_afsel },
+	{ 12,	"Mirror lockup", ccstm_disen },
+	{ 13,	"# AF points/spot metering", ccstm_afspot },
+	{ 14,	"Fill flash auto reduction", ccstm_endis },
+	{ 15,	"Shutter curtain sync", ccstm_shutsync },
+	{ 16,	"Safety shift in Av or Tv", ccstm_endis },
+	{ 17,	"AF point activation area", ccstm_afact },
+	{ 18,	"Switch to registered AF point", ccstm_regaf },
+	{ 19,	"Lens AF stop button", ccstm_lensaf1 },
+	{ 20,	"AI servo tracking sensitivity", ccstm_aisens },
 	{ -1,	"Unknown function", NULL },
 };
 
@@ -596,13 +733,21 @@ canon_propA0(struct exifprop *aprop, struct exifprop *prop, char *off,
  * Common function for a tag's child values.  Pass in the list of tags
  * and a function to process them.
  */
-static void
-canon_subval(struct exifprop *prop, char *off, struct exiftags *t,
+static int
+canon_subval(struct exifprop *prop, struct exiftags *t,
     struct exiftag *subtags, int (*valfun)())
 {
 	int i, j;
 	u_int16_t v;
 	struct exifprop *aprop;
+	char *off = t->btiff + prop->value;
+
+	/* Check size of tag (first value). */
+
+	if (exif2byte(off, t->tifforder) != 2 * prop->count) {
+		exifwarn("Canon maker tag appears corrupt");
+		return (FALSE);
+	}
 
 	for (i = 0; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2, t->tifforder);
@@ -635,6 +780,7 @@ canon_subval(struct exifprop *prop, char *off, struct exiftags *t,
 			aprop->str[31] = '\0';
 		}
 	}
+	return (TRUE);
 }
 
 
@@ -642,27 +788,23 @@ canon_subval(struct exifprop *prop, char *off, struct exiftags *t,
  * Process custom function tag values.
  */
 static void
-canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
+canon_custom(struct exifprop *prop, char *off, enum order o,
+    struct ccstm *table)
 {
 	int i, j;
 	const char *cn;
 	char *cv = NULL;
 	u_int16_t v;
-	struct exifprop *aprop, *tmpprop;
-	struct ccstm *table = NULL;
-	enum order o = t->tifforder;
+	struct exifprop *aprop;
 
-	/*
-	 * Determine what kind of camera we've got.  Only support D30
-	 * right now...  (Is this correct for D60 too?)
-	 */
+	/* Check size of tag (first value). */
 
-	tmpprop = findprop(t->props, EXIF_T_MODEL);
-	if (tmpprop && tmpprop->str && (!strcmp(tmpprop->str, "Canon EOS D30")
-	    || !strcmp(tmpprop->str, "Canon EOS D60")))
-		table = canon_d30custom;
-
-	for (i = 0; i < (int)prop->count; i++) {
+	if (exif2byte(off, o) != 2 * prop->count) {
+		exifwarn("Canon maker tag appears corrupt");
+		return;
+	}
+	
+	for (i = 1; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2, o);
 
 		aprop = childprop(prop);
@@ -670,11 +812,14 @@ canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 		aprop->subtag = i;
 		aprop->name = prop->name;
 		aprop->descr = prop->descr;
-		aprop->lvl = prop->lvl;
+		aprop->lvl = ED_VRB;
 
 		dumpprop(aprop, NULL);
 
-		/* If we have a table, lookup function name and value. */
+		/*
+		 * If we have a table, lookup function name and value.
+		 * First byte is function number; second is function value.
+		 */
 
 		if (table) {
 			for (j = 0; table[j].val != -1 &&
@@ -690,7 +835,7 @@ canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 		    (cv ? strlen(cv) : 10))))
 			exifdie((const char *)strerror(errno));
 
-		if (cv) {
+		if (cv && j != -1) {
 			snprintf(aprop->str, 4 + strlen(cn) + strlen(cv),
 			    "%s - %s", cn, cv);
 			free(cv);
@@ -747,12 +892,8 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 	/* Various image data. */
 
 	case 0x0001:
-		offset = t->btiff + prop->value;
-		if (exif2byte(offset, t->tifforder) != 2 * prop->count) {
-			exifwarn("Canon maker note appears corrupt (0x0001)");
+		if (!canon_subval(prop, t, canon_tags01, canon_prop01))
 			break;
-		}
-		canon_subval(prop, offset, t, canon_tags01, canon_prop01);
 
 		/*
 		 * Create a new value for the lens' focal length range.  If
@@ -761,6 +902,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		 */
 
 		if (prop->count >= 25) {
+			offset = t->btiff + prop->value;
 			flmax = exif2byte(offset + 23 * 2, t->tifforder);
 			flmin = exif2byte(offset + 24 * 2, t->tifforder);
 			flunit = exif2byte(offset + 25 * 2, t->tifforder);
@@ -787,21 +929,12 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	case 0x0004:
-		offset = t->btiff + prop->value;
-		if (exif2byte(offset, t->tifforder) != 2 * prop->count) {
-			exifwarn("Canon maker note appears corrupt (0x0004)");
-			break;
-		}
-		canon_subval(prop, offset, t, canon_tags04, canon_prop04);
+		canon_subval(prop, t, canon_tags04, canon_prop04);
 		break;
 
 	case 0x00a0:
-		offset = t->btiff + prop->value;
-		if (exif2byte(offset, t->tifforder) != 2 * prop->count) {
-			exifwarn("Canon maker note appears corrupt (0x00a0)");
+		if (!canon_subval(prop, t, canon_tagsA0, canon_propA0))
 			break;
-		}
-		canon_subval(prop, offset, t, canon_tagsA0, canon_propA0);
 
 		/* Show color temp if white balance is manual. */
 
@@ -830,10 +963,16 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		snprintf(prop->str, 11, "%010d", prop->value);
 		break;
 
-	/* Custom function. */
+	/* Custom functions. */
 
 	case 0x000f:
-		canon_custom(prop, t->btiff + prop->value, t);
+		canon_custom(prop, t->btiff + prop->value, t->tifforder,
+		    canon_d30custom);
+		break;
+
+	case 0x0090:
+		canon_custom(prop, t->btiff + prop->value, t->tifforder,
+		    canon_1dcustom);
 		break;
 
 	/* Dump debug for tags of type short w/count > 1. */
