@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.11 2002/09/28 20:50:42 ejohnst Exp $
+ * $Id: exiftags.c,v 1.12 2002/10/05 17:57:59 ejohnst Exp $
  */
 
 /*
@@ -86,7 +86,7 @@ exifwarn2(const char *msg1, const char *msg2)
 
 
 static void
-printprops(struct exifprop *list, unsigned short lvl)
+printprops(struct exifprop *list, unsigned short lvl, int pas)
 {
 	static int prevf = -1;
 	const char *n;
@@ -114,6 +114,12 @@ printprops(struct exifprop *list, unsigned short lvl)
 	}
 
 	while (list) {
+
+		/* Take care of point-and-shoot values. */
+
+		if (list->lvl == ED_PAS)
+			list->lvl = pas ? ED_CAM : ED_IMG;
+
 		if (list->lvl == lvl) {
 			n = list->descr ? list->descr : list->name;
 			if (list->str)
@@ -128,7 +134,7 @@ printprops(struct exifprop *list, unsigned short lvl)
 
 
 static int
-doit(FILE *fp, int dumplvl)
+doit(FILE *fp, int dumplvl, int pas)
 {
 	int mark, gotapp1, first;
 	unsigned int len, rlen;
@@ -163,13 +169,13 @@ doit(FILE *fp, int dumplvl)
 
 		if (t && t->props) {
 			if (dumplvl & ED_CAM)
-				printprops(t->props, ED_CAM);
+				printprops(t->props, ED_CAM, pas);
 			if (dumplvl & ED_IMG)
-				printprops(t->props, ED_IMG);
+				printprops(t->props, ED_IMG, pas);
 			if (dumplvl & ED_VRB)
-				printprops(t->props, ED_VRB);
+				printprops(t->props, ED_VRB, pas);
 			if (dumplvl & ED_UNK)
-				printprops(t->props, ED_UNK);
+				printprops(t->props, ED_UNK, pas);
 		}
 		exiffree(t);
 		free(exifbuf);
@@ -197,6 +203,7 @@ void usage()
 	fprintf(stderr, "  -i\tDisplay image-specific properties.\n");
 	fprintf(stderr, "  -v\tDisplay verbose properties.\n");
 	fprintf(stderr, "  -u\tDisplay unknown/unsupported properties.\n");
+	fprintf(stderr, "  -l\tCamera has a removable lens.\n");
 	fprintf(stderr, "  -d\tDisplay parse debug information.\n");
 	fprintf(stderr, "  -q\tSuppress section headers.\n");
 
@@ -208,20 +215,21 @@ int
 main(int argc, char **argv)
 {
 	register int ch;
-	int dumplvl, eval;
+	int dumplvl, pas, eval;
 	char *mode;
 	FILE *fp;
 
 	progname = argv[0];
 	dumplvl = eval = 0;
 	debug = quiet = FALSE;
+	pas = TRUE;
 #ifdef WIN32
 	mode = "rb";
 #else
 	mode = "r";
 #endif
 
-	while ((ch = getopt(argc, argv, "acivudq")) != -1)
+	while ((ch = getopt(argc, argv, "acivuldq")) != -1)
 		switch (ch) {
 		case 'a':
 			dumplvl |= (ED_CAM | ED_IMG | ED_VRB);
@@ -237,6 +245,9 @@ main(int argc, char **argv)
 			break;
 		case 'u':
 			dumplvl |= ED_UNK;
+			break;
+		case 'l':
+			pas = FALSE;
 			break;
 		case 'd':
 			dumplvl |= ED_UNK;
@@ -270,12 +281,12 @@ main(int argc, char **argv)
 			if (argc > 1)
 				printf("%s%s:\n", fnum == 1 ? "" : "\n", *argv);
 
-			if (doit(fp, dumplvl))
+			if (doit(fp, dumplvl, pas))
 				eval = 1;
 			fclose(fp);
 		}
         } else {
-		if (doit(stdin, dumplvl))
+		if (doit(stdin, dumplvl, pas))
 			eval = 1;
 	}
 

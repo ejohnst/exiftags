@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.7 2002/10/05 17:11:58 ejohnst Exp $
+ * $Id: canon.c,v 1.8 2002/10/05 17:57:59 ejohnst Exp $
  */
 
 /*
@@ -552,7 +552,7 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 	} else {
 		snprintf(aprop->str, 31, "%.2f - %.2f mm",
 		    (float)flmin / (float)flunit, (float)flmax / (float)flunit);
-		aprop->lvl = ED_CAM;
+		aprop->lvl = ED_PAS;
 	}
 }
 

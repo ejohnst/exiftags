@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.8 2002/08/01 18:18:28 ejohnst Exp $
+ * $Id: exif.h,v 1.9 2002/10/05 17:57:59 ejohnst Exp $
  */
 
 /*
@@ -89,6 +89,7 @@ typedef __int32 int32_t;
 #define ED_CAM	0x02	/* Camera-specific info. */
 #define ED_IMG	0x04	/* Image-specific info. */
 #define ED_VRB	0x08	/* Verbose info. */
+#define ED_PAS	0x10	/* Point-and-shoot info. */
 
 
 /* Byte order. */
