@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.10 2004/04/20 17:59:42 ejohnst Exp $
+ * $Id: exifcom.c,v 1.11 2004/04/20 18:35:28 ejohnst Exp $
  */
 
 /*
@@ -299,7 +299,7 @@ doit(FILE *fp, const char *fname)
 				rc = printcom(fname, findprop(t->props, tags,
 				    EXIF_T_USERCOMMENT), t->md.btiff);
 		} else {
-			fprintf(stderr, "couldn't find Exif properties\n",
+			fprintf(stderr, "%s: couldn't find Exif properties\n",
 			    fname);
 			rc = 1;
 		}
@@ -308,7 +308,7 @@ doit(FILE *fp, const char *fname)
 	}
 
 	if (!gotapp1) {
-		fprintf(stderr, "couldn't find Exif data\n", fname);
+		fprintf(stderr, "%s: couldn't find Exif data\n", fname);
 		return (1);
 	}
 
