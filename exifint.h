@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.24 2003/08/04 06:12:11 ejohnst Exp $
+ * $Id: exifint.h,v 1.25 2003/08/05 00:40:30 ejohnst Exp $
  */
 
 /*
@@ -82,7 +82,10 @@ struct ifd {
 	u_int16_t num;		/* Number of fields. */
 	struct field *fields;	/* Array of fields. */
 	struct exiftag *tagset;	/* Tag definitions. */
+
 	enum order ifdorder;	/* Endianness of IFD. */
+	unsigned char *btiff;	/* Beginning of TIFF. */
+	unsigned char *etiff;	/* End of TIFF. */
 	struct exifprop *par;	/* Parent property association. */
 	struct ifd *next;
 };
@@ -126,10 +129,10 @@ extern struct exifprop *childprop(struct exifprop *parent);
 extern void exifstralloc(char **str, int len);
 extern void hexprint(unsigned char *b, int len);
 extern void dumpprop(struct exifprop *prop, struct field *afield);
-extern struct ifd *readifds(u_int32_t offset, struct exiftag *set,
-    struct exiftags *t);
-extern u_int32_t readifd(unsigned char *b, struct ifd **dir,
-    struct exiftag *set, struct exiftags *t);
+extern struct ifd *readifds(unsigned char *beg, unsigned char *end,
+    u_int32_t off, struct exiftag *set, enum order o);
+extern u_int32_t readifd(unsigned char *b, unsigned char *e, u_int32_t off,
+    struct ifd **dir, struct exiftag *set, enum order o);
 extern u_int32_t gcd(u_int32_t a, u_int32_t b);
 
 /* Interface to exifgps.c. */

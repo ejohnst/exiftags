@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.20 2003/08/04 06:04:05 ejohnst Exp $
+ * $Id: minolta.c,v 1.21 2003/08/05 00:40:30 ejohnst Exp $
  *
  */ 
 
@@ -806,5 +806,6 @@ minolta_ifd(u_int32_t offset, struct exiftags *t)
 		return (NULL);
 	}
 
-	return (readifds(offset, minolta_tags, t));
+	return (readifds(t->btiff, t->etiff, offset, minolta_tags,
+	    t->tifforder));
 }

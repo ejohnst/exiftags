@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.21 2003/08/04 06:12:11 ejohnst Exp $
+ * $Id: exifutil.c,v 1.22 2003/08/05 00:40:30 ejohnst Exp $
  */
 
 /*
@@ -295,8 +295,8 @@ dumpprop(struct exifprop *prop, struct field *afield)
  * Exif buffer, returns the IFD and an offset to the next IFD.
  */
 u_int32_t
-readifd(unsigned char *b, struct ifd **dir, struct exiftag *set,
-    struct exiftags *t)
+readifd(unsigned char *b, unsigned char *e, u_int32_t off, struct ifd **dir,
+    struct exiftag *set, enum order o)
 {
 	u_int32_t ifdsize;
 
@@ -306,7 +306,7 @@ readifd(unsigned char *b, struct ifd **dir, struct exiftag *set,
 	 * (Number of directory entries is in the first 2 bytes.)
 	 */
 
-	if (b + 2 > t->etiff) {
+	if (b + off + 2 > e) {
 		*dir = NULL;
 		return (0);
 	}
@@ -316,16 +316,18 @@ readifd(unsigned char *b, struct ifd **dir, struct exiftag *set,
 		exifdie((const char *)strerror(errno));
 
 	(*dir)->next = NULL;
-	(*dir)->num = exif2byte(b, t->tifforder);
+	(*dir)->num = exif2byte(b + off, o);
 	(*dir)->tagset = set;
-	(*dir)->ifdorder = t->tifforder;
+	(*dir)->ifdorder = o;
+	(*dir)->btiff = b;
+	(*dir)->etiff = e;
 	(*dir)->par = NULL;
 	ifdsize = (*dir)->num * sizeof(struct field);
-	b += 2;
+	b += off + 2;
 
 	/* Sanity check our sizes. */
 
-	if (b + ifdsize > t->etiff) {
+	if (b + ifdsize > e) {
 		free(*dir);
 		*dir = NULL;
 		return (0);
@@ -346,8 +348,7 @@ readifd(unsigned char *b, struct ifd **dir, struct exiftag *set,
 	 * standard IFDs.
 	 */
 
-	return ((b + ifdsize + 4 > t->etiff) ? 0 :
-	    exif4byte(b + ifdsize, t->tifforder));
+	return ((b + ifdsize + 4 > e) ? 0 : exif4byte(b + ifdsize, o));
 }
 
 
@@ -356,19 +357,20 @@ readifd(unsigned char *b, struct ifd **dir, struct exiftag *set,
  * node in a chain of IFDs.  Note that it can return NULL.
  */
 struct ifd *
-readifds(u_int32_t offset, struct exiftag *set, struct exiftags *t)
+readifds(unsigned char *beg, unsigned char *end, u_int32_t off,
+    struct exiftag *set, enum order o)
 {
 	struct ifd *firstifd, *curifd;
 
 	/* Fetch our first one. */
 
-	offset = readifd(t->btiff + offset, &firstifd, set, t);
+	off = readifd(beg, end, off, &firstifd, set, o);
 	curifd = firstifd;
 
 	/* Fetch any remaining ones. */
 
-	while (offset) {
-		offset = readifd(t->btiff + offset, &(curifd->next), set, t);
+	while (off) {
+		off = readifd(beg, end, off, &(curifd->next), set, o);
 		curifd = curifd->next;
 	}
 	return (firstifd);

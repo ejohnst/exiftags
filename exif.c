@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.56 2003/08/04 06:12:11 ejohnst Exp $
+ * $Id: exif.c,v 1.57 2003/08/05 00:40:30 ejohnst Exp $
  */
 
 /*
@@ -77,15 +77,6 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	int i, j;
 	struct exifprop *prop, *tmpprop;
 	u_int16_t tag;
-	enum order tmporder;
-
-	/*
-	 * XXX Some IFDs are in a different byte order than the TIFF itself.
-	 * Nasty hack to accomodate for now.
-	 */
-
-	tmporder = t->tifforder;
-	t->tifforder = dir->ifdorder;
 
 	prop = newprop();
 	if (dir->par)
@@ -95,14 +86,14 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 	/* Field info. */
 
-	prop->tag = exif2byte(afield->tag, t->tifforder);
-	prop->type = exif2byte(afield->type, t->tifforder);
-	prop->count = exif4byte(afield->count, t->tifforder);
+	prop->tag = exif2byte(afield->tag, dir->ifdorder);
+	prop->type = exif2byte(afield->type, dir->ifdorder);
+	prop->count = exif4byte(afield->count, dir->ifdorder);
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
 	    prop->count <= 1)
-		prop->value = exif2byte(afield->value, t->tifforder);
+		prop->value = exif2byte(afield->value, dir->ifdorder);
 	else
-		prop->value = exif4byte(afield->value, t->tifforder);
+		prop->value = exif4byte(afield->value, dir->ifdorder);
 
 	/* IFD identifying info. */
 
@@ -178,7 +169,6 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 		tmpprop->next = prop;
 	} else
 		t->props = prop;
-	t->tifforder = tmporder;
 }
 
 
@@ -220,6 +210,8 @@ readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
  * Post-process property values.  By now we've got all of the standard
  * Exif tags read in (but not maker tags), so it's safe to work out
  * dependencies between tags.
+ *
+ * XXX Byte order.
  */
 static void
 postprop(struct exifprop *prop, struct exiftags *t)
@@ -437,6 +429,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	u_int32_t un, ud, denom;
 	int32_t sn, sd;
 	char buf[32], *c, *d;
+	enum order ifdorder;
 
 	/* Set description if we have a lookup table. */
 
@@ -456,6 +449,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	case EXIF_T_EXIFIFD:
 	case EXIF_T_GPSIFD:
 	case EXIF_T_INTEROP:
+		c = dir->btiff;
+		d = dir->etiff;
+		ifdorder = dir->ifdorder;
 		while (dir->next)
 			dir = dir->next;
 
@@ -466,13 +462,15 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		 */
 #ifdef OLYMPUS_BUGS
 		if (prop->tag == EXIF_T_EXIFIFD)
-			readifd(t->btiff + prop->value, &dir->next, tags, t);
+			readifd(c, d, prop->value, &dir->next, tags, ifdorder);
 		else
 #endif
 			if (prop->tag == EXIF_T_GPSIFD)
-				dir->next = readifds(prop->value, gpstags, t);
+				dir->next = readifds(c, d, prop->value,
+				    gpstags, ifdorder);
 			else
-				dir->next = readifds(prop->value, NULL, t);
+				dir->next = readifds(c, d, prop->value, NULL,
+				    ifdorder);
 
 		if (!dir->next) {
 
@@ -545,7 +543,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	/* Lookup functions for maker note. */
 
 	case EXIF_T_EQUIPMAKE:
-		strncpy(buf, (const char *)(t->btiff + prop->value),
+		strncpy(buf, (const char *)(dir->btiff + prop->value),
 		    sizeof(buf));
 		buf[sizeof(buf) - 1] = '\0';
 		for (c = buf; *c; c++) *c = tolower(*c);
@@ -594,15 +592,15 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 		for (i = 0; ucomment[i].descr; i++)
 			if (!memcmp(ucomment[i].descr,
-			    t->btiff + prop->value, 8))
+			    dir->btiff + prop->value, 8))
 				break;
 
 		/* Handle an ASCII comment; strip any trailing whitespace. */
 
 		if (ucomment[i].val == TIFF_ASCII &&
 		    (prop->value + prop->count <
-		    (u_int32_t)(t->etiff - t->btiff))) {
-			c = (char *)(t->btiff + prop->value + 8);
+		    (u_int32_t)(dir->etiff - dir->btiff))) {
+			c = (char *)(dir->btiff + prop->value + 8);
 			d = strlen(c) < prop->count - 8 ? c + strlen(c) :
 			    c + prop->count - 8;
 
@@ -634,9 +632,10 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	if (prop->type == TIFF_ASCII &&
-	    (prop->value + prop->count <= (u_int32_t)(t->etiff - t->btiff))) {
+	    (prop->value + prop->count <=
+	    (u_int32_t)(dir->etiff - dir->btiff))) {
 		exifstralloc(&prop->str, prop->count + 1);
-		strncpy(prop->str, (const char *)(t->btiff + prop->value),
+		strncpy(prop->str, (const char *)(dir->btiff + prop->value),
 		    prop->count);
 		return;
 	}
@@ -648,20 +647,21 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	if ((prop->type == TIFF_RTNL || prop->type == TIFF_SRTNL) &&
 	    (prop->value + prop->count * 8 <=
-	    (u_int32_t)(t->etiff - t->btiff))) {
+	    (u_int32_t)(dir->etiff - dir->btiff))) {
 
 		exifstralloc(&prop->str, 32);
 
 		if (prop->type == TIFF_RTNL) {
-			un = exif4byte(t->btiff + prop->value, t->tifforder);
-			ud = exif4byte(t->btiff + prop->value + 4,
-			    t->tifforder);
+			un = exif4byte(dir->btiff + prop->value, dir->ifdorder);
+			ud = exif4byte(dir->btiff + prop->value + 4,
+			    dir->ifdorder);
 			denom = gcd(un, ud);
 			fixfract(prop->str, un, ud, denom);
 		} else {
-			sn = exif4sbyte(t->btiff + prop->value, t->tifforder);
-			sd = exif4sbyte(t->btiff + prop->value + 4,
-			    t->tifforder);
+			sn = exif4sbyte(dir->btiff + prop->value,
+			    dir->ifdorder);
+			sd = exif4sbyte(dir->btiff + prop->value + 4,
+			    dir->ifdorder);
 			denom = gcd(abs(sn), abs(sd));
 			fixfract(prop->str, sn, sd, (int32_t)denom);
 		}
@@ -677,7 +677,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
 	    prop->count > 1 && (prop->value + prop->count * 2 <=
-	    (u_int32_t)(t->etiff - t->btiff))) {
+	    (u_int32_t)(dir->etiff - dir->btiff))) {
 
 		if (prop->count > 8)
 			return;
@@ -688,13 +688,13 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			if (prop->type == TIFF_SHORT)
 				snprintf(prop->str + strlen(prop->str),
 				    len - strlen(prop->str) - 1, "%d, ",
-				    exif2byte(t->btiff + prop->value +
-				    (i * 2), t->tifforder));
+				    exif2byte(dir->btiff + prop->value +
+				    (i * 2), dir->ifdorder));
 			else
 				snprintf(prop->str + strlen(prop->str),
 				    len - strlen(prop->str) - 1, "%d, ",
-				    exif2sbyte(t->btiff + prop->value +
-				    (i * 2), t->tifforder));
+				    exif2sbyte(dir->btiff + prop->value +
+				    (i * 2), dir->ifdorder));
 		}
 		prop->str[strlen(prop->str) - 2] = '\0';
 		return;
@@ -781,7 +781,7 @@ exifscan(unsigned char *b, int len, int domkr)
 	/* Get the 0th IFD, where all of the good stuff should start. */
 
 	ifdoff = exif4byte(b, t->tifforder);
-	curifd = readifds(ifdoff, tags, t);
+	curifd = readifds(t->btiff, t->etiff, ifdoff, tags, t->tifforder);
 	if (!curifd) {
 		exifwarn("invalid Exif format (couldn't read IFD0)");
 		exiffree(t);

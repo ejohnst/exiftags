@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.9 2003/08/04 06:04:05 ejohnst Exp $
+ * $Id: casio.c,v 1.10 2003/08/05 00:40:30 ejohnst Exp $
  */
 
 /*
@@ -203,11 +203,12 @@ casio_ifd(u_int32_t offset, struct exiftags *t)
 	 */
 
 	if (!memcmp("QVC\0\0\0", t->btiff + offset, 6)) {
-		readifd(t->btiff + offset + strlen("QVC") + 3, &myifd,
-		    casio_tags1, t);
+		readifd(t->btiff, t->etiff, + offset + strlen("QVC") + 3,
+		    &myifd, casio_tags1, t->tifforder);
 		exifwarn("Casio maker note version not supported");
 	} else
-		readifd(t->btiff + offset, &myifd, casio_tags0, t);
+		readifd(t->btiff, t->etiff, offset, &myifd, casio_tags0,
+		    t->tifforder);
 
 	return (myifd);
 }

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.14 2003/08/04 06:04:05 ejohnst Exp $
+ * $Id: olympus.c,v 1.15 2003/08/05 00:40:30 ejohnst Exp $
  */
 
 /*
@@ -174,10 +174,11 @@ olympus_ifd(u_int32_t offset, struct exiftags *t)
 	 */
 
 	if (!strcmp((const char *)(t->btiff + offset), "OLYMP"))
-		readifd(t->btiff + offset + strlen("OLYMP") + 3, &myifd,
-		    olympus_tags, t);
+		readifd(t->btiff, t->etiff, offset + strlen("OLYMP") + 3,
+		    &myifd, olympus_tags, t->tifforder);
 	else
-		readifd(t->btiff + offset, &myifd, olympus_tags, t);
+		readifd(t->btiff, t->etiff, offset, &myifd, olympus_tags,
+		    t->tifforder);
 
 	return (myifd);
 }
