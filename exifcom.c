@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.7 2003/02/11 15:32:19 ejohnst Exp $
+ * $Id: exifcom.c,v 1.8 2003/08/16 02:24:04 ejohnst Exp $
  */
 
 /*
@@ -56,7 +56,7 @@ int getopt(int, char * const [], const char *);
 #include "exif.h"
 
 
-static const char *version = "0.97";
+static const char *version = "0.98";
 static int fnum, bflag, iflag, nflag, vflag; 
 static const char *com;
 static const char *delim = ": ";
@@ -291,11 +291,11 @@ doit(FILE *fp, const char *fname)
 		if (t && t->props) {
 			if (bflag || com)
 				rc = writecom(fp, fname, app1,
-				    findprop(t->props, EXIF_T_USERCOMMENT),
-				    exifbuf, t->btiff);
+				    findprop(t->props, tags,
+				    EXIF_T_USERCOMMENT), exifbuf, t->md.btiff);
 			else
-				rc = printcom(findprop(t->props,
-				    EXIF_T_USERCOMMENT), t->btiff);
+				rc = printcom(findprop(t->props, tags,
+				    EXIF_T_USERCOMMENT), t->md.btiff);
 		} else {
 			exifwarn("couldn't find Exif properties");
 			rc = 1;

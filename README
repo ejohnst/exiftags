@@ -1,5 +1,5 @@
-exiftags-0.97
-20030203
+exiftags-0.98
+20030815
 Eric M. Johnston, emj@postal.net
 
 The exiftags utility spits out Exif tags from a digital camera JPEG file.
@@ -42,4 +42,4 @@ Please report bugs, incompatibilities, successes, etc. to
 emj@postal.net.  The latest version of this software will be posted
 at http://johnst.org/sw/exiftags/.
 
-$Id: README,v 1.10 2003/02/04 07:16:15 ejohnst Exp $
+$Id: README,v 1.11 2003/08/16 02:24:04 ejohnst Exp $

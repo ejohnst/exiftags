@@ -1,3 +1,15 @@
+20030815 version: exiftags 0.98
+20030807 fixed some Fuji, Minotla, Nikon byte order bugs/dependencies
+20030806 internal code cleanup to nicely support multiple tag sets
+20030806 internal code cleanup to allow different IFD byte orders
+20030806 added Sanyo maker note support
+20030805 added support for Nikon D1X
+20030805 fixed crash on Minolta DiMAGE EX
+20030802 fixed offset check bug for ascii strings
+20030801 added support for GPS info tags
+20030622 fixed crashes on badly formed comments, type mismatches
+20030622 added Canon 10D custom function support (thanks: Jason Montojo)
+20030211 tweaked Canon 1D/1Ds custom function support
 20030204 version: exiftags 0.97
 20030204 fixed byte order bug displaying Exif version
 20030128 assign bad or senseless tags separate dump level
@@ -42,4 +54,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.13 2003/02/05 08:09:41 ejohnst Exp $
+$Id: CHANGES,v 1.14 2003/08/16 02:24:04 ejohnst Exp $
