@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.2 2002/01/20 23:59:08 ejohnst Exp $
+ * $Id: exif.c,v 1.3 2002/02/17 03:42:22 ejohnst Exp $
  */
 
 /*
@@ -116,7 +116,16 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir)
 	for (j = 0; types[j].type && types[j].type != prop->type; j++);
 	if (!types[j].type)
 		exifdie("unknown TIFF field type");
-	if (tags[i].type && tags[i].type != prop->type)
+
+	/*
+	 * XXX Ignoring UserComment is a hack to get around an apparent
+	 * Windows XP Picture Viewer bug (err, liberty).  When you rotate
+	 * a picture in the viewer, it modifies the IFD1 (thumbnail) tags
+	 * to UserComment without changing the type appropriately.
+	 */
+
+	if (tags[i].type && tags[i].type != prop->type &&
+	   prop->tag != EXIF_T_USERCOMMENT)
 		exifwarn2("field type mismatch", prop->name);
 
 	/* Check the field count. */
@@ -155,10 +164,9 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir)
  * encountered.
  */
 static void
-readtags(struct ifd *dir)
+readtags(struct ifd *dir, int seq)
 {
 	int i;
-	static int seq = 0;
 
 	if (debug) {
 		if (dir->tag != EXIF_T_UNKNOWN) {
@@ -175,8 +183,6 @@ readtags(struct ifd *dir)
 		readtag(&(dir->fields[i]), seq, dir);
 	if (debug)
 		printf("\n");
-
-	seq++;
 }
 
 
@@ -528,10 +534,13 @@ exiffree(struct exifprop *list)
 struct exifprop *
 exifscan(unsigned char *b, int len)
 {
+	int seq;
 	u_int32_t ifdoff;
 	struct ifd *ifd0, *curifd, *tmpifd;
 	struct exifprop *curprop;
 
+	seq = 0;
+	head = NULL;
 	etiff = b + len;	/* End of TIFF. */
 
 	/* Make sure we've got the proper Exif header. */
@@ -569,7 +578,7 @@ exifscan(unsigned char *b, int len)
 
 	curifd = ifd0;
 	while ((tmpifd = curifd)) {
-		readtags(curifd);
+		readtags(curifd, seq++);
 		curifd = curifd->next;
 		free(tmpifd);		/* No need to keep it around... */
 	}
