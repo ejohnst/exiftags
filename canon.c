@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.18 2003/01/11 06:19:34 ejohnst Exp $
+ * $Id: canon.c,v 1.19 2003/01/24 08:48:37 ejohnst Exp $
  */
 
 /*
@@ -243,6 +243,8 @@ static struct descrip canon_whitebal[] = {
 	{ 5,	"Flash" },
 	{ 6,	"Custom" },
 	{ 7,	"Black & White" },
+	{ 8,	"Shade" },
+	{ 9,	"Manual Temperature" },
 	{ -1,	"Unknown" },
 };
 
@@ -250,9 +252,9 @@ static struct descrip canon_whitebal[] = {
 /* Maker note IFD tags. */
 
 static struct exiftag canon_tags[] = {
-	{ 0x0001, TIFF_SHORT, 0,  ED_VRB, "Canon1Tag",
+	{ 0x0001, TIFF_SHORT, 0,  ED_UNK, "Canon1Tag",
 	  "Canon Tag1 Offset", NULL },
-	{ 0x0004, TIFF_SHORT, 0,  ED_VRB, "Canon4Tag",
+	{ 0x0004, TIFF_SHORT, 0,  ED_UNK, "Canon4Tag",
 	  "Canon Tag4 Offset", NULL },
 	{ 0x0006, TIFF_ASCII, 32, ED_VRB, "ImageType",
 	  "Image Type", NULL },
@@ -266,6 +268,8 @@ static struct exiftag canon_tags[] = {
 	  "Serial Number", NULL },
 	{ 0x000f, TIFF_SHORT, 0,  ED_VRB, "CustomFunc",
 	  "Custom Function", NULL },
+	{ 0x00a0, TIFF_SHORT, 0,  ED_UNK, "CanonA0Tag",
+	  "Canon TagA0 Offset", NULL },
 	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "Unknown",
 	  "Canon Unknown", NULL },
 };
@@ -346,6 +350,16 @@ static struct exiftag canon_tags4[] = {
 	  "Subject Distance", NULL },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
 	  "Canon Tag4 Unknown", NULL },
+};
+
+
+/* Fields under tag 0x00a0. */
+
+static struct exiftag canon_tagsA0[] = {
+	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonColorTemp",
+	  "Color Temperature", NULL },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
+	  "Canon TagA0 Unknown", NULL },
 };
 
 
@@ -651,6 +665,61 @@ canon_prop4(struct exifprop *prop, char *off, enum order o)
 
 
 /*
+ * Process maker note tag 0x00a0 values.
+ */
+
+static void
+canon_propA0(struct exifprop *prop, char *off, enum order o)
+{
+	int i, j;
+	u_int16_t v;
+	struct exifprop *aprop;
+
+	for (i = 0; i < (int)prop->count; i++) {
+		v = exif2byte(off + i * 2, o);
+
+		aprop = childprop(prop);
+		aprop->value = (u_int32_t)v;
+
+		/* Lookup property name and description. */
+
+		for (j = 0; canon_tagsA0[j].tag < EXIF_T_UNKNOWN &&
+		    canon_tagsA0[j].tag != i; j++);
+		aprop->name = canon_tagsA0[j].name;
+		aprop->descr = canon_tagsA0[j].descr;
+		aprop->lvl = canon_tagsA0[j].lvl;
+		if (canon_tagsA0[j].table)
+			aprop->str = finddescr(canon_tagsA0[j].table, v);
+
+		if (debug)
+			printf("     %s (%d): %d\n", aprop->name, i, v);
+
+		/* Further process known properties. */
+
+		switch (i) {
+		case 9:
+			aprop->lvl = v ? ED_IMG : ED_VRB;
+			if (!(aprop->str = (char *)malloc(32)))
+				exifdie((const char *)strerror(errno));
+			snprintf(aprop->str, 31, "%d° K", v);
+			aprop->str[31] = '\0';
+			break;
+		default:
+			if (aprop->lvl != ED_UNK)
+				break;
+
+			if (!(aprop->str = (char *)malloc(32)))
+				exifdie((const char *)strerror(errno));
+			snprintf(aprop->str, 31,
+			    "num %02d, val 0x%04X", i, v);
+			aprop->str[31] = '\0';
+			break;
+		}
+	}
+}
+
+
+/*
  * Process custom function tag values.
  */
 
@@ -725,6 +794,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
 	char *offset;
+	uint16_t v;
 
 	/*
 	 * Don't process properties we've created while looking at other
@@ -778,6 +848,15 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		canon_prop4(prop, offset, t->tifforder);
 		break;
 
+	case 0x00a0:
+		offset = t->btiff + prop->value;
+		if (exif2byte(offset, t->tifforder) != 2 * prop->count) {
+			exifwarn("Canon maker note appears corrupt (0x00a0)");
+			break;
+		}
+		canon_propA0(prop, offset, t->tifforder);
+		break;
+
 	/* Image number. */
 
 	case 0x0008:
@@ -800,6 +879,18 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 
 	case 0x000f:
 		canon_custom(prop, t->btiff + prop->value, t);
+		break;
+
+	/* Dump debug for tags of type short w/count > 1. */
+
+	default:
+		if (prop->type == TIFF_SHORT && prop->count > 1 && debug)
+			for (i = 0; i < prop->count; i++) {
+				v = exif2byte(t->btiff + prop->value +
+				    (i * 2), t->tifforder);
+				printf("     Unknown (%d): %d, 0x%04X\n",
+				    i, v, v);
+			}
 		break;
 	}
 }
