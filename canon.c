@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.11 2002/10/05 23:46:49 ejohnst Exp $
+ * $Id: canon.c,v 1.12 2002/10/06 00:57:19 ejohnst Exp $
  */
 
 /*
@@ -672,7 +672,8 @@ canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 			for (j = 0; table[j].val != -1 &&
 			    table[j].val != (v >> 8 & 0xff); j++);
 			if (table[j].table)
-				cv = finddescr(table[j].table, v & 0xff);
+				cv = finddescr(table[j].table,
+				    (u_int16_t)(v & 0xff));
 			cn = table[j].descr;
 		} else
 			cn = "Unknown";
