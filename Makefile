@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2002/07/11 02:07:21 ejohnst Exp $
+# $Id: Makefile,v 1.8 2002/07/12 21:35:53 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
@@ -9,8 +9,8 @@ MKRS=canon.o olympus.o fuji.o nikon.o
 # A few parameters...
 #
 CC=cc
-DEBUG=-g
-CFLAGS=-Wall -O2 $(DEBUG)
+DEBUG=
+CFLAGS=$(DEBUG)
 PREFIX=/usr/local
 
 OBJS=exiftags.o exif.o tagdefs.o exifutil.o jpeg.o $(MKRS)
