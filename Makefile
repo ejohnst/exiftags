@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2004/04/20 22:18:56 ejohnst Exp $
+# $Id: Makefile,v 1.20 2004/05/07 05:46:29 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
@@ -44,7 +44,9 @@ clean:
 	timevary.o exiftags exifcom exiftime
 
 install: all
-	cp exiftags exifcom $(PREFIX)/bin
-	chmod a+x $(PREFIX)/bin/exiftags $(PREFIX)/bin/exifcom
-	cp exiftags.1 exifcom.1 $(PREFIX)/man/man1
-	chmod a+r $(PREFIX)/man/man1/exiftags.1 $(PREFIX)/man/man1/exifcom.1
+	cp exiftags exifcom exiftime $(PREFIX)/bin
+	chmod a+x $(PREFIX)/bin/exiftags $(PREFIX)/bin/exifcom \
+	$(PREFIX)/bin/exiftime
+	cp exiftags.1 exifcom.1 exiftime.1 $(PREFIX)/man/man1
+	chmod a+r $(PREFIX)/man/man1/exiftags.1 $(PREFIX)/man/man1/exifcom.1 \
+	$(PREFIX)/man/man1/exiftime.1
