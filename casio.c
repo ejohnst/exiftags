@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.3 2002/11/03 10:07:28 ejohnst Exp $
+ * $Id: casio.c,v 1.4 2002/11/04 07:23:16 ejohnst Exp $
  */
 
 /*
@@ -267,8 +267,6 @@ casio_prop(struct exifprop *prop, struct exiftags *t)
 	        for (i = 0; ftypes[i].type &&
 		    ftypes[i].type != prop->type; i++);
 		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
-		printf("XXX %s (0x%04X): %s \t%d\t%d\n", prop->name, prop->tag,
 		    ftypes[i].name, prop->count, prop->value);
 	}
 }
