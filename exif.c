@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.42 2003/01/25 03:01:43 ejohnst Exp $
+ * $Id: exif.c,v 1.43 2003/01/25 09:27:51 ejohnst Exp $
  */
 
 /*
@@ -385,7 +385,7 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 static int
 parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 {
-	int i, len;
+	unsigned int i, len;
 	u_int16_t v = (u_int16_t)prop->value;
 	u_int32_t un, ud, denom;
 	int32_t sn, sd;
