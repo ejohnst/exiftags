@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.21 2004/04/20 17:59:42 ejohnst Exp $
+ * $Id: exiftags.c,v 1.22 2004/04/21 05:19:31 ejohnst Exp $
  */
 
 /*
@@ -118,12 +118,12 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 static int
 doit(FILE *fp, int dumplvl, int pas)
 {
-	int mark, gotapp1, first;
+	int mark, gotexif, first;
 	unsigned int len, rlen;
 	unsigned char *exifbuf;
 	struct exiftags *t;
 
-	gotapp1 = FALSE;
+	gotexif = FALSE;
 	first = 0;
 	exifbuf = NULL;
 
@@ -149,7 +149,7 @@ doit(FILE *fp, int dumplvl, int pas)
 		t = exifparse(exifbuf, len);
 
 		if (t && t->props) {
-			gotapp1 = TRUE;
+			gotexif = TRUE;
 
 			if (dumplvl & ED_CAM)
 				printprops(t->props, ED_CAM, pas);
@@ -164,7 +164,7 @@ doit(FILE *fp, int dumplvl, int pas)
 		free(exifbuf);
 	}
 
-	if (!gotapp1) {
+	if (!gotexif) {
 		exifwarn("couldn't find Exif data");
 		return (1);
 	}
