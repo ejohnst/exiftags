@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.4 2002/06/30 08:59:09 ejohnst Exp $
+ * $Id: exiftags.c,v 1.5 2002/07/01 08:40:11 ejohnst Exp $
  */
 
 /*
@@ -124,7 +124,7 @@ doit(FILE *fp, int dumplvl)
 	int mark, gotapp1, first;
 	unsigned int len, rlen;
 	unsigned char *exifbuf;
-	struct exifprop *proplist;
+	struct exiftags *t;
 
 	gotapp1 = FALSE;
 	first = 0;
@@ -142,19 +142,19 @@ doit(FILE *fp, int dumplvl)
 
 		if (mark == JPEG_M_APP1) {
 			gotapp1 = TRUE;
-			proplist = exifscan(exifbuf, len);
+			t = exifscan(exifbuf, len);
 
-			if (proplist) {
+			if (t && t->props) {
 				if (dumplvl & ED_CAM)
-					printprops(proplist, ED_CAM);
+					printprops(t->props, ED_CAM);
 				if (dumplvl & ED_IMG)
-					printprops(proplist, ED_IMG);
+					printprops(t->props, ED_IMG);
 				if (dumplvl & ED_VRB)
-					printprops(proplist, ED_VRB);
+					printprops(t->props, ED_VRB);
 				if (dumplvl & ED_UNK)
-					printprops(proplist, ED_UNK);
+					printprops(t->props, ED_UNK);
 			}
-			exiffree(proplist);
+			exiffree(t);
 
 			free(exifbuf);
 		}
