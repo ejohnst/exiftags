@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.26 2002/10/15 02:55:08 ejohnst Exp $
+ * $Id: exif.c,v 1.27 2002/11/02 06:40:59 ejohnst Exp $
  */
 
 /*
@@ -696,7 +696,8 @@ exifparse(unsigned char *b, int len)
 
 	/* Find the section and scan it. */
 
-	t = exifscan(b, len, TRUE);
+	if (!(t = exifscan(b, len, TRUE)))
+		return (NULL);
 
 	/* Make field values pretty. */
 
