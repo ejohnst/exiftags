@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.2 2004/04/08 05:59:03 ejohnst Exp $
+ * $Id: exiftime.c,v 1.3 2004/04/08 07:29:08 ejohnst Exp $
  */
 
 /*
@@ -69,6 +69,8 @@ static struct vary *v;
 static struct linfo *lorder;
 
 #define EXIFTIMEFMT	"%Y:%m:%d %H:%M:%S"
+#define EXIFTIMELEN	20
+
 #define ET_CREATE	0x01
 #define ET_GEN		0x02
 #define ET_DIGI		0x04
@@ -177,7 +179,7 @@ listts(struct exiftags *t, struct linfo *li)
 
 /*
  * Grab the specified timestamp and vary it, if necessary.
- * The provided buffer must be at least 20 bytes (Exif standard).
+ * The provided buffer must be at least EXIFTIMELEN bytes.
  */
 static int
 ettime(char *b, struct exifprop *p)
@@ -198,7 +200,7 @@ ettime(char *b, struct exifprop *p)
 		usage();
 	}
 
-	if (!strftime(b, 20, EXIFTIMEFMT, &tv))
+	if (strftime(b, EXIFTIMELEN, EXIFTIMEFMT, &tv) != EXIFTIMELEN - 1)
 		return (1);
 
 	return (0);
@@ -206,14 +208,77 @@ ettime(char *b, struct exifprop *p)
 
 
 /*
- * Display the timestamps.  This function just uses what's returned by
- * exifscan() -- it doesn't touch the file.
+ * Overwrite a timestamp with an adjusted value (in nt).  Note that we
+ * rely on buf being good and EXIFTIMELEN bytes long (including ending zero).
+ * XXX Whew -- too many parameters!
  */
 static int
-printts(struct exiftags *t)
+writets(FILE *fp, const char *fname, long pos, struct exiftags *t,
+    struct exifprop *p, const unsigned char *buf, const char *ttype,
+    const char *nt)
+{
+	int ch, checkch;
+	long psave;
+
+	/* Some sanity checking. */
+
+	if (strlen(nt) != EXIFTIMELEN - 1) {
+		fprintf(stderr, "%s: invalid %s timestamp (%s)\n",
+		    fname, ttype, nt);
+		return (1);
+	}
+
+	if (!strcmp(nt, p->str)) {
+		fprintf(stderr, "%s: new %s timestamp (%s) identical to old\n",
+		    nt, ttype, fname);
+		return (0);
+	}
+
+	/* Prompt user, if desired. */
+
+	if (iflag) {
+		if (nflag)
+			return (1);
+		fprintf(stderr, "change time %s in %s from %s to %s? "
+		    "(y/n [n]) ", ttype, fname, p->str, nt);
+		checkch = ch = getchar();
+		while (ch != '\n' && ch != EOF)
+			ch = getchar();
+		if (checkch != 'y' && checkch != 'Y') {
+			fprintf(stderr, "not adjusted\n");
+			return (1);
+		}
+	}
+
+	/* Remember where we are and move to the comment in our file. */
+
+	psave = ftell(fp);
+	if (fseek(fp, pos + (t->md.btiff - buf) + p->value, SEEK_SET))
+		exifdie((const char *)strerror(errno));
+
+	/* Write the new timestamp. */
+
+	if (fwrite(nt, EXIFTIMELEN, 1, fp) != 1)
+		exifdie((const char *)strerror(errno));
+
+	/* Restore the file pointer. */
+
+	if (fseek(fp, psave, SEEK_SET))
+		exifdie((const char *)strerror(errno));
+
+	return (0);
+}
+
+
+/*
+ * Process the timestamps.
+ */
+static int
+procts(FILE *fp, const char *fname, long pos, struct exiftags *t,
+    const unsigned char *buf)
 {
 	int found, r, rc;
-	char buf[20];
+	char nt[EXIFTIMELEN];
 	struct exifprop *p;
 
 	found = rc = 0;
@@ -226,160 +291,66 @@ printts(struct exiftags *t)
 
 	if (ttags & ET_CREATE || !ttags) {
 		p = findprop(t->props, tags, EXIF_T_DATETIME);
-		r = ettime(buf, p);
+		r = ettime(nt, p);
 
 		if (r && ttags) {
-			exifwarn("image created time not available");
+			fprintf(stderr, "%s: image created time not "
+			    "available\n", fname);
 			rc = 1;
 		}
 		if (!r) {
 			found++;
-			printf("%s%s%s\n", p->descr, delim, buf);
+			if (wflag)
+				rc = (writets(fp, fname, pos, t, p, buf,
+				    "created", nt) || rc);
+			printf("%s%s%s\n", p->descr, delim, nt);
 		}
 	}
 
 	if (ttags & ET_GEN || !ttags) {
 		p = findprop(t->props, tags, EXIF_T_DATETIMEORIG);
-		r = ettime(buf, p);
+		r = ettime(nt, p);
 
 		if (r && ttags) {
-			exifwarn("image generated time not available");
+			fprintf(stderr, "%s: image generated time not "
+			    "available\n", fname);
 			rc = 1;
 		}
 		if (!r) {
 			found++;
-			printf("%s%s%s\n", p->descr, delim, buf);
+			if (wflag)
+				rc = (writets(fp, fname, pos, t, p, buf,
+				    "generated", nt) || rc);
+			printf("%s%s%s\n", p->descr, delim, nt);
 		}
 	}
 
 	if (ttags & ET_DIGI || !ttags) {
 		p = findprop(t->props, tags, EXIF_T_DATETIMEDIGI);
-		r = ettime(buf, p);
+		r = ettime(nt, p);
 
 		if (r && ttags) {
-			exifwarn("image digitized time not available");
+			fprintf(stderr, "%s: image digitized time not "
+			    "available\n", fname);
 			rc = 1;
 		}
 		if (!r) {
 			found++;
-			printf("%s%s%s\n", p->descr, delim, buf);
+			if (wflag)
+				rc = (writets(fp, fname, pos, t, p, buf,
+				    "digitized", nt) || rc);
+			printf("%s%s%s\n", p->descr, delim, nt);
 		}
 	}
 
 	/* No timestamp tags. */
 
 	if (!ttags && !found) {
-		exifwarn("no timestamps available");
+		fprintf(stderr, "%s: no timestamps available\n", fname);
 		return (1);
 	}
 
 	return (rc);
-}
-
-
-/*
- * Blank or write a comment.
- */
-static int
-writets(FILE *fp, const char *fname, long pos, struct exiftags *t,
-    const unsigned char *buf)
-{
-	u_int32_t l;
-	int ch, checkch;
-	long psave;
-	struct exifprop *p;
-
-	/* No comment tag or it's zero length. */
-
-	if (!p) {
-		exifwarn("comment not available");
-		return (1);
-	}
-
-	if (p->count < 9) {
-		exifwarn("comment size zero");
-		return (1);
-	}
-
-	/* Be careful with existing or unsupported comments. */
-
-#if 0
-	if (iflag && *(t->md.btiff + p->value)) {
-		if (memcmp(ASCCOM, t->md.btiff + p->value, 8)) {
-			if (nflag)
-				return (1);
-			fprintf(stderr, "overwrite %.8s comment in %s? "
-			    "(y/n [n]) ", t->md.btiff + p->value, fname);
-
-			checkch = ch = getchar();
-			while (ch != '\n' && ch != EOF)
-				ch = getchar();
-			if (checkch != 'y' && checkch != 'Y') {
-				fprintf(stderr, "not overwritten\n");
-				return (1);
-			}
-
-		} else if (p->str && *(p->str)) {
-			if (nflag)
-				return (1);
-			fprintf(stderr, "overwrite comment in %s? (y/n [n]) ",
-			    fname);
-
-			checkch = ch = getchar();
-			while (ch != '\n' && ch != EOF)
-				ch = getchar();
-			if (checkch != 'y' && checkch != 'Y') {
-				fprintf(stderr, "not overwritten\n");
-				return (1);
-			}
-		}
-	}
-#endif
-	/* Remember where we are and move to the comment in our file. */
-
-	psave = ftell(fp);
-	if (fseek(fp, pos + (t->md.btiff - buf) + p->value, SEEK_SET))
-		exifdie((const char *)strerror(errno));
-
-	/* Write the character code and comment. */
-#if 0
-	if (com) {
-		l = strlen(com);
-		if (l > p->count - 8) {
-			exifwarn("truncating comment to fit");
-			l = p->count - 8;
-		}
-
-		/* Character code. */
-
-		if (fwrite(ASCCOM, 8, 1, fp) != 1)
-			exifdie((const char *)strerror(errno));
-
-		/* Comment. */
-
-		if (fwrite(com, l, 1, fp) != 1)
-			exifdie((const char *)strerror(errno));
-
-		/*
-		 * Pad with spaces (this seems to be standard practice).
-		 * XXX For now we're not NUL terminating the string.
-		 * This doesn't appear to be required by the spec, but it's
-		 * always possible that something out there will break.
-		 * I've seen some utilities pad with spaces and set the
-		 * last byte to NUL.
-		 */
-
-		for (l = p->count - 8 - l; l; l--)
-			if (fwrite(" ", 1, 1, fp) != 1)
-				exifdie((const char *)strerror(errno));
-	}
-#endif
-	/* Restore the file pointer. */
-
-	if (fseek(fp, psave, SEEK_SET))
-		exifdie((const char *)strerror(errno));
-
-	return (0);
 }
 
 
@@ -415,7 +386,8 @@ doit(FILE *fp, const char *fname, int n)
 		app1 = ftell(fp);
 		rlen = fread(exifbuf, 1, len, fp);
 		if (rlen != len) {
-			exifwarn("error reading JPEG (length mismatch)");
+			fprintf(stderr, "%s: error reading JPEG (length "
+			    "mismatch)\n", fname);
 			free(exifbuf);
 			return (1);
 		}
@@ -424,19 +396,17 @@ doit(FILE *fp, const char *fname, int n)
 
 		if (t && t->props) {
 			gotapp1 = TRUE;
-			if (wflag)
-				rc = writets(fp, fname, app1, t, exifbuf);
-			else if (lflag)
+			if (lflag)
 				rc = listts(t, &lorder[n]);
 			else
-				rc = printts(t);
+				rc = procts(fp, fname, app1, t, exifbuf);
 		}
 		exiffree(t);
 		free(exifbuf);
 	}
 
 	if (!gotapp1) {
-		exifwarn("couldn't find Exif data");
+		fprintf(stderr, "%s: couldn't find Exif data\n", fname);
 		return (1);
 	}
 
@@ -549,7 +519,7 @@ main(int argc, char **argv)
 		eval = mergesort(lorder, argc, sizeof(struct linfo), lcomp);
 		for (fnum = 0; fnum < argc; fnum++)
 			printf("%s\n", lorder[fnum].fn);
-		free(lorder);
+		free(lorder);	/* XXX Over in usage()? */
 	}
 
 	vary_destroy(v);
