@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.14 2002/07/12 21:34:53 ejohnst Exp $
+ * $Id: exif.c,v 1.15 2002/08/01 18:17:52 ejohnst Exp $
  */
 
 /*
@@ -50,6 +50,7 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
+#include <float.h>
 #include <ctype.h>
 
 #include "exiftags.h"		/* XXX For errors/warns.  Need to remove... */
@@ -287,9 +288,10 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	case EXIF_T_SHUTTER:
 		fval = (float)exif4sbyte(t->btiff + prop->value, o) /
 		    (float)exif4sbyte(t->btiff + prop->value + 4, o);
+		if (isnan(fval)) fval = 0;
 		/* 1 / (2^speed) */
 		snprintf(prop->str, 31, "1/%d",
-		    (int)rint(pow(2, (double)fval)));
+		    (int)floor(pow(2, (double)fval) + 0.5));
 		prop->str[31] = '\0';
 		/* FALLTHROUGH */
 
@@ -301,6 +303,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	case EXIF_T_FNUMBER:
 		fval = (float)exif4byte(t->btiff + prop->value, o) /
 		    (float)exif4byte(t->btiff + prop->value + 4, o);
+		if (isnan(fval)) fval = 0;
 		snprintf(prop->str, 31, "f/%.1f", fval);
 		prop->str[31] = '\0';
 		break;
@@ -309,6 +312,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	case EXIF_T_MAXAPERTURE:
 		fval = (float)exif4byte(t->btiff + prop->value, o) /
 		    (float)exif4byte(t->btiff + prop->value + 4, o);
+		if (isnan(fval)) fval = 0;
 		/* sqrt(2)^aperture */
 		snprintf(prop->str, 31, "f/%.1f", pow(1.4142, (double)fval));
 		prop->str[31] = '\0';
@@ -319,6 +323,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	case EXIF_T_DISTANCE:
 		fval = (float)exif4sbyte(t->btiff + prop->value, o) /
 		    (float)exif4sbyte(t->btiff + prop->value + 4, o);
+		if (isnan(fval)) fval = 0;
 		snprintf(prop->str, 31, "%.2f m", fval);
 		prop->str[31] = '\0';
 		break;
@@ -326,6 +331,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	case EXIF_T_FOCALLEN:
 		fval = (float)exif4byte(t->btiff + prop->value, o) /
 		    (float)exif4byte(t->btiff + prop->value + 4, o);
+		if (isnan(fval)) fval = 0;
 		snprintf(prop->str, 31, "%.2f mm", fval);
 		prop->str[31] = '\0';
 		break;
@@ -378,6 +384,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 {
 	int i;
 	u_int16_t v = (u_int16_t)prop->value;
+	char buf[32], *c;
 
 	switch (prop->tag) {
 
@@ -447,9 +454,13 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 	/* Lookup functions for maker note. */
 
 	case EXIF_T_EQUIPMAKE:
+		strncpy(buf, t->btiff + prop->value, sizeof(buf));
+		buf[sizeof(buf) - 1] = '\0';
+		for (c = buf; *c; c++) *c = tolower(*c);
+
 		for (i = 0; makers[i].val != EXIF_MKR_UNKNOWN; i++)
-			if (!strncasecmp(t->btiff + prop->value,
-			    makers[i].name, strlen(makers[i].name)))
+			if (!strncmp(buf, makers[i].name,
+			    strlen(makers[i].name)))
 				break;
 		t->mkrval = i;
 
@@ -507,7 +518,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 		 * not zeroing out stuff.
 		 */
 #ifdef WINXP_BUGS
-		prop->str = finddescr(filesrcs, v & 0xFF);
+		prop->str = finddescr(filesrcs, (u_int16_t)(v & 0xFFU));
 #else
 		prop->str = finddescr(filesrcs, v);
 #endif
