@@ -1,3 +1,6 @@
+20040506 version: exiftags 0.99.1
+20040506 fixed exiftime install oversight
+20040504 added Canon camera actuations (thanks: Stan Jirman)
 20040430 version: exiftags 0.99
 20040420 added Panasonic maker note support (thanks: Tom Hughes)
 20040410 improved error messages in exifcom
@@ -67,4 +70,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.17 2004/04/30 16:54:21 ejohnst Exp $
+$Id: CHANGES,v 1.18 2004/05/07 05:47:43 ejohnst Exp $
