@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: panasonic.c,v 1.3 2004/04/21 05:20:02 ejohnst Exp $
+ * $Id: panasonic.c,v 1.4 2004/04/21 19:30:59 ejohnst Exp $
  *
  */ 
 
@@ -191,7 +191,7 @@ static struct exiftag panasonic_tags0[] = {
 	{ 0x0020, TIFF_SHORT, 1, ED_IMG, "PanasonicAudio",
 	  "Audio", panasonic_audio },
 	{ 0x0023, TIFF_SHORT, 1, ED_UNK, "PanasonicWBAdjust",
-	  "White Balance Adjust", NULL },
+	  "White Balance Adjust", panasonic_wbadjust },
 	{ 0x0024, TIFF_SSHORT, 1, ED_IMG, "PanasonicFlashBias",
 	  "Flash Bias", panasonic_fbias },
 	{ 0x0028, TIFF_SHORT, 1, ED_IMG, "PanasonicColorEffect",
