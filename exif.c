@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.8 2002/07/10 17:59:33 ejohnst Exp $
+ * $Id: exif.c,v 1.9 2002/07/11 02:05:30 ejohnst Exp $
  */
 
 /*
@@ -64,6 +64,19 @@
 /* Function prototypes. */
 
 static int parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t);
+
+
+/*
+ * Print hex values of a buffer.
+ */
+static void
+hexprint(unsigned char *b, int len)
+{
+	int i;
+
+	for (i = 0; i < len; i++)
+		printf(" %02X", b[i]);
+}
 
 
 /*
@@ -154,9 +167,20 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
 			exifwarn2("field count mismatch", prop->name);
 	}
 
-	if (debug)
+	if (debug) {
 		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
 		    ftypes[j].name, prop->count, prop->value);
+
+		printf("      ");
+		hexprint(afield->tag, 2);
+		printf(" |");
+		hexprint(afield->type, 2);
+		printf(" |");
+		hexprint(afield->count, 4);
+		printf(" |");
+		hexprint(afield->value, 4);
+		printf("\n");
+	}
 
 	/*
 	 * Do as much as we can with the tag at this point and add it
