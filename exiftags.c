@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.1 2002/01/20 23:39:32 ejohnst Exp $
+ * $Id: exiftags.c,v 1.2 2002/01/21 03:21:17 ejohnst Exp $
  */
 
 /*
@@ -41,7 +41,7 @@
 #include "exif.h"
 
 
-int debug;
+int debug, quiet;
 static char *version = "0.8";
 static const char *progname;
 static int fnum;
@@ -75,24 +75,26 @@ printprops(struct exifprop *list, unsigned short lvl)
 	static int prevf = -1;
 	const char *n;
 
-	if (prevf == fnum)
-		printf("\n");
-	else
-		prevf = fnum;
+	if (!quiet) {
+		if (prevf == fnum)
+			printf("\n");
+		else
+			prevf = fnum;
 
-	switch (lvl) {
-	case ED_UNK:
-		printf("Unsupported Properties:\n\n");
-		break;
-	case ED_CAM:
-		printf("Camera-Specific Properties:\n\n");
-		break;
-	case ED_IMG:
-		printf("Image-Specific Properties:\n\n");
-		break;
-	case ED_VRB:
-		printf("Other Properties:\n\n");
-		break;
+		switch (lvl) {
+		case ED_UNK:
+			printf("Unsupported Properties:\n\n");
+			break;
+		case ED_CAM:
+			printf("Camera-Specific Properties:\n\n");
+			break;
+		case ED_IMG:
+			printf("Image-Specific Properties:\n\n");
+			break;
+		case ED_VRB:
+			printf("Other Properties:\n\n");
+			break;
+		}
 	}
 
 	while (list) {
@@ -163,12 +165,13 @@ void usage()
 	fprintf(stderr, "Version: %s\n\n", version);
 	fprintf(stderr, "Available options:\n");
 	fprintf(stderr, "  -a\tDisplay camera-specific, image-specific, "
-	    "and verbose poperties.\n");
-	fprintf(stderr, "  -c\tDisplay camera-specific poperties.\n");
-	fprintf(stderr, "  -i\tDisplay image-specific poperties.\n");
-	fprintf(stderr, "  -v\tDisplay verbose poperties.\n");
-	fprintf(stderr, "  -u\tDisplay unknown/unsupported poperties.\n");
+	    "and verbose properties.\n");
+	fprintf(stderr, "  -c\tDisplay camera-specific properties.\n");
+	fprintf(stderr, "  -i\tDisplay image-specific properties.\n");
+	fprintf(stderr, "  -v\tDisplay verbose properties.\n");
+	fprintf(stderr, "  -u\tDisplay unknown/unsupported properties.\n");
 	fprintf(stderr, "  -d\tDisplay parse debug information.\n");
+	fprintf(stderr, "  -q\tSuppress section headers.\n");
 
 	exit(1);
 }
@@ -184,9 +187,9 @@ main(int argc, char **argv)
 
 	progname = argv[0];
 	dumplvl = eval = 0;
-	debug = FALSE;
+	debug = quiet = FALSE;
 
-	while ((ch = getopt(argc, argv, "acivud")) != -1)
+	while ((ch = getopt(argc, argv, "acivudq")) != -1)
 		switch (ch) {
 		case 'a':
 			dumplvl |= (ED_CAM | ED_IMG | ED_VRB);
@@ -206,6 +209,9 @@ main(int argc, char **argv)
 		case 'd':
 			dumplvl |= ED_UNK;
 			debug = TRUE;
+			break;
+		case 'q':
+			quiet = TRUE;
 			break;
 		case '?':
 		default:
