@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.6 2002/07/11 23:49:15 ejohnst Exp $
+ * $Id: exiftags.c,v 1.7 2002/07/14 23:59:51 ejohnst Exp $
  */
 
 /*
@@ -131,33 +131,36 @@ doit(FILE *fp, int dumplvl)
 	exifbuf = NULL;
 
 	while (jpegscan(fp, &mark, &len, !(first++))) {
+
+		if (mark != JPEG_M_APP1) {
+			if (fseek(fp, len, SEEK_CUR))
+				exifdie((const char *)strerror(errno));
+			continue;
+		}
+
 		exifbuf = (unsigned char *)malloc(len);
 		if (!exifbuf)
 			exifdie((const char *)strerror(errno));
 
 		rlen = fread(exifbuf, 1, len, fp);
-
 		if (rlen != len)
 			exifdie("error reading JPEG (length mismatch)");
 
-		if (mark == JPEG_M_APP1) {
-			gotapp1 = TRUE;
-			t = exifscan(exifbuf, len);
+		gotapp1 = TRUE;
+		t = exifscan(exifbuf, len);
 
-			if (t && t->props) {
-				if (dumplvl & ED_CAM)
-					printprops(t->props, ED_CAM);
-				if (dumplvl & ED_IMG)
-					printprops(t->props, ED_IMG);
-				if (dumplvl & ED_VRB)
-					printprops(t->props, ED_VRB);
-				if (dumplvl & ED_UNK)
-					printprops(t->props, ED_UNK);
-			}
-			exiffree(t);
-
-			free(exifbuf);
+		if (t && t->props) {
+			if (dumplvl & ED_CAM)
+				printprops(t->props, ED_CAM);
+			if (dumplvl & ED_IMG)
+				printprops(t->props, ED_IMG);
+			if (dumplvl & ED_VRB)
+				printprops(t->props, ED_VRB);
+			if (dumplvl & ED_UNK)
+				printprops(t->props, ED_UNK);
 		}
+		exiffree(t);
+		free(exifbuf);
 	}
 
 	if (!gotapp1)
