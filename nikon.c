@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.5 2002/10/07 00:57:31 ejohnst Exp $
+ * $Id: nikon.c,v 1.6 2002/11/02 07:18:05 ejohnst Exp $
  */
 
 /*
@@ -169,7 +169,7 @@ static struct exiftag nikon_tags1[] = {
 
 /* Process normal Nikon maker note tags. */
 
-void
+static void
 nikon_prop0(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
@@ -230,7 +230,7 @@ nikon_prop0(struct exifprop *prop, struct exiftags *t)
 
 /* Process Nikon maker note tags that start from an offset. */
 
-void
+static void
 nikon_prop1(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
