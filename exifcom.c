@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2002-2005, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.13 2004/05/07 05:47:43 ejohnst Exp $
+ * $Id: exifcom.c,v 1.14 2005/01/05 00:31:03 ejohnst Exp $
  */
 
 /*
@@ -56,7 +56,7 @@ int getopt(int, char * const [], const char *);
 #include "exif.h"
 
 
-static const char *version = "0.99.1";
+static const char *version = "1.00a";
 static int fnum, bflag, iflag, nflag, vflag; 
 static const char *com;
 static const char *delim = ": ";

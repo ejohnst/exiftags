@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2004, 2005, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.10 2004/12/18 01:31:25 ejohnst Exp $
+ * $Id: exiftime.c,v 1.11 2005/01/05 00:31:03 ejohnst Exp $
  */
 
 /*
@@ -63,7 +63,7 @@ struct linfo {
 	time_t ts;
 };
 
-static const char *version = "0.99.1";
+static const char *version = "1.00a";
 static int iflag, lflag, qflag, wflag, ttags;
 static const char *delim = ": ";
 static const char *fname;
