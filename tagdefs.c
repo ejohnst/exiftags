@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.19 2002/11/04 00:16:55 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.20 2003/01/20 21:37:41 ejohnst Exp $
  */
 
 /*
@@ -505,7 +505,7 @@ struct exiftag tags[] = {
 	    "Flash", "Flash", NULL },
 	{ 0x920a, TIFF_RTNL,  1,  ED_IMG,		/* mm */
 	    "FocalLength", "Focal Length", NULL },
-	{ 0x9214, TIFF_SHORT,  0,  ED_UNK,
+	{ 0x9214, TIFF_SHORT,  0,  ED_VRB,
 	    "SubjectArea", "Subject Area", NULL },
 	{ 0x927c, TIFF_UNDEF, 0,  ED_UNK,
 	    "MakerNote", "Manufacturer Notes", NULL },
