@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.38 2003/01/24 00:55:42 ejohnst Exp $
+ * $Id: exif.c,v 1.39 2003/01/24 08:39:41 ejohnst Exp $
  */
 
 /*
@@ -624,13 +624,15 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	/*
 	 * Multiple short values.
+	 * XXX For now, we're going to ignore tags with count > 8.  Maker
+	 * note tags frequently consist of many shorts; we don't really
+	 * want to be spitting these out.  (Plus, TransferFunction is huge.)
 	 */
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
 	    prop->count > 1) {
 
-		/* TransferFunction is huge.  Let's just ignore it. */
-		if (prop->tag == EXIF_T_XFERFUNC)
+		if (prop->count > 8)
 			return (TRUE);
 
 		len = 8 * prop->count + 1;
