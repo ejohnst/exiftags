@@ -1,3 +1,4 @@
+.TH EXIFDUMP 1
 .\"
 .\" Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
 .\" All rights reserved.
@@ -28,9 +29,8 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $Id: exiftags.1,v 1.2 2002/06/30 08:53:12 ejohnst Exp $
+.\" $Id: exiftags.1,v 1.3 2002/07/10 18:39:34 ejohnst Exp $
 .\"
-.TH EXIFDUMP 1
 .SH NAME
 exiftags \- output the properties contained in a JPEG Exif section
 .SH SYNOPSIS
@@ -53,15 +53,6 @@ Digitial cameras typically add Exif data to the image files they produce,
 containing information about the camera and digitized image.  The options
 described below may be used to control output verbosity and section
 formatting.
-
-Some camera manufacturers include a "maker note" section with additional
-information about the camera or image not part of the Exif standard.  At
-present, 
-.B exiftags
-only supports Canon maker notes.  If you wish support for additional
-manufacturers or cameras, please send any information you have
-about the data format or, better yet, patches, and a sample image file
-to the author.  (Though he makes no promises.)
 .SH OPTIONS
 .IP -a
 Output camera-specific, image-specific, and verbose properties contained in
@@ -78,6 +69,28 @@ Suppress output of a property section header.
 Output unknown or unsupported properties contained in the file.
 .IP -v
 Output verbose properties contained in the file.
+.SH MAKER NOTES
+Some camera manufacturers include a "maker note" section with additional
+information about the camera or image not part of the Exif standard.
+The format of these maker notes varies wildly and manufacturers are not
+forthcoming with implementation details.  Therefore,
+.B exiftags
+maker note support is the result of experimentation and reverse engineering
+(see below for credits) and incomplete.
+.B exiftags
+is known to have at least partial support for the following cameras'
+maker notes:
+.IP "" 4
+Canon/Canon PowerShot S110
+.br
+FUJIFILM/FinePix2600Zoom
+.br
+OLYMPUS OPTICAL CO.,LTD/C3030Z
+.PP
+If you wish support for additional
+manufacturers or cameras, please send any information you have
+about the data format or, better yet, patches, and a sample image file
+to the author.  (Though he makes no promises.)
 .SH DIAGNOSTICS
 The
 .B exiftags
@@ -97,6 +110,8 @@ The
 .B exiftags
 utility and this man page were written by Eric M. Johnston <emj@postal.net>.
 Portions of the utility were developed while referencing the public domain
-Jhead utility, version 1.2, by Matthias Wandel <mwandel@rim.net>.  Canon
-maker note support was added using information developed by David Burren
-<db061@burren.cx> (http://www.burren.cx/david/canon.html).
+Jhead utility, version 1.2, by Matthias Wandel <mwandel@rim.net>.
+Maker note support is largely the result of TsuruZoh Tachibanaya's
+<tsuruzoh@ba.wakwak.com> compendium
+(http://www.ba.wakwak.com/~tsuruzoh/Computer/Digicams/exif-e.html)
+and its contributers.
