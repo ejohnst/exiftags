@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, 2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2002-2004, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.8 2003/08/16 02:24:04 ejohnst Exp $
+ * $Id: exifcom.c,v 1.9 2004/04/10 07:48:20 ejohnst Exp $
  */
 
 /*
@@ -69,14 +69,14 @@ static const char *delim = ": ";
  * exifscan() -- it doesn't touch the file.
  */
 static int
-printcom(struct exifprop *p, const unsigned char *btiff)
+printcom(const char *fname, struct exifprop *p, const unsigned char *btiff)
 {
 	int rc = 0;
 
 	/* No comment tag. */
 
 	if (!p) {
-		exifwarn("comment not available");
+		fprintf(stderr, "%s: comment not available\n", fname);
 		return (1);
 	}
 
@@ -139,12 +139,12 @@ writecom(FILE *fp, const char *fname, long pos, struct exifprop *p,
 	/* No comment tag or it's zero length. */
 
 	if (!p) {
-		exifwarn("comment not available");
+		fprintf(stderr, "%s: comment not available\n", fname);
 		return (1);
 	}
 
 	if (p->count < 9) {
-		exifwarn("comment size zero");
+		fprintf(stderr, "%s: comment size zero\n", fname);
 		return (1);
 	}
 
@@ -211,7 +211,8 @@ writecom(FILE *fp, const char *fname, long pos, struct exifprop *p,
 	if (com) {
 		l = strlen(com);
 		if (l > p->count - 8) {
-			exifwarn("truncating comment to fit");
+			fprintf(stderr, "%s: truncating comment to fit\n",
+			    fname);
 			l = p->count - 8;
 		}
 
@@ -280,7 +281,8 @@ doit(FILE *fp, const char *fname)
 		app1 = ftell(fp);
 		rlen = fread(exifbuf, 1, len, fp);
 		if (rlen != len) {
-			exifwarn("error reading JPEG (length mismatch)");
+			fprintf(stderr, "%s: error reading JPEG (length "
+			    "mismatch)\n", fname);
 			free(exifbuf);
 			return (1);
 		}
@@ -294,10 +296,11 @@ doit(FILE *fp, const char *fname)
 				    findprop(t->props, tags,
 				    EXIF_T_USERCOMMENT), exifbuf, t->md.btiff);
 			else
-				rc = printcom(findprop(t->props, tags,
+				rc = printcom(fname, findprop(t->props, tags,
 				    EXIF_T_USERCOMMENT), t->md.btiff);
 		} else {
-			exifwarn("couldn't find Exif properties");
+			fprintf(stderr, "couldn't find Exif properties\n",
+			    fname);
 			rc = 1;
 		}
 		exiffree(t);
@@ -305,7 +308,7 @@ doit(FILE *fp, const char *fname)
 	}
 
 	if (!gotapp1) {
-		exifwarn("couldn't find Exif data");
+		fprintf(stderr, "couldn't find Exif data\n", fname);
 		return (1);
 	}
 
