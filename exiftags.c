@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.7 2002/07/14 23:59:51 ejohnst Exp $
+ * $Id: exiftags.c,v 1.8 2002/08/01 18:19:07 ejohnst Exp $
  */
 
 /*
@@ -41,7 +41,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+/* For getopt(). */
+
+#ifndef WIN32
 #include <unistd.h>
+#else
+extern char *optarg;
+extern int optind, opterr, optopt;
+int getopt(int, char * const [], const char *);
+#endif
 
 #include "exiftags.h"
 #include "jpeg.h"
@@ -49,8 +58,8 @@
 
 
 int debug, quiet;
-static char *version = "0.91";
-static const char *progname;
+static char *version = "0.92";
+const char *progname;
 static int fnum;
 
 
@@ -194,11 +203,17 @@ main(int argc, char **argv)
 {
 	register int ch;
 	int dumplvl, eval;
+	char *mode;
 	FILE *fp;
 
 	progname = argv[0];
 	dumplvl = eval = 0;
 	debug = quiet = FALSE;
+#ifdef WIN32
+	mode = "rb";
+#else
+	mode = "r";
+#endif
 
 	while ((ch = getopt(argc, argv, "acivudq")) != -1)
 		switch (ch) {
@@ -236,7 +251,7 @@ main(int argc, char **argv)
 
 	if (*argv) {
 		for (fnum = 0; *argv; ++argv) {
-			if ((fp = fopen(*argv, "r")) == NULL) {
+			if ((fp = fopen(*argv, mode)) == NULL) {
 				exifwarn2(strerror(errno), *argv);
 				eval = 1;
 				continue;
