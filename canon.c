@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.12 2002/10/06 00:57:19 ejohnst Exp $
+ * $Id: canon.c,v 1.13 2002/10/06 18:31:03 ejohnst Exp $
  */
 
 /*
@@ -770,11 +770,9 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 	/* Serial number. */
 
 	case 0x000c:
-		if (!(prop->str = (char *)malloc(32)))
+		if (!(prop->str = (char *)malloc(11)))
 			exifdie((const char *)strerror(errno));
-		snprintf(prop->str, 31, "%04X%05d", prop->value >> 16,
-		    prop->value & 0xffff);
-		prop->str[31] = '\0';
+		snprintf(prop->str, 11, "%010d", prop->value);
 		break;
 
 	/* Custom function. */
