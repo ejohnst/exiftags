@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.5 2002/07/11 02:04:04 ejohnst Exp $
+ * $Id: exifutil.c,v 1.6 2002/07/11 07:20:08 ejohnst Exp $
  */
 
 /*
@@ -61,7 +61,7 @@ exif2byte(unsigned char *b, enum order o)
 
 
 /*
- * Read an unsigned 4-byte int from the buffer.  (XXX Endian test...)
+ * Read an unsigned 4-byte int from the buffer.
  */
 u_int32_t
 exif4byte(unsigned char *b, enum order o)
@@ -75,7 +75,7 @@ exif4byte(unsigned char *b, enum order o)
 
 
 /*
- * Read a signed 4-byte int from the buffer.  (XXX Endian test...)
+ * Read a signed 4-byte int from the buffer.
  */
 int32_t
 exif4sbyte(unsigned char *b, enum order o)
