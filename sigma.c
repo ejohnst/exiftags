@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sigma.c,v 1.1 2004/09/15 23:35:55 ejohnst Exp $
+ * $Id: sigma.c,v 1.2 2004/09/29 03:53:03 ejohnst Exp $
  */
 
 /*
@@ -116,7 +116,6 @@ void
 sigma_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
-	u_int32_t a, b;
 
 	/* Couldn't grok the value somewhere upstream, so nevermind. */
 
