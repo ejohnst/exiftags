@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.15 2003/01/25 01:17:12 ejohnst Exp $
+ * $Id: exifutil.c,v 1.16 2003/08/02 18:27:00 ejohnst Exp $
  */
 
 /*
@@ -123,6 +123,23 @@ exif4byte(unsigned char *b, enum order o)
 
 
 /*
+ * Write an unsigned 4-byte int to the buffer.
+ */
+void
+byte4exif(u_int32_t n, unsigned char *b, enum order o)
+{
+	int i;
+
+	if (o == BIG)
+		for (i = 0; i < 4; i++)
+			b[3 - i] = (n >> (i * 8)) & 0xff;
+	else
+		for (i = 0; i < 4; i++)
+			b[i] = (n >> (i * 8)) & 0xff;
+}
+
+
+/*
  * Read a signed 4-byte int from the buffer.
  */
 int32_t
@@ -150,6 +167,19 @@ finddescr(struct descrip *table, u_int16_t val)
 		exifdie((const char *)strerror(errno));
 	strcpy(c, table[i].descr);
 	return (c);
+}
+
+
+/*
+ * Lookup a property entry for a particular set of tags.
+ */
+struct exifprop *
+findtprop(struct exifprop *prop, struct exiftag *tagset, u_int16_t tag)
+{
+
+	for (; prop && (prop->tagset != tagset || prop->tag != tag);
+	    prop = prop->next);
+	return (prop);
 }
 
 
