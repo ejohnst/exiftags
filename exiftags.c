@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.15 2002/11/04 07:24:55 ejohnst Exp $
+ * $Id: exiftags.c,v 1.16 2003/01/11 06:27:00 ejohnst Exp $
  */
 
 /*
@@ -140,10 +140,11 @@ doit(FILE *fp, int dumplvl, int pas)
 			return (1);
 		}
 
-		gotapp1 = TRUE;
 		t = exifparse(exifbuf, len);
 
 		if (t && t->props) {
+			gotapp1 = TRUE;
+
 			if (dumplvl & ED_CAM)
 				printprops(t->props, ED_CAM, pas);
 			if (dumplvl & ED_IMG)

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.35 2002/11/04 08:21:38 ejohnst Exp $
+ * $Id: exif.c,v 1.36 2003/01/11 06:27:00 ejohnst Exp $
  */
 
 /*
@@ -664,10 +664,12 @@ exifscan(unsigned char *b, int len, int domkr)
 	seq = 0;
 	t->etiff = b + len;	/* End of TIFF. */
 
-	/* Make sure we've got the proper Exif header. */
+	/*
+	 * Make sure we've got the proper Exif header.  If not, we're
+	 * looking at somebody else's APP1 (e.g., Photoshop).
+	 */
 
 	if (memcmp(b, "Exif\0\0", 6)) {
-		exifwarn("invalid Exif header");
 		exiffree(t);
 		return (NULL);
 	}
