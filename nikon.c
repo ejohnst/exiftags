@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.12 2003/08/03 00:50:03 ejohnst Exp $
+ * $Id: nikon.c,v 1.13 2003/08/04 06:11:47 ejohnst Exp $
  */
 
 /*
@@ -40,7 +40,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "makers.h"
 
@@ -167,6 +166,12 @@ static struct exiftag nikon_tags1[] = {
 };
 
 
+static struct exiftag nikon_tags2[] = {
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
+	  "Nikon Unknown", NULL },
+};
+
+
 /*
  * Process normal Nikon maker note tags.
  */
@@ -253,18 +258,59 @@ struct ifd *
 nikon_ifd(u_int32_t offset, struct exiftags *t)
 {
 	struct ifd *myifd;
+	unsigned char *b, *bmaker;
+	struct exiftags nikont;
+
+	nikont = *t;
+	b = nikont.btiff + offset;
 
 	/*
 	 * Seems that some Nikon maker notes start with an ID string.
-	 * Therefore, * try reading the IFD starting at offset + 8
-	 * ("Nikon" + 3).
 	 */
 
-	if (!strcmp((const char *)(t->btiff + offset), "Nikon")) {
-		readifd(t->btiff + offset + strlen("Nikon") + 3, &myifd,
-		    nikon_tags1, t);
-	} else
-		readifd(t->btiff + offset, &myifd, nikon_tags0, t);
+	if (!strcmp((const char *)b, "Nikon")) {
+		b += 6;
 
+		switch (*((u_int16_t *)b)) {
+		case 0x0001:
+			readifd(b + 2, &myifd, nikon_tags1, t);
+			return (myifd);
+
+		case 0x0002:
+			b += 4;
+
+			/*
+			 * So, this is interesting: they've put a full-fledged
+			 * TIFF header here.
+			 */
+
+			/* Determine endianness of the TIFF data. */
+
+			if (*((u_int16_t *)b) == 0x4d4d)
+				nikont.tifforder = BIG;
+			else if (*((u_int16_t *)b) == 0x4949)
+				nikont.tifforder = LITTLE;
+			else {
+				exifwarn("invalid Nikon TIFF header");
+				return (NULL);
+			}
+			bmaker = b;	/* Beginning of maker. */
+			b += 2;
+
+			/* Verify the TIFF header. */
+
+			if (exif2byte(b, nikont.tifforder) != 42) {
+				exifwarn("invalid Nikon TIFF header");
+				return (NULL);
+			}
+			b += 2;
+
+			readifd(bmaker + exif4byte(b, nikont.tifforder),
+			    &myifd, nikon_tags2, &nikont);
+			return (myifd);
+		}
+	}
+
+	readifd(b, &myifd, nikon_tags0, &nikont);
 	return (myifd);
 }
