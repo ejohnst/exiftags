@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.6 2002/07/11 07:20:08 ejohnst Exp $
+ * $Id: exifutil.c,v 1.7 2002/07/11 18:00:18 ejohnst Exp $
  */
 
 /*
@@ -106,7 +106,7 @@ finddescr(struct descrip *table, u_int16_t val)
 
 
 /*
- * Create a new Exif property.
+ * Allocate memory for an Exif property.
  */
 struct exifprop *
 newprop(void)
