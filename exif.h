@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.6 2002/07/11 02:01:45 ejohnst Exp $
+ * $Id: exif.h,v 1.7 2002/07/12 21:35:11 ejohnst Exp $
  */
 
 /*
@@ -46,6 +46,16 @@
 #define _EXIF_H
 
 #include <sys/types.h>
+
+/*
+ * XXX Only checking for Solaris now.  Other platforms will probably need
+ * this if they don't have u_int16_t or u_int32_t.
+ */
+
+#if (defined(sun) && (defined(__svr4__) || defined(__SVR4)))
+typedef unsigned short u_int16_t;
+typedef unsigned int u_int32_t;
+#endif
 
 
 /* TIFF types. */
