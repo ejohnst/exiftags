@@ -29,21 +29,54 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.8 2002/10/05 00:46:10 ejohnst Exp $
+ * $Id: exifutil.c,v 1.9 2002/10/07 00:55:04 ejohnst Exp $
  */
 
 /*
- * Some utilities for dealing with Exif data.
- *
+ * Utilities for dealing with Exif data.
  */
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <errno.h>
 
-#include "exiftags.h"			/* XXX For exifdie(). */
 #include "exif.h"
 #include "exifint.h"
+
+
+/*
+ * Some global variables we all need.
+ */
+
+int debug;
+const char *progname;
+
+
+/*
+ * Logging and error functions.
+ */
+
+void
+exifdie(const char *msg)
+{
+	fprintf(stderr, "%s: %s\n", progname, msg);
+	exit(1);
+}
+
+
+void
+exifwarn(const char *msg)
+{
+	fprintf(stderr, "%s: %s\n", progname, msg);
+}
+
+
+void
+exifwarn2(const char *msg1, const char *msg2)
+{
+	fprintf(stderr, "%s: %s (%s)\n", progname, msg1, msg2);
+}
 
 
 /*
