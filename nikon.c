@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.4 2002/10/05 22:49:39 ejohnst Exp $
+ * $Id: nikon.c,v 1.5 2002/10/07 00:57:31 ejohnst Exp $
  */
 
 /*
@@ -42,8 +42,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include "exiftags.h"
-#include "exifint.h"
 #include "makers.h"
 
 

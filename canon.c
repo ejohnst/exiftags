@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.14 2002/10/06 19:38:11 ejohnst Exp $
+ * $Id: canon.c,v 1.15 2002/10/07 00:57:31 ejohnst Exp $
  */
 
 /*
@@ -43,8 +43,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include "exiftags.h"			/* XXX For exifdie(). */
-#include "exifint.h"
 #include "makers.h"
 
 

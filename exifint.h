@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.7 2002/10/05 22:49:39 ejohnst Exp $
+ * $Id: exifint.h,v 1.8 2002/10/07 00:57:31 ejohnst Exp $
  */
 
 /*
@@ -56,43 +56,6 @@
 #define EXIF_T_GPSIFD		0x8825
 #define EXIF_T_MAKERNOTE	0x927c		/* (potentially) */
 #define EXIF_T_INTEROP		0xa005
-
-/* Other interesting tags. */
-
-#define EXIF_T_UNKNOWN		0xffff		/* XXX Non-standard. */
-
-#define EXIF_T_COMPRESS		0x0103
-#define EXIF_T_PHOTOINTERP	0x0106
-#define EXIF_T_EQUIPMAKE	0x010f
-#define EXIF_T_MODEL		0x0110
-#define EXIF_T_ORIENT		0x0112
-#define EXIF_T_XRES		0x011a
-#define EXIF_T_YRES		0x011b
-#define EXIF_T_PLANARCONFIG	0x011c
-#define EXIF_T_RESUNITS		0x0128
-#define EXIF_T_CHROMRATIO	0x0212
-#define EXIF_T_CHROMPOS		0x0213
-#define EXIF_T_EXPOSURE		0x829a
-#define EXIF_T_FNUMBER		0x829d
-#define EXIF_T_EXPPROG		0x8822
-#define EXIF_T_VERSION		0x9000
-#define EXIF_T_COMPCONFIG	0x9101
-#define EXIF_T_SHUTTER		0x9201
-#define EXIF_T_LAPERTURE	0x9202
-#define EXIF_T_MAXAPERTURE	0x9205
-#define EXIF_T_DISTANCE		0x9206
-#define EXIF_T_METERMODE	0x9207
-#define EXIF_T_LIGHTSRC		0x9208
-#define EXIF_T_FLASH		0x9209
-#define EXIF_T_FOCALLEN		0x920a
-#define EXIF_T_USERCOMMENT	0x9286
-#define EXIF_T_COLORSPC		0xa001
-#define EXIF_T_FPXRES		0xa20e
-#define EXIF_T_FPYRES		0xa20f
-#define EXIF_T_FPRESUNITS	0xa210
-#define EXIF_T_IMGSENSOR	0xa217
-#define EXIF_T_FILESRC		0xa300
-#define EXIF_T_SCENETYPE	0xa301
 
 
 /* Generic field description lookup table. */
@@ -176,7 +139,6 @@ extern u_int16_t exif2byte(unsigned char *b, enum order o);
 extern u_int32_t exif4byte(unsigned char *b, enum order o);
 extern int32_t exif4sbyte(unsigned char *b, enum order o);
 extern char *finddescr(struct descrip *table, u_int16_t val);
-extern struct exifprop *findprop(struct exifprop *prop, u_int16_t tag);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
 extern struct ifd *readifds(u_int32_t offset, struct exiftags *t);
