@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2004/09/15 23:35:55 ejohnst Exp $
+# $Id: Makefile,v 1.22 2005/01/05 00:30:32 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
@@ -17,7 +17,12 @@ NOMKRS=makers_stub.o
 CC=cc
 DEBUG=
 CFLAGS=$(DEBUG)
-PREFIX=/usr/local
+DESTDIR=
+
+prefix=/usr/local
+datadir=$(DESTDIR)$(prefix)
+bindir=$(DESTDIR)$(prefix)/bin
+mandir=$(datadir)/man
 
 OBJS=exif.o tagdefs.o exifutil.o exifgps.o jpeg.o
 HDRS=exif.h exifint.h jpeg.h makers.h
@@ -44,9 +49,8 @@ clean:
 	timevary.o exiftags exifcom exiftime
 
 install: all
-	cp exiftags exifcom exiftime $(PREFIX)/bin
-	chmod a+x $(PREFIX)/bin/exiftags $(PREFIX)/bin/exifcom \
-	$(PREFIX)/bin/exiftime
-	cp exiftags.1 exifcom.1 exiftime.1 $(PREFIX)/man/man1
-	chmod a+r $(PREFIX)/man/man1/exiftags.1 $(PREFIX)/man/man1/exifcom.1 \
-	$(PREFIX)/man/man1/exiftime.1
+	cp exiftags exifcom exiftime $(bindir)
+	chmod 0755 $(bindir)/exiftags $(bindir)/exifcom $(bindir)/exiftime
+	cp exiftags.1 exifcom.1 exiftime.1 $(mandir)/man1
+	chmod 0644 $(mandir)/man1/exiftags.1 $(mandir)/man1/exifcom.1 \
+	$(mandir)/man1/exiftime.1
