@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.50 2003/08/01 19:21:14 ejohnst Exp $
+ * $Id: exif.c,v 1.51 2003/08/02 23:26:16 ejohnst Exp $
  */
 
 /*
@@ -114,6 +114,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	prop->name = taglist[i].name;
 	prop->descr = taglist[i].descr;
 	prop->lvl = taglist[i].lvl;
+	prop->tagset = taglist;
 
 	/* Lookup and check the field type. */
 
@@ -558,7 +559,20 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 * Handle user comment.  According to the spec, the first 8 bytes
 	 * of the comment indicate what charset follows.  For now, we
 	 * just support ASCII.
+	 *
+	 * A handful of the GPS tags are also stored in this format
+	 * (GPSProcessingMethod & GPSAreaInformation).
 	 */
+
+	case 0x001b:
+	case 0x001c:
+		/*
+		 * XXX Note that this is kind of dangerous -- any other
+		 * tag set won't reach the end of the switch...
+		 */
+		if (prop->tagset != gpstags)
+			break;
+		/* FALLTHROUGH */
 
 	case EXIF_T_USERCOMMENT:
 
@@ -618,7 +632,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	if (prop->type == TIFF_ASCII &&
-	    (prop->value + prop->count < (u_int32_t)(t->etiff - t->btiff))) {
+	    (prop->value + prop->count <= (u_int32_t)(t->etiff - t->btiff))) {
 		if (!(prop->str = (char *)malloc(prop->count + 1)))
 			exifdie((const char *)strerror(errno));
 		strncpy(prop->str, (const char *)(t->btiff + prop->value),
