@@ -29,12 +29,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: asahi.c,v 1.1 2004/02/27 19:16:57 ejohnst Exp $
+ * $Id: asahi.c,v 1.2 2004/04/04 20:59:47 ejohnst Exp $
  */
 
 /*
  * Exif tag definitions for Asahi Optical Co. (Pentax) maker notes.
- * Note that they're basically the same as for Casio.
+ * Note that the format is similar to Casio's, though has byte order
+ * weirdness like Fuji.
  *
  */
 
@@ -45,24 +46,23 @@
 #include "makers.h"
 
 
-/* Recording mode. */
+/* Quality. */
 
-static struct descrip asahi_record[] = {
-	{ 1,	"Single Shutter" },
-	{ 7,	"Panorama" },
-	{ 10,	"Night Scene" },
-	{ 15,	"Portrait" },
-	{ 16,	"Landscape" },
+static struct descrip asahi_qual[] = {
+	{ 0,	"Economy" },
+	{ 1,	"Fine" },
+	{ 2,	"Super Fine" },
 	{ -1,	"Unknown" },
 };
 
 
-/* Quality. */
+/* Resolution. */
 
-static struct descrip asahi_qual[] = {
-	{ 1,	"Economy" },
-	{ 2,	"Normal" },
-	{ 3,	"Fine" },
+static struct descrip asahi_res[] = {
+	{ 0,	"640x480" },
+	{ 2,	"1024x768" },
+	{ 4,	"1600x1200" },
+	{ 22,	"2304x1728" },
 	{ -1,	"Unknown" },
 };
 
@@ -70,31 +70,10 @@ static struct descrip asahi_qual[] = {
 /* Focus mode. */
 
 static struct descrip asahi_focus[] = {
+	{ 0,	"Normal" },
+	{ 1,	"Macro" },
 	{ 2,	"Macro" },
-	{ 3,	"Auto" },
-	{ 4,	"Manual" },
-	{ 5,	"Infinity" },
-	{ -1,	"Unknown" },
-};
-
-
-/* Flash mode. */
-
-static struct descrip asahi_flash[] = {
-	{ 1,	"Auto" },
-	{ 2,	"On" },
-	{ 4,	"Off" },
-	{ 5,	"Red Eye Reduction" },
-	{ -1,	"Unknown" },
-};
-
-
-/* Flash intensity. */
-
-static struct descrip asahi_intense[] = {
-	{ 11,	"Weak" },
-	{ 13,	"Normal" },
-	{ 15,	"Strong" },
+	{ 3,	"Infinity" },
 	{ -1,	"Unknown" },
 };
 
@@ -102,45 +81,24 @@ static struct descrip asahi_intense[] = {
 /* White balance. */
 
 static struct descrip asahi_whiteb[] = {
-	{ 1,	"Auto" },
-	{ 2,	"Tungsten" },
-	{ 3,	"Daylight" },
-	{ 4,	"Fluorescent" },
-	{ 5,	"Shade" },
-	{ 129,	"Manual" },
+	{ 0,	"Auto" },
+	{ 1,	"Daylight" },
+	{ 2,	"Shade" },
+	{ 3,	"Fluorescent" },
+	{ 4,	"Tungsten" },
+	{ 5,	"Manual" },
 	{ -1,	"Unknown" },
 };
 
 
-/* Sharpness. */
-
-static struct descrip asahi_sharp[] = {
-	{ 0,	"Normal" },
-	{ 1,	"Soft" },
-	{ 2,	"Hard" },
-	{ -1,	"Unknown" },
-};
-
-
-/* Contrast & saturation. */
+/* Saturation, contrast, & sharpness. */
 
 static struct descrip asahi_range[] = {
-	{ 0,	"Normal" },
-	{ 1,	"Low" },
-	{ 2,	"High" },
-	{ -1,	"Unknown" },
-};
-
-
-/* Sensitivity. */
-
-static struct descrip asahi_sensitive[] = {
-	{ 64,	"Normal" },
-	{ 80,	"Normal" },
-	{ 100,	"High" },
-	{ 125,	"+1.0" },
-	{ 244,	"+3.0" },
-	{ 250,	"+2.0" },
+	{ 0,	"Soft" },
+	{ 1,	"Normal" },
+	{ 2,	"Hard" },
+	{ 3,	"Medium Soft" },
+	{ 4,	"Medium Hard" },
 	{ -1,	"Unknown" },
 };
 
@@ -148,30 +106,20 @@ static struct descrip asahi_sensitive[] = {
 /* Maker note IFD tags. */
 
 static struct exiftag asahi_tags[] = {
-	{ 0x0001, TIFF_SHORT, 1, ED_IMG, "AsahiRecord",
-	  "Recording Mode", asahi_record },
-	{ 0x0002, TIFF_SHORT, 1, ED_IMG, "AsahiQuality",
-	  "Quality Setting", asahi_qual },
-	{ 0x0003, TIFF_SHORT, 1, ED_IMG, "AsahiFocus",
+	{ 0x0008, TIFF_SHORT, 1, ED_IMG, "AsahiQuality",
+	  "Quality Level", asahi_qual },
+	{ 0x0009, TIFF_SHORT, 1, ED_IMG, "AsahiRes",
+	  "Recorded Pixels", asahi_res },
+	{ 0x000d, TIFF_SHORT, 1, ED_IMG, "AsahiFocus",
 	  "Focusing Mode", asahi_focus },
-	{ 0x0004, TIFF_SHORT, 1, ED_IMG, "AsahiFlash",
-	  "Flash Mode", asahi_flash },
-	{ 0x0005, TIFF_SHORT, 1, ED_IMG, "AsahiIntensity",
-	  "Flash Intensity", asahi_intense },
-	{ 0x0006, TIFF_LONG, 1, ED_VRB, "AsahiDistance",
-	  "Object Distance", NULL },
-	{ 0x0007, TIFF_SHORT, 1, ED_IMG, "AsahiWhiteB",
+	{ 0x0019, TIFF_SHORT, 1, ED_IMG, "AsahiWhiteB",
 	  "White Balance", asahi_whiteb },
-	{ 0x000a, TIFF_LONG, 1, ED_UNK, "AsahiDZoom",
-	  "Digital Zoom", NULL },
-	{ 0x000b, TIFF_SHORT, 1, ED_IMG, "AsahiSharp",
-	  "Sharpness", asahi_sharp },
-	{ 0x000c, TIFF_SHORT, 1, ED_IMG, "AsahiContrast",
-	  "Contrast", asahi_range },
-	{ 0x000d, TIFF_SHORT, 1, ED_IMG, "AsahiSaturate",
+	{ 0x001f, TIFF_SHORT, 1, ED_IMG, "AsahiSaturate",
 	  "Saturation", asahi_range },
-	{ 0x0014, TIFF_SHORT, 1, ED_IMG, "AsahiSensitive",
-	  "Sensitivity", asahi_sensitive },
+	{ 0x0020, TIFF_SHORT, 1, ED_IMG, "AsahiContrast",
+	  "Contrast", asahi_range },
+	{ 0x0021, TIFF_SHORT, 1, ED_IMG, "AsahiSharp",
+	  "Sharpness", asahi_range },
 	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "AsahiUnknown",
 	  "Asahi Unknown", NULL },
 };
@@ -183,20 +131,62 @@ static struct exiftag asahi_tags[] = {
 struct ifd *
 asahi_ifd(u_int32_t offset, struct tiffmeta *md)
 {
+	int num;
 	struct ifd *myifd;
+	struct tiffmeta mkrmd;
+
+	mkrmd = *md;
+	mkrmd.order = BIG;
 
 	/*
-	 * It appears that there are two different types of maker notes
-	 * for Asahi cameras: one, for older cameras, uses a standard IFD
-	 * format; the other starts at offset + 6 ("AOC\0\0\0").
+	 * It appears that there are a couple of maker note schemes for
+	 * for Asahi cameras, most with a 6 byte offset.  ("AOC" stands
+	 * for "Asahi Optical Co.")
 	 */
 
-	if (!memcmp("AOC\0\0\0", md->btiff + offset, 6)) {
-		readifd(offset + strlen("AOC") + 3, &myifd, asahi_tags, md);
-	} else {
-		readifd(offset, &myifd, asahi_tags, md);
+	if (!memcmp("AOC\0", md->btiff + offset, 4)) {
+
+		/*
+		 * If the prefix includes two spaces, fix at big-endian.
+		 * E.g., Optio 230, 330GS, 33L.
+		 */
+
+		if (!memcmp("  ", md->btiff + offset + 4, 2))
+			return (readifds(offset + 6, asahi_tags, &mkrmd));
+
+		/*
+		 * With two zero bytes, try file byte order (?).
+		 * E.g., Optio 330RS, 33WR, 430RS, 450, 550, 555, S, S4.
+		 */
+
+		if (!memcmp("\0\0", md->btiff + offset + 4, 2))
+			return (readifds(offset + 6, asahi_tags, md));
+
+		/*
+		 * Two M's seems to be a different tag set we don't grok.
+		 * E.g., *ist D.
+		 */
+
+		if (!memcmp("MM", md->btiff + offset + 4, 2)) {
+			exifwarn("Asahi maker note version not supported");
+			return (NULL);
+		}
+
 		exifwarn("Asahi maker note version not supported");
+		return (NULL);
 	}
 
-	return (myifd);
+	/*
+	 * The EI-200 seems to have a non-IFD note; we'll use the heuristic
+	 * of a minimum 10 tags before we look at it as an IFD.
+	 */
+
+	if (exif2byte(md->btiff + offset, md->order) < 10) {
+		exifwarn("Asahi maker note version not supported");
+		return (NULL);
+	}
+
+	/* E.g., Optio 330, 430. */
+
+	return (readifds(offset, asahi_tags, &mkrmd));
 }
