@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.26 2004/08/20 22:20:25 ejohnst Exp $
+ * $Id: minolta.c,v 1.27 2004/09/15 23:30:33 ejohnst Exp $
  *
  */ 
 
@@ -651,7 +651,7 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 /*
  * Make sure meaningless values are meaningless.
  */
-void
+static void
 minolta_naval(struct exifprop *props, struct exiftag *tags, int16_t tag)
 {
 	struct exifprop *prop;
