@@ -1,0 +1,96 @@
+.\"
+.\" Copyright (c) 2002, Eric M. Johnston <emj@postal.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" $Id: exiftags.1,v 1.1 2002/02/17 02:42:59 ejohnst Exp $
+.\"
+.TH EXIFDUMP 1
+.SH NAME
+exifdump \- output the properties contained in a JPEG Exif section
+.SH SYNOPSIS
+.B exifdump
+[
+.B \-acdiquv
+] [
+.I file ...
+]
+.SH DESCRIPTION
+The
+.B exifdump
+utility parses
+.I file
+or, by default, its standard input, looking for a JPEG APP1 section
+containing Exif (Exchangeable Image File) data.  The properties contained in
+these data are then printed to the standard output.
+
+Digitial cameras typically add Exif data to the image files they produce,
+containing information about the camera and digitized image.  The options
+described below may be used to control output verbosity and section
+formatting.
+
+Some camera manufacturers include a "maker note" section with additional
+information about the camera or image not part of the Exif standard.  At
+present, 
+.B exifdump
+only supports Canon maker notes.  If you wish support for additional
+manufacturers or cameras, please send any information you have
+about the data format or, better yet, patches, and a sample image file
+to the author.  (Though he makes no promises.)
+.SH OPTIONS
+.IP -a
+Output camera-specific, image-specific, and verbose properties contained in
+the file.
+.IP -c
+Output camera-specific properties contained in the file.
+.IP -d
+Output Exif parse debug information.
+.IP -i
+Output image-specific properties contained in the file.
+.IP -q
+Suppress output of a property section header.
+.IP -u
+Output unknown or unsupported properties contained in the file.
+.IP -v
+Output verbose properties contained in the file.
+.SH DIAGNOSTICS
+The
+.B exifdump
+utility exit 0 on success, and >0 if an error occurs.
+.SH STANDARDS
+The
+.B exifdump
+utility was developed using the June 1998 Exif standard, version 2.1
+(http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF) and the June 1992
+TIFF specification, revision 6.0
+(http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf).
+.SH BUGS
+Not all Exif 2.1 properties are supported, due either to the author's laziness
+or incomplete information.
+.SH AUTHOR
+The
+.B exifdump
+utility and this man page were written by Eric M. Johnston <emj@postal.net>.
+Portions of the utility were developed while referencing the public domain
+Jhead utility, version 1.2, by Matthias Wandel <mwandel@rim.net>.  Canon
+maker note support was added using information developed by David Burren
+<db061@burren.cx> (http://www.burren.cx/david/canon.html).
