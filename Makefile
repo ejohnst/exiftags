@@ -1,9 +1,14 @@
-# $Id: Makefile,v 1.11 2002/11/02 22:18:57 ejohnst Exp $
+# $Id: Makefile,v 1.12 2002/11/04 00:16:55 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
 #
-MKRS=canon.o olympus.o fuji.o nikon.o casio.o
+MKRS=makers.o canon.o olympus.o fuji.o nikon.o casio.o
+
+#
+# Or, if you don't want maker note modules...
+#
+NOMKRS=makers_stub.o
 
 #
 # A few parameters...
@@ -27,11 +32,11 @@ all: exiftags exifcom
 exiftags: exiftags.o $(OBJS) $(MKRS) $(HDRS)
 	$(CC) $(CFLAGS) -o $@ exiftags.o $(OBJS) $(MKRS) -lm
 
-exifcom: exifcom.o $(OBJS) $(MKRS) $(HDRS)
-	$(CC) $(CFLAGS) -o $@ exifcom.o $(OBJS) $(MKRS) -lm
+exifcom: exifcom.o $(OBJS) $(NOMKRS) $(HDRS)
+	$(CC) $(CFLAGS) -o $@ exifcom.o $(OBJS) $(NOMKRS) -lm
 
 clean:
-	@rm -f $(OBJS) $(MKRS) exiftags.o exifcom.o exiftags exifcom
+	@rm -f $(OBJS) $(MKRS) $(NOMKRS) exiftags.o exifcom.o exiftags exifcom
 
 install: all
 	cp exiftags exifcom $(PREFIX)/bin

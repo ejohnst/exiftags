@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.18 2002/11/03 06:46:25 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.19 2002/11/04 00:16:55 ejohnst Exp $
  */
 
 /*
@@ -45,7 +45,6 @@
 
 #include "exif.h"
 #include "exifint.h"
-#include "makers.h"
 
 
 /* TIFF 6.0 field types. */
@@ -64,21 +63,6 @@ struct fieldtype ftypes[] = {
 	{ TIFF_FLOAT,	"float",	4 },	/* not in Exif 2.2 */
 	{ TIFF_DBL,	"double",	8 },	/* not in Exif 2.2 */
 	{ TIFF_UNKN,	"unknown",	0 },
-};
-
-
-/*
- * Maker note lookup table.
- */
-
-struct makerfun makers[] = {
-	{ 0, "unknown", NULL, NULL },		/* default value */
-	{ EXIF_MKR_CANON, "canon", canon_prop, readifds },
-	{ EXIF_MKR_OLYMPUS, "olympus", olympus_prop, olympus_ifd },
-	{ EXIF_MKR_FUJI, "fujifilm", fuji_prop, fuji_ifd },
-	{ EXIF_MKR_NIKON, "nikon", nikon_prop, nikon_ifd },
-	{ EXIF_MKR_CASIO, "casio", casio_prop, casio_ifd },
-	{ EXIF_MKR_UNKNOWN, "unknown", NULL, NULL },
 };
 
 
