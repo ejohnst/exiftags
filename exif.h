@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.24 2003/01/25 08:01:07 ejohnst Exp $
+ * $Id: exif.h,v 1.25 2003/01/25 09:28:17 ejohnst Exp $
  */
 
 /*
@@ -60,6 +60,7 @@ typedef unsigned int u_int32_t;
 #ifdef WIN32
 typedef unsigned __int16 u_int16_t;
 typedef unsigned __int32 u_int32_t;
+typedef __int16 int16_t;
 typedef __int32 int32_t;
 #define snprintf _snprintf
 #define isnan _isnan
@@ -169,7 +170,7 @@ struct exifprop {
 	int ifdseq;		/* Sequence number of parent IFD. */
 	u_int16_t ifdtag;	/* Parent IFD tag association. */
 	u_int16_t override;	/* Override display of another tag. */
-	int16_t subtag;		/* Index of a tag's sub-value (def: -1). */
+	int16_t subtag;		/* Index of a tag's sub-value (def: -2). */
 	struct exifprop *next;
 };
 
