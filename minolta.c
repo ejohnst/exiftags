@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.25 2003/08/08 22:31:32 ejohnst Exp $
+ * $Id: minolta.c,v 1.26 2004/08/20 22:20:25 ejohnst Exp $
  *
  */ 
 
@@ -165,8 +165,8 @@ static struct descrip minolta_whitebal[] = {
 	{ 2,	"Cloudy" },
 	{ 3,	"Tungsten" },
 	{ 5,	"Custom" },
-	{ 7,	"Flourescent" },
-	{ 8,	"Flourescent 2" },
+	{ 7,	"Fluorescent" },
+	{ 8,	"Fluorescent 2" },
 	{ 11,	"Custom 2" },
 	{ 12,	"Custom 3" },
 	{ -1,	"Unknown" },
