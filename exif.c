@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.68 2004/12/23 20:38:52 ejohnst Exp $
+ * $Id: exif.c,v 1.69 2004/12/27 22:27:17 ejohnst Exp $
  */
 
 /*
@@ -191,6 +191,7 @@ readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
 	int i;
 
 	if (debug) {
+		/* XXX Byte order info can be off for maker notes. */
 		if (dir->par && dir->par->tag != EXIF_T_UNKNOWN) {
 			printf("Processing %s directory, %d entries, "
 			    "%s-endian\n",
@@ -742,7 +743,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
-	    prop->count > 1 && (prop->value + prop->count * 2 <=
+	    prop->count > 2 && (prop->value + prop->count * 2 <=
 	    (u_int32_t)(dir->md.etiff - btiff))) {
 
 		if (prop->count > 8)
