@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.3 2002/07/01 08:36:06 ejohnst Exp $
+ * $Id: olympus.c,v 1.4 2002/07/11 02:06:41 ejohnst Exp $
  */
 
 /*
@@ -52,21 +52,21 @@
 /* Maker note IFD tags. */
 
 static struct exiftag olympus_tags[] = {
-	{ 0x0200, TIFF_LONG, 3,  ED_UNK, "OlympusShootMode",
+	{ 0x0200, TIFF_LONG, 3, ED_UNK, "OlympusShootMode",
 	  "Shooting Mode" },
-	{ 0x0201, TIFF_SHORT, 1,  ED_IMG, "OlympusQuality",
+	{ 0x0201, TIFF_SHORT, 1, ED_IMG, "OlympusQuality",
 	  "Compression Setting" },
 	{ 0x0202, TIFF_SHORT, 1, ED_IMG, "OlympusMacroMode",
 	  "Macro Mode" },
 	{ 0x0204, TIFF_RTNL, 1, ED_UNK, "OlympusDigiZoom",
 	  "Digital Zoom" },
-	{ 0x0207, TIFF_ASCII, 5,  ED_UNK, "FirmwareVer",
+	{ 0x0207, TIFF_ASCII, 5, ED_UNK, "FirmwareVer",
 	  "Firmware Version" },
 	{ 0x0208, TIFF_ASCII, 52, ED_UNK, "OlympusPicInfo",
 	  "Picture Info" },
-	{ 0x0209, TIFF_UNKN,  32, ED_UNK, "OlympusCameraID",
+	{ 0x0209, TIFF_UNKN, 32, ED_UNK, "OlympusCameraID",
 	  "Camera ID" },
-	{ 0xffff, TIFF_UNKN,  0,  ED_UNK, "Unknown",
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
 	  "Olympus Unknown" },
 };
 
@@ -96,6 +96,7 @@ void
 olympus_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
+	u_int32_t a, b;
 	char *offset;
 	struct exifprop *aprop;
 
@@ -175,6 +176,18 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 
 	case 0x0202:
 		prop->str = finddescr(olympus_macro, prop->value);
+		break;
+
+	/* Digital zoom. */
+
+	case 0x0204:
+		a = exif4byte(t->btiff + prop->value, t->tifforder);
+		b = exif4byte(t->btiff + prop->value + 4, t->tifforder);
+
+		if (a == b)
+			snprintf(prop->str, 31, "None");
+		else
+			snprintf(prop->str, 31, "x%.1f", (float)a / (float)b);
 		break;
 
 	/* Image number. */
