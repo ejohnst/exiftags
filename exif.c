@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.19 2002/10/05 01:03:33 ejohnst Exp $
+ * $Id: exif.c,v 1.20 2002/10/05 18:05:01 ejohnst Exp $
  */
 
 /*
@@ -279,7 +279,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	/*
 	 * Shutter speed doesn't seem all that useful.  It's usually the
 	 * same as exposure time and when it's not, it's wrong.  In the
-	 * absence of an exposure time we'll make it ED_IMG.
+	 * presence of an exposure time we'll make it ED_VRB.
 	 */
 
 	case EXIF_T_SHUTTER:
@@ -291,8 +291,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		    (int)floor(pow(2, (double)fval) + 0.5));
 		prop->str[31] = '\0';
 
-		if (!findprop(h, EXIF_T_EXPOSURE))
-			prop->lvl = ED_IMG;
+		if (findprop(h, EXIF_T_EXPOSURE))
+			prop->lvl = ED_VRB;
 		/* FALLTHROUGH */
 
 	case EXIF_T_EXPOSURE:
