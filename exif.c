@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.37 2003/01/20 21:42:04 ejohnst Exp $
+ * $Id: exif.c,v 1.38 2003/01/24 00:55:42 ejohnst Exp $
  */
 
 /*
@@ -401,7 +401,7 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 
 	if (prop->override && (tmpprop = findprop(t->props, prop->override)))
 		if (tmpprop->lvl & (ED_CAM | ED_IMG | ED_PAS))
-			tmpprop->lvl = ED_VRB;
+			tmpprop->lvl = ED_OVR;
 }
 
 

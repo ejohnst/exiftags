@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.17 2003/01/20 22:49:14 ejohnst Exp $
+ * $Id: exiftags.c,v 1.18 2003/01/24 00:55:42 ejohnst Exp $
  */
 
 /*
@@ -96,6 +96,11 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 
 		if (list->lvl == ED_PAS)
 			list->lvl = pas ? ED_CAM : ED_IMG;
+
+		/* For now, just treat overridden values as verbose. */
+
+		if (list->lvl == ED_OVR)
+			list->lvl = ED_VRB;
 
 		if (list->lvl == lvl) {
 			n = list->descr ? list->descr : list->name;
