@@ -29,14 +29,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.h,v 1.2 2002/06/30 08:59:44 ejohnst Exp $
+ * $Id: exiftags.h,v 1.3 2002/07/01 08:31:18 ejohnst Exp $
  */
 
 
-#ifndef _EXIFDUMP_H
-#define _EXIFDUMP_H
-
-#include <stdio.h>
+#ifndef _EXIFTAGS_H
+#define _EXIFTAGS_H
 
 
 #ifndef TRUE
@@ -45,14 +43,6 @@
 #ifndef FALSE
 #define FALSE 0
 #endif
-
-
-/* Dump level. */
-
-#define ED_UNK	0x01	/* Unknown or unimplemented info. */
-#define ED_CAM	0x02	/* Camera-specific info. */
-#define ED_IMG	0x04	/* Image-specific info. */
-#define ED_VRB	0x08	/* Verbose info. */
 
 
 extern int debug;

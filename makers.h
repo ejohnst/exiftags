@@ -29,87 +29,48 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.5 2002/07/01 08:31:18 ejohnst Exp $
+ * $Id: makers.h,v 1.1 2002/07/01 08:31:18 ejohnst Exp $
  */
 
 /*
- * Exchangeable image file format (Exif) parser.
+ * Maker note module definitions.
  *
- * Developed using the TIFF 6.0 specification
- * (http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf)
- * and the EXIF 2.1 standard
- * (http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF)
+ * When adding a new module, include a #define, a property function,
+ * and, if applicable, an IFD reading function.  These need to be included
+ * in the makers table found in tagdefs.c.
  */
 
 
-#ifndef _EXIF_H
-#define _EXIF_H
+#ifndef _MAKERS_H
+#define _MAKERS_H
 
-#include <sys/types.h>
-
-
-/* TIFF types. */
-
-#define TIFF_UNKN	0
-#define TIFF_BYTE	1
-#define TIFF_ASCII	2
-#define TIFF_SHORT	3
-#define TIFF_LONG	4
-#define TIFF_RTNL	5
-#define TIFF_SBYTE	6
-#define TIFF_UNDEF	7
-#define TIFF_SSHORT	8
-#define TIFF_SLONG	9
-#define TIFF_SRTNL	10
-#define TIFF_FLOAT	11
-#define TIFF_DBL	12
+#include "exifint.h"
 
 
-/* Dump level. */
+/* Maker note function table. */
 
-#define ED_UNK	0x01	/* Unknown or unimplemented info. */
-#define ED_CAM	0x02	/* Camera-specific info. */
-#define ED_IMG	0x04	/* Image-specific info. */
-#define ED_VRB	0x08	/* Verbose info. */
-
-
-/* Byte order. */
-
-enum order { LITTLE, BIG };
-
-
-/* Final Exif property info.  (Note: descr can be NULL.) */
-
-struct exifprop {
-	u_int16_t tag;		/* The Exif tag. */
-	u_int16_t type;
-	u_int32_t count;
-	u_int32_t value;
+struct makerfun {
+	int val;
 	const char *name;
-	const char *descr;
-	char *str;		/* String representation of value (dynamic). */
-	unsigned short lvl;	/* Verbosity level. */
-	int ifdseq;		/* Sequence number of parent IFD. */
-	u_int16_t ifdtag;	/* Parent IFD tag association. */
-	struct exifprop *next;
+	void (*propfun)();		/* Function to parse properties. */
+	struct ifd *(*ifdfun)();	/* Function to read IFD. */
 };
+extern struct makerfun makers[];
 
 
-/* Image info and exifprop pointer returned by exifscan(). */
+/* Maker note defines. */
 
-struct exiftags {
-	struct exifprop *props;	/* The good stuff. */
-
-	enum order tifforder;	/* Endianness of TIFF. */
-	unsigned char *btiff;	/* Beginning of TIFF. */
-	unsigned char *etiff;	/* End of TIFF. */
-	int mkrval;		/* Maker index (XXX uhh, somewhat opaque). */
-};
+#define EXIF_MKR_CANON		0
+#define EXIF_MKR_OLYMPUS	1
+#define EXIF_MKR_NIKON		2
+#define EXIF_MKR_UNKNOWN	-1
 
 
-/* Eternal interfaces. */
+/* Maker note functions. */
 
-extern void exiffree(struct exiftags *t);
-extern struct exiftags *exifscan(unsigned char *buf, int len);
+extern void canon_prop(struct exifprop *prop, struct exiftags *t);
+extern void olympus_prop(struct exifprop *prop, struct exiftags *t);
+extern struct ifd *olympus_ifd(u_int32_t offset, struct exiftags *t);
+extern void nikon_prop(struct exifprop *prop, struct exiftags *t);
 
 #endif
