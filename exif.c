@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.44 2003/02/04 07:15:03 ejohnst Exp $
+ * $Id: exif.c,v 1.45 2003/02/04 19:20:28 ejohnst Exp $
  */
 
 /*
@@ -449,9 +449,19 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			exifdie((const char *)strerror(errno));
 		strncpy(buf, (const char *)(&prop->value), 4);
 		buf[4] = prop->str[7] = '\0';
-		t->exifmin = (short)atoi(buf + 2);
-		buf[2] = '\0';
-		t->exifmaj = (short)atoi(buf);
+
+		/* Our platform's byte order affects this... */
+
+		i = 1;
+		if (*(char *)&i == 1) {		/* LITTLE */
+			t->exifmin = (short)atoi(buf + 2);
+			buf[2] = '\0';
+			t->exifmaj = (short)atoi(buf);
+		} else {			/* BIG */
+			t->exifmaj = (short)atoi(buf + 2);
+			buf[2] = '\0';
+			t->exifmin = (short)atoi(buf);
+		}
 		snprintf(prop->str, 7, "%d.%d", t->exifmaj, t->exifmin);
 		break;
 
