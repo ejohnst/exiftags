@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: asahi.c,v 1.2 2004/04/04 20:59:47 ejohnst Exp $
+ * $Id: asahi.c,v 1.3 2004/04/04 21:08:41 ejohnst Exp $
  */
 
 /*
@@ -108,7 +108,7 @@ static struct descrip asahi_range[] = {
 static struct exiftag asahi_tags[] = {
 	{ 0x0008, TIFF_SHORT, 1, ED_IMG, "AsahiQuality",
 	  "Quality Level", asahi_qual },
-	{ 0x0009, TIFF_SHORT, 1, ED_IMG, "AsahiRes",
+	{ 0x0009, TIFF_SHORT, 1, ED_VRB, "AsahiRes",
 	  "Recorded Pixels", asahi_res },
 	{ 0x000d, TIFF_SHORT, 1, ED_IMG, "AsahiFocus",
 	  "Focusing Mode", asahi_focus },
@@ -123,6 +123,36 @@ static struct exiftag asahi_tags[] = {
 	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "AsahiUnknown",
 	  "Asahi Unknown", NULL },
 };
+
+
+/*
+ * Process Asahi maker note tags.
+ */
+void
+asahi_prop(struct exifprop *prop, struct exiftags *t)
+{
+
+	/* Override a couple of standard tags. */
+
+	switch (prop->tag) {
+
+	case 0x0019:
+		prop->override = EXIF_T_WHITEBAL;
+		break;
+
+	case 0x001f:
+		prop->override = EXIF_T_SATURATION;
+		break;
+
+	case 0x0020:
+		prop->override = EXIF_T_CONTRAST;
+		break;
+
+	case 0x0021:
+		prop->override = EXIF_T_SHARPNESS;
+		break;
+	}
+}
 
 
 /*
