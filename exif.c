@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.23 2002/10/07 00:53:06 ejohnst Exp $
+ * $Id: exif.c,v 1.24 2002/10/07 02:28:52 ejohnst Exp $
  */
 
 /*
@@ -506,9 +506,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 		    (prop->value + prop->count <
 		    (u_int32_t)(t->etiff - t->btiff))) {
 			c = t->btiff + prop->value + 8;
-			d = c + strlen(c);
+			d = strlen(c) < prop->count - 8 ? c + strlen(c) :
+			    c + prop->count - 8;
 
-			/* XXX Extra byte when no whitespace. */
 			while (d > c && isspace((int)*(d - 1))) --d;
 
 			if (!(prop->str = (char *)malloc(d - c + 1)))
