@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.21 2004/12/27 23:55:01 ejohnst Exp $
+ * $Id: nikon.c,v 1.22 2004/12/28 06:38:53 ejohnst Exp $
  */
 
 /*
@@ -326,10 +326,10 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		/* Platform byte order affects this... */
 
 		i = 1;
-		if (*(char *)&i == 1)
+		if (*(char *)&i == 1 && t->mkrmd.order == BIG) {
 			for (i = 0; i < 4; i++)
 				buf[i] = ((const char *)&prop->value)[3 - i];
-		else
+		} else
 			strncpy(buf, (const char *)&prop->value, 4);
 		buf[4] = '\0';
 		v[1] = atoi(buf + 2);
@@ -587,12 +587,18 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		prop->override = EXIF_T_SATURATION;
 		break;
 
-	/* Serial number (remove prefix). */
+	/* Serial number. */
 
 	case 0x00a0:
+		/* Remove prefix. */
 		if (!strncmp(prop->str, "NO= ", 4))
 			memmove(prop->str, prop->str + 4,
 			    strlen(prop->str + 4) + 1);
+
+		/* Remove leading whitespace. */
+		for (c1 = prop->str; *c1 && *c1 == ' '; c1++);
+		if (*c1 && c1 > prop->str)
+			memmove(prop->str, c1, strlen(c1) + 1);
 		break;
 	}
 }
