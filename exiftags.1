@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2002, Eric M. Johnston <emj@postal.net>
+.\" Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -10,6 +10,12 @@
 .\" 2. Redistributions in binary form must reproduce the above copyright
 .\"    notice, this list of conditions and the following disclaimer in the
 .\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"      This product includes software developed by Eric M. Johnston.
+.\" 4. Neither the name of the author nor the names of any co-contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
 .\"
 .\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 .\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -22,13 +28,13 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $Id: exiftags.1,v 1.1 2002/02/17 02:42:59 ejohnst Exp $
+.\" $Id: exiftags.1,v 1.2 2002/06/30 08:53:12 ejohnst Exp $
 .\"
 .TH EXIFDUMP 1
 .SH NAME
-exifdump \- output the properties contained in a JPEG Exif section
+exiftags \- output the properties contained in a JPEG Exif section
 .SH SYNOPSIS
-.B exifdump
+.B exiftags
 [
 .B \-acdiquv
 ] [
@@ -36,7 +42,7 @@ exifdump \- output the properties contained in a JPEG Exif section
 ]
 .SH DESCRIPTION
 The
-.B exifdump
+.B exiftags
 utility parses
 .I file
 or, by default, its standard input, looking for a JPEG APP1 section
@@ -51,7 +57,7 @@ formatting.
 Some camera manufacturers include a "maker note" section with additional
 information about the camera or image not part of the Exif standard.  At
 present, 
-.B exifdump
+.B exiftags
 only supports Canon maker notes.  If you wish support for additional
 manufacturers or cameras, please send any information you have
 about the data format or, better yet, patches, and a sample image file
@@ -74,11 +80,11 @@ Output unknown or unsupported properties contained in the file.
 Output verbose properties contained in the file.
 .SH DIAGNOSTICS
 The
-.B exifdump
+.B exiftags
 utility exit 0 on success, and >0 if an error occurs.
 .SH STANDARDS
 The
-.B exifdump
+.B exiftags
 utility was developed using the June 1998 Exif standard, version 2.1
 (http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF) and the June 1992
 TIFF specification, revision 6.0
@@ -88,7 +94,7 @@ Not all Exif 2.1 properties are supported, due either to the author's laziness
 or incomplete information.
 .SH AUTHOR
 The
-.B exifdump
+.B exiftags
 utility and this man page were written by Eric M. Johnston <emj@postal.net>.
 Portions of the utility were developed while referencing the public domain
 Jhead utility, version 1.2, by Matthias Wandel <mwandel@rim.net>.  Canon
