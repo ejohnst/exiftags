@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.7 2002/07/12 21:35:11 ejohnst Exp $
+ * $Id: exif.h,v 1.8 2002/08/01 18:18:28 ejohnst Exp $
  */
 
 /*
@@ -48,13 +48,21 @@
 #include <sys/types.h>
 
 /*
- * XXX Only checking for Solaris now.  Other platforms will probably need
- * this if they don't have u_int16_t or u_int32_t.
+ * XXX Only checking for Solaris & Windows now.  Other platforms will
+ * probably need something similar if they don't have u_int16_t or u_int32_t.
  */
 
 #if (defined(sun) && (defined(__svr4__) || defined(__SVR4)))
 typedef unsigned short u_int16_t;
 typedef unsigned int u_int32_t;
+#endif
+
+#ifdef WIN32
+typedef unsigned __int16 u_int16_t;
+typedef unsigned __int32 u_int32_t;
+typedef __int32 int32_t;
+#define snprintf _snprintf
+#define isnan _isnan
 #endif
 
 
