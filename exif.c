@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.46 2003/02/04 21:33:28 ejohnst Exp $
+ * $Id: exif.c,v 1.47 2003/02/04 21:51:23 ejohnst Exp $
  */
 
 /*
@@ -448,19 +448,15 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		if (!(prop->str = (char *)malloc(8)))
 			exifdie((const char *)strerror(errno));
 
-		/* Our platform's byte order affects this...  Brute force. */
+		/* Platform byte order affects this... */
 
 		i = 1;
-		if (*(char *)&i == 1)		/* LITTLE */
+		if (*(char *)&i == 1)
 			strncpy(buf, (const char *)&prop->value, 4);
-		else {				/* BIG */
-			buf[0] = ((const char *)&prop->value)[1];
-			buf[1] = ((const char *)&prop->value)[0];
-			buf[2] = ((const char *)&prop->value)[3];
-			buf[3] = ((const char *)&prop->value)[2];
-		}
+		else
+			for (i = 0; i < 4; i++)
+				buf[i] = ((const char *)&prop->value)[3 - i];
 		buf[4] = prop->str[7] = '\0';
-
 		t->exifmin = (short)atoi(buf + 2);
 		buf[2] = '\0';
 		t->exifmaj = (short)atoi(buf);
