@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2002, 2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.4 2002/11/04 07:23:50 ejohnst Exp $
+ * $Id: exifcom.c,v 1.5 2003/01/20 22:31:13 ejohnst Exp $
  */
 
 /*
@@ -56,9 +56,10 @@ int getopt(int, char * const [], const char *);
 #include "exif.h"
 
 
-static char *version = "0.96";
+static const char *version = "0.97";
 static int fnum, bflag, iflag, nflag, vflag; 
-const char *com;
+static const char *com;
+static const char *delim = ": ";
 
 #define ASCCOM		"ASCII\0\0\0"
 
@@ -80,7 +81,7 @@ printcom(struct exifprop *p, const unsigned char *btiff)
 	}
 
 	if (vflag)
-		printf("Supported Length: %d\n", p->count - 8);
+		printf("Supported Length%s%d\n", delim, p->count - 8);
 
 	/* Comment tag unset. */
 
@@ -98,7 +99,7 @@ printcom(struct exifprop *p, const unsigned char *btiff)
 		}
 
 		if (vflag)
-			printf("Type: %s\n", btiff + p->value);
+			printf("Type%s%s\n", delim, btiff + p->value);
 	}
 
 	/* Comment tag OK, but blank. */
@@ -116,8 +117,8 @@ printcom(struct exifprop *p, const unsigned char *btiff)
 	/* Print length and comment if it's supported. */
 
 	if (rc != 1 && rc != 3) {
-		printf("Length: %d\n", rc ? 0 : strlen(p->str));
-		printf("Comment: %s\n", rc ? "" : p->str);
+		printf("Length%s%d\n", delim, rc ? 0 : strlen(p->str));
+		printf("Comment%s%s\n", delim, rc ? "" : p->str);
 	}
 
 	return (rc);
@@ -322,6 +323,8 @@ void usage()
 	fprintf(stderr, "  -n\tAnswer 'no' to any confirmation prompts.\n");
 	fprintf(stderr, "  -v\tBe verbose about comment information.\n");
 	fprintf(stderr, "  -w\tSet comment to provided string.\n");
+	fprintf(stderr, "  -s\tSet delimiter to provided string "
+	    "(default: \": \").\n");
 
 	exit(1);
 }
@@ -349,7 +352,7 @@ main(int argc, char **argv)
 	wmode = "r+";
 #endif
 
-	while ((ch = getopt(argc, argv, "bfinvw:")) != -1)
+	while ((ch = getopt(argc, argv, "bfinvw:s:")) != -1)
 		switch (ch) {
 		case 'b':
 			bflag = TRUE;
@@ -368,6 +371,9 @@ main(int argc, char **argv)
 			break;
 		case 'w':
 			com = optarg;
+			break;
+		case 's':
+			delim = optarg;
 			break;
 		case '?':
 		default:
@@ -400,7 +406,7 @@ main(int argc, char **argv)
 				printf("%s%s:\n",
 				    fnum == 1 ? "" : "\n", *argv);
 			else if (!(bflag || com))
-				printf("%s: ", *argv);
+				printf("%s%s", *argv, delim);
 
 			/* Don't error >1 with multiple files. */
 
