@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.15 2002/11/02 22:18:02 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.16 2002/11/03 01:58:04 ejohnst Exp $
  */
 
 /*
@@ -37,8 +37,7 @@
  *
  * Developed using the TIFF 6.0 specification:
  * (http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf)
- * and the EXIF 2.1 standard:
- * (http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF)
+ * and the EXIF 2.2 standard: (http://tsc.jeita.or.jp/avs/data/cp3451.pdf)
  *
  */
 
@@ -57,13 +56,13 @@ struct fieldtype ftypes[] = {
 	{ TIFF_SHORT,	"short",	2 },
 	{ TIFF_LONG,	"long",		4 },
 	{ TIFF_RTNL,	"rational",	8 },
-	{ TIFF_SBYTE,	"sbyte",	1 },	/* not in Exif 2.1 */
+	{ TIFF_SBYTE,	"sbyte",	1 },	/* not in Exif 2.2 */
 	{ TIFF_UNDEF,	"undefined",	1 },
-	{ TIFF_SSHORT,	"sshort",	2 },	/* not in Exif 2.1 */
+	{ TIFF_SSHORT,	"sshort",	2 },	/* not in Exif 2.2 */
 	{ TIFF_SLONG,	"slong",	4 },
 	{ TIFF_SRTNL,	"srational",	8 },
-	{ TIFF_FLOAT,	"float",	4 },	/* not in Exif 2.1 */
-	{ TIFF_DBL,	"double",	8 },	/* not in Exif 2.1 */
+	{ TIFF_FLOAT,	"float",	4 },	/* not in Exif 2.2 */
+	{ TIFF_DBL,	"double",	8 },	/* not in Exif 2.2 */
 	{ TIFF_UNKN,	"unknown",	0 },
 };
 
@@ -238,15 +237,29 @@ struct descrip lightsrcs[] = {
 /* Flash modes. */
 
 struct descrip flashes[] = {
-	{ 0,	"No Flash" },
-	{ 1,	"Flash" },
-	{ 2,	"No Flash" },
-	{ 3,	"Flash" },
-	{ 4,	"No Flash" },
-	{ 5,	"Flash, Strobe Not Detected" },
-	{ 6,	"No Flash" },
-	{ 7,	"Flash, Strobe Detected" },
-	{ -1,	"No Flash" },
+	{ 0x00,	"No Flash" },
+	{ 0x01,	"Flash" },
+	{ 0x05,	"Flash, Return Not Detected" },
+	{ 0x07,	"Flash, Return Detected" },
+	{ 0x09,	"Flash, Compulsory" },
+	{ 0x0d,	"Flash, Compulsory, Return Not Detected" },
+	{ 0x0f,	"Flash, Compulsory, Return Detected" },
+	{ 0x10,	"No Flash, Compulsory" },
+	{ 0x18,	"No Flash, Auto" },
+	{ 0x19,	"Flash, Auto" },
+	{ 0x1d,	"Flash, Auto, Return Not Detected" },
+	{ 0x1f,	"Flash, Auto, Return Detected" },
+	{ 0x20,	"No Flash Function" },
+	{ 0x41,	"Flash, Red-Eye Reduce" },
+	{ 0x45,	"Flash, Red-Eye Reduce, Return Not Detected" },
+	{ 0x47,	"Flash, Red-Eye Reduce, Return Detected" },
+	{ 0x49,	"Flash, Compulsory, Red-Eye Reduce" },
+	{ 0x4d,	"Flash, Compulsory, Red-Eye Reduce, Return Not Detected" },
+	{ 0x4f,	"Flash, Compulsory, Red-Eye Reduce, Return Detected" },
+	{ 0x59,	"Flash, Auto, Red-Eye Reduce" },
+	{ 0x5d,	"Flash, Auto, Red-Eye Reduce, Return Not Detected" },
+	{ 0x5f,	"Flash, Auto, Red-Eye Reduce, Return Detected" },
+	{ -1,	"Unknown" },
 };
 
 
@@ -289,7 +302,7 @@ struct descrip scenetypes[] = {
 };
 
 
-/* Exif 2.1 tags. */
+/* Exif 2.2 tags. */
 
 struct exiftag tags[] = {
 	{ 0x0100, TIFF_UNKN,  1,  ED_IMG, 		/* columns */
@@ -413,7 +426,7 @@ struct exiftag tags[] = {
 	{ 0x9208, TIFF_SHORT, 1,  ED_IMG,
 	    "LightSource", "Light Source", lightsrcs },
 	{ 0x9209, TIFF_SHORT, 1,  ED_IMG,
-	    "Flash", "Flash", flashes },
+	    "Flash", "Flash", NULL },
 	{ 0x920a, TIFF_RTNL,  1,  ED_IMG,		/* mm */
 	    "FocalLength", "Focal Length", NULL },
 	{ 0x927c, TIFF_UNDEF, 0,  ED_UNK,
