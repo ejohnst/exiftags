@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.6 2004/04/20 18:35:08 ejohnst Exp $
+ * $Id: exiftime.c,v 1.7 2004/04/20 18:42:29 ejohnst Exp $
  */
 
 /*
@@ -533,7 +533,7 @@ main(int argc, char **argv)
 	 * not inclined to include the function...
 	 */
 	if (lflag) {
-		eval = qsort(lorder, argc, sizeof(struct linfo), lcomp);
+		qsort(lorder, argc, sizeof(struct linfo), lcomp);
 		for (fnum = 0; fnum < argc; fnum++)
 			printf("%s\n", lorder[fnum].fn);
 		free(lorder);	/* XXX Over in usage()? */
