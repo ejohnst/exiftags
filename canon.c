@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.48 2004/12/23 20:38:52 ejohnst Exp $
+ * $Id: canon.c,v 1.49 2004/12/28 07:12:48 ejohnst Exp $
  */
 
 /*
@@ -210,6 +210,8 @@ static struct descrip canon_iso[] = {
 /* Metering mode. */
 
 static struct descrip canon_meter[] = {
+	{ 0,	"Default" },
+	{ 1,	"Spot" },
 	{ 3,	"Evaluative" },
 	{ 4,	"Partial" },
 	{ 5,	"Center-Weighted" },
