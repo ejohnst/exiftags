@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.10 2002/11/03 02:00:20 ejohnst Exp $
+ * $Id: exifint.h,v 1.11 2002/11/03 10:25:24 ejohnst Exp $
  */
 
 /*
@@ -107,6 +107,19 @@ struct ifd {
 };
 
 
+/* Macro for making sense of a fraction. */
+
+#define fixfract(n, d, t)	{ \
+	if (t) { n /= t; d /= t; } \
+	if (!n) sprintf(prop->str, "0"); \
+	else if (!d) sprintf(prop->str, "Infinite"); \
+	else if (n == d) sprintf(prop->str, "1"); \
+	else if (d == 1) snprintf(prop->str, 31, "%d", n); \
+	else snprintf(prop->str, 31, "%d/%d", n, d); \
+	prop->str[31] = '\0'; \
+}
+
+
 /* The tables from tagdefs.c. */
 
 extern struct fieldtype ftypes[];
@@ -114,22 +127,8 @@ extern struct exiftag tags[];
 
 extern struct descrip ucomment[];
 
-extern struct descrip compresss[];
-extern struct descrip pixelcomps[];
-extern struct descrip orients[];
-extern struct descrip planarconfigs[];
-extern struct descrip resunits[];
-extern struct descrip chromratios[];
-extern struct descrip chrompos[];
-extern struct descrip expprogs[];
-extern struct descrip compconfig[];
-extern struct descrip metermodes[];
-extern struct descrip lightsrcs[];
 extern struct descrip flashes[];
-extern struct descrip colorspcs[];
-extern struct descrip imgsensors[];
 extern struct descrip filesrcs[];
-extern struct descrip scenetypes[];
 
 
 /* Utility functions from exifutil.c. */
@@ -141,6 +140,9 @@ extern char *finddescr(struct descrip *table, u_int16_t val);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
 extern struct ifd *readifds(u_int32_t offset, struct exiftags *t);
-extern u_int32_t readifd(unsigned char *b, struct ifd **dir, struct exiftags *t);
+extern u_int32_t readifd(unsigned char *b, struct ifd **dir,
+    struct exiftags *t);
+extern u_int32_t gcd(u_int32_t a, u_int32_t b);
+extern u_int32_t sgcd(int32_t a, int32_t b);
 
 #endif
