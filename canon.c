@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.25 2003/01/30 07:23:51 ejohnst Exp $
+ * $Id: canon.c,v 1.26 2003/02/03 18:50:19 ejohnst Exp $
  */
 
 /*
@@ -798,13 +798,19 @@ canon_custom(struct exifprop *prop, char *off, enum order o,
 	u_int16_t v;
 	struct exifprop *aprop;
 
-	/* Check size of tag (first value). */
+	/*
+	 * Check size of tag (first value).
+	 * XXX There seems to be a problem with the D60 where it reports the
+	 * wrong size, hence the 2nd clause in the if().  Could be related
+	 * to the second value being zero?
+	 */
 
-	if (exif2byte(off, o) != 2 * prop->count) {
-		exifwarn("Canon maker tag appears corrupt");
+	if (exif2byte(off, o) != 2 * prop->count &&
+	    exif2byte(off, o) != 2 * (prop->count - 1)) {
+		exifwarn("Canon custom tag appears corrupt");
 		return;
 	}
-	
+
 	for (i = 1; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2, o);
 
