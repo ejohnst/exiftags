@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.15 2002/11/03 05:36:47 ejohnst Exp $
+ * $Id: exif.h,v 1.16 2002/11/03 10:26:28 ejohnst Exp $
  */
 
 /*
@@ -121,6 +121,8 @@ typedef __int32 int32_t;
 #define EXIF_T_COMPCONFIG	0x9101
 #define EXIF_T_SHUTTER		0x9201
 #define EXIF_T_LAPERTURE	0x9202
+#define EXIF_T_BRIGHTVAL	0x9203
+#define EXIF_T_EXPBIASVAL	0x9204
 #define EXIF_T_MAXAPERTURE	0x9205
 #define EXIF_T_DISTANCE		0x9206
 #define EXIF_T_METERMODE	0x9207
