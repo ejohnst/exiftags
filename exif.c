@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.52 2003/08/03 00:50:02 ejohnst Exp $
+ * $Id: exif.c,v 1.53 2003/08/03 01:34:02 ejohnst Exp $
  */
 
 /*
@@ -257,9 +257,11 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	case EXIF_T_FPXRES:
 	case EXIF_T_FPYRES:
 		if (prop->tag == EXIF_T_XRES || prop->tag == EXIF_T_YRES) {
-			if (!(tmpprop = findprop(h, EXIF_T_RESUNITS))) break;
+			if (!(tmpprop = findprop(h, tags, EXIF_T_RESUNITS)))
+				break;
 		} else {
-			if (!(tmpprop = findprop(h, EXIF_T_FPRESUNITS))) break;
+			if (!(tmpprop = findprop(h, tags, EXIF_T_FPRESUNITS)))
+				break;
 		}
 		val = exif4byte(t->btiff + prop->value, o) /
 		    exif4byte(t->btiff + prop->value + 4, o);
@@ -410,7 +412,10 @@ tweaklvl(struct exifprop *prop, struct exiftags *t)
 	if (prop->ifdseq == 1 && prop->lvl != ED_UNK)
 		prop->lvl = ED_VRB;
 
-	if (prop->override && (tmpprop = findprop(t->props, prop->override)))
+	/* Maker tags can override normal Exif tags. */
+
+	if (prop->override && (tmpprop = findprop(t->props, tags,
+	    prop->override)))
 		if (tmpprop->lvl & (ED_CAM | ED_IMG | ED_PAS))
 			tmpprop->lvl = ED_OVR;
 }

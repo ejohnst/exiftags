@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.16 2003/08/03 00:50:03 ejohnst Exp $
+ * $Id: minolta.c,v 1.17 2003/08/03 01:34:02 ejohnst Exp $
  *
  */ 
 
@@ -772,7 +772,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 
 		/* Exposure mode (meter mode, exposure comp). */
 
-		if ((tmpprop = findprop(t->props, EXIF_T_EXPMODE)))
+		if ((tmpprop = findprop(t->props, tags, EXIF_T_EXPMODE)))
 			if (tmpprop->value == 1) {
 				minolta_naval(t->props, prop->tag, 7);
 				minolta_naval(t->props, prop->tag, 13);

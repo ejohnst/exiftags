@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.30 2003/08/03 00:50:02 ejohnst Exp $
+ * $Id: exif.h,v 1.31 2003/08/03 01:34:02 ejohnst Exp $
  */
 
 /*
@@ -201,8 +201,10 @@ struct exiftags {
 
 extern int debug;
 extern const char *progname;
+extern struct exiftag tags[];
 
-extern struct exifprop *findprop(struct exifprop *prop, u_int16_t tag);
+extern struct exifprop *findprop(struct exifprop *prop,
+    struct exiftag *tagset, u_int16_t tag);
 extern void exifdie(const char *msg);
 extern void exifwarn(const char *msg);
 extern void exifwarn2(const char *msg1, const char *msg2);

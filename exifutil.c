@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2002, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.17 2003/08/03 00:50:02 ejohnst Exp $
+ * $Id: exifutil.c,v 1.18 2003/08/03 01:34:02 ejohnst Exp $
  */
 
 /*
@@ -123,7 +123,7 @@ exif4byte(unsigned char *b, enum order o)
 
 
 /*
- * Write an unsigned 4-byte int to the buffer.
+ * Write an unsigned 4-byte int to a buffer.
  */
 void
 byte4exif(u_int32_t n, unsigned char *b, enum order o)
@@ -171,26 +171,14 @@ finddescr(struct descrip *table, u_int16_t val)
 
 
 /*
- * Lookup a property entry for a particular set of tags.
+ * Lookup a property entry belonging to a particular set of tags.
  */
 struct exifprop *
-findtprop(struct exifprop *prop, struct exiftag *tagset, u_int16_t tag)
+findprop(struct exifprop *prop, struct exiftag *tagset, u_int16_t tag)
 {
 
 	for (; prop && (prop->tagset != tagset || prop->tag != tag);
 	    prop = prop->next);
-	return (prop);
-}
-
-
-/*
- * Lookup a property entry.
- */
-struct exifprop *
-findprop(struct exifprop *prop, u_int16_t tag)
-{
-
-	for (; prop && prop->tag != tag; prop = prop->next);
 	return (prop);
 }
 

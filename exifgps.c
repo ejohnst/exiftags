@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.5 2003/08/03 00:50:02 ejohnst Exp $
+ * $Id: exifgps.c,v 1.6 2003/08/03 01:34:02 ejohnst Exp $
  */
 
 /*
@@ -257,16 +257,16 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 
 		switch (prop->tag) {
 		case 0x0002:
-			tmpprop = findtprop(t->props, gpstags, 0x0001);
+			tmpprop = findprop(t->props, gpstags, 0x0001);
 			break;
 		case 0x0004:
-			tmpprop = findtprop(t->props, gpstags, 0x0003);
+			tmpprop = findprop(t->props, gpstags, 0x0003);
 			break;
 		case 0x0014:
-			tmpprop = findtprop(t->props, gpstags, 0x0013);
+			tmpprop = findprop(t->props, gpstags, 0x0013);
 			break;
 		case 0x0016:
-			tmpprop = findtprop(t->props, gpstags, 0x0015);
+			tmpprop = findprop(t->props, gpstags, 0x0015);
 			break;
 		default:
 			tmpprop = NULL;
@@ -339,7 +339,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 
 		/* Look up reference.  Non-zero means negative altitude. */
 
-		tmpprop = findtprop(t->props, gpstags, 0x0005);
+		tmpprop = findprop(t->props, gpstags, 0x0005);
 		if (tmpprop && tmpprop->value)
 			n *= -1;
 
