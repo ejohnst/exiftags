@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.11 2002/07/11 07:15:19 ejohnst Exp $
+ * $Id: exif.c,v 1.12 2002/07/11 17:59:37 ejohnst Exp $
  */
 
 /*
@@ -84,18 +84,16 @@ hexprint(unsigned char *b, int len)
  * Lookup a property entry.
  */
 static struct exifprop *
-findprop(struct exifprop *head, u_int16_t tag)
+findprop(struct exifprop *prop, u_int16_t tag)
 {
-	struct exifprop *curprop;
 
-	for (curprop = head; curprop && curprop->tag != tag;
-	    curprop = curprop->next);
-	return (curprop);
+	for (; prop && prop->tag != tag; prop = prop->next);
+	return (prop);
 }
 
 
 /*
- * Create an Exif property.
+ * Create an Exif property from the raw IFD field data.
  */
 static void
 readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
@@ -113,7 +111,10 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
 
 	/*
 	 * Fetch the value.
-	 * WinXP doesn't seem to zero out values when mucking with the data.
+	 *
+	 * XXX WinXP doesn't seem to zero out values when mucking with
+	 * the data when it rotates an image.  This fix could get us into
+	 * trouble if count > 1.
 	 */
 
 #ifdef WINXP_BUGS
@@ -164,6 +165,8 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t)
 		if (tags[i].count && tags[i].count != prop->count)
 			exifwarn2("field count mismatch", prop->name);
 	}
+
+	/* Print some debugging info about the property. */
 
 	if (debug) {
 		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
@@ -443,15 +446,11 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 	/* Lookup functions for maker note. */
 
 	case EXIF_T_EQUIPMAKE:
-		for (i = 0; makers[i].val != -1; i++)
-			if (!strncasecmp(t->btiff + prop->value, makers[i].name,
-			    strlen(makers[i].name)))
+		for (i = 0; makers[i].val != EXIF_MKR_UNKNOWN; i++)
+			if (!strncasecmp(t->btiff + prop->value,
+			    makers[i].name, strlen(makers[i].name)))
 				break;
-
-		if (!makers[i].propfun)
-			t->mkrval = EXIF_MKR_UNKNOWN;
-		else
-			t->mkrval = i;
+		t->mkrval = i;
 
 		/* Keep processing (ASCII value). */
 		break;
@@ -587,7 +586,7 @@ exifscan(unsigned char *b, int len)
 	int seq;
 	u_int32_t ifdoff;
 	struct exiftags *t;
-	struct ifd *ifd0, *curifd, *tmpifd;
+	struct ifd *curifd, *tmpifd;
 	struct exifprop *curprop;
 
 	/* Create and initialize our file info structure. */
@@ -627,13 +626,12 @@ exifscan(unsigned char *b, int len)
 	/* Get the 0th IFD, where all of the good stuff should start. */
 
 	ifdoff = exif4byte(b, t->tifforder);
-	ifd0 = readifds(ifdoff, t);
-	if (!ifd0)
-		exifdie("invalid Exif format (IFD0 length mismatch)");
+	curifd = readifds(ifdoff, t);
+	if (!curifd)
+		exifdie("invalid Exif format (couldn't read IFD0)");
 
 	/* Now, let's parse the fields... */
 
-	curifd = ifd0;
 	while ((tmpifd = curifd)) {
 		readtags(curifd, seq++, t);
 		curifd = curifd->next;
