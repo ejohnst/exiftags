@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.17 2003/02/04 07:15:03 ejohnst Exp $
+ * $Id: exifint.h,v 1.18 2003/08/01 19:21:14 ejohnst Exp $
  */
 
 /*
@@ -153,5 +153,10 @@ extern struct ifd *readifds(u_int32_t offset, struct exiftags *t);
 extern u_int32_t readifd(unsigned char *b, struct ifd **dir,
     struct exiftags *t);
 extern u_int32_t gcd(u_int32_t a, u_int32_t b);
+
+/* Interface to exifgps.c. */
+
+extern struct exiftag gpstags[];
+extern void gpsprop(struct exifprop *prop, struct exiftags *t);
 
 #endif

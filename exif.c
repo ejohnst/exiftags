@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.49 2003/06/22 03:43:55 ejohnst Exp $
+ * $Id: exif.c,v 1.50 2003/08/01 19:21:14 ejohnst Exp $
  */
 
 /*
@@ -77,6 +77,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 {
 	int i, j;
 	struct exifprop *prop, *tmpprop;
+	struct exiftag *taglist;
 
 	prop = newprop();
 
@@ -96,13 +97,23 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	prop->ifdseq = ifdseq;
 	prop->ifdtag = dir->tag;
 
+	/* Figure out which set of tags to use. */
+
+	switch (prop->ifdtag) {
+	case EXIF_T_GPSIFD:
+		taglist = gpstags;
+		break;
+	default:
+		taglist = tags;
+	}
+
 	/* Lookup the field name. */
 
-	for (i = 0; tags[i].tag < EXIF_T_UNKNOWN &&
-	    tags[i].tag != prop->tag; i++);
-	prop->name = tags[i].name;
-	prop->descr = tags[i].descr;
-	prop->lvl = tags[i].lvl;
+	for (i = 0; taglist[i].tag < EXIF_T_UNKNOWN &&
+	    taglist[i].tag != prop->tag; i++);
+	prop->name = taglist[i].name;
+	prop->descr = taglist[i].descr;
+	prop->lvl = taglist[i].lvl;
 
 	/* Lookup and check the field type. */
 
@@ -134,7 +145,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 		 * (At least we're able to ID invalid comments...)
 		 */
 
-		if (tags[i].type && tags[i].type != prop->type
+		if (taglist[i].type && taglist[i].type != prop->type
 #ifdef WINXP_BUGS
 		    && prop->tag != EXIF_T_USERCOMMENT
 #endif
@@ -143,7 +154,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 		/* Check the field count. */
 
-		if (tags[i].count && tags[i].count != prop->count)
+		if (taglist[i].count && taglist[i].count != prop->count)
 			exifwarn2("field count mismatch", prop->name);
 	}
 
@@ -230,12 +241,23 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	enum order o = t->tifforder;
 	struct exifprop *h = t->props;
 
-	/* Process maker note tags specially... */
+	/* Process tags from special IFDs. */
 
-	if (prop->ifdtag == EXIF_T_MAKERNOTE && makers[t->mkrval].propfun) {
-		makers[t->mkrval].propfun(prop, t);
+	switch (prop->ifdtag) {
+
+	case EXIF_T_MAKERNOTE:
+		if (makers[t->mkrval].propfun) {
+			makers[t->mkrval].propfun(prop, t);
+			return;
+		}
+		break;
+
+	case EXIF_T_GPSIFD:
+		gpsprop(prop, t);
 		return;
 	}
+
+	/* Process normal tags. */
 
 	switch (prop->tag) {
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2003/01/11 08:20:29 ejohnst Exp $
+# $Id: Makefile,v 1.14 2003/08/01 19:21:14 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
@@ -18,7 +18,7 @@ DEBUG=
 CFLAGS=$(DEBUG)
 PREFIX=/usr/local
 
-OBJS=exif.o tagdefs.o exifutil.o jpeg.o
+OBJS=exif.o tagdefs.o exifutil.o exifgps.o jpeg.o
 HDRS=exif.h exifint.h jpeg.h makers.h
 
 
