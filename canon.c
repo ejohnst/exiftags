@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.16 2002/11/04 07:08:19 ejohnst Exp $
+ * $Id: canon.c,v 1.17 2002/11/04 09:15:03 ejohnst Exp $
  */
 
 /*
@@ -463,7 +463,7 @@ canon_prop1(struct exifprop *prop, char *off, struct exiftags *t)
 {
 	int i, j;
 	u_int16_t v, flmin = 0, flmax = 0, flunit = 0;
-	struct exifprop *aprop, *tmpprop;
+	struct exifprop *aprop;
 	enum order o = t->tifforder;
 
 	for (i = 0; i < (int)prop->count; i++) {
