@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.21 2003/08/05 00:40:30 ejohnst Exp $
+ * $Id: minolta.c,v 1.22 2003/08/05 22:50:24 ejohnst Exp $
  *
  */ 
 
@@ -797,11 +797,12 @@ minolta_ifd(u_int32_t offset, struct exiftags *t)
 	}
 
 	/*
-	 * Assume that if IFD num > 255, this isn't a real IFD.
-	 * Takes care of the unfortunate DiMAGE 2300.
+	 * Assume that if IFD num > 255 or < 2, this isn't a real IFD.
+	 * Takes care of the unfortunate DiMAGE 2300 & EX.
 	 */
 
-	if (exif2byte(t->btiff + offset, t->tifforder) > 0xff) {
+	if (exif2byte(t->btiff + offset, t->tifforder) > 0xff ||
+	    exif2byte(t->btiff + offset, t->tifforder) < 0x02) {
 		exifwarn("Minolta maker note version not supported");
 		return (NULL);
 	}
