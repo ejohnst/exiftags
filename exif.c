@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.30 2002/11/03 05:49:30 ejohnst Exp $
+ * $Id: exif.c,v 1.31 2002/11/03 10:27:37 ejohnst Exp $
  */
 
 /*
@@ -318,7 +318,17 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		prop->str[31] = '\0';
 		break;
 
-	/* XXX How do you calculate ExposureBiasValue? */
+	case EXIF_T_BRIGHTVAL:
+		if (exif4byte(t->btiff + prop->value, o) == 0xffffffff) {
+			strcpy(prop->str, "Unknown");
+			break;
+		}
+		/* FALLTHROUGH */
+
+	case EXIF_T_EXPBIASVAL:
+		if (strlen(prop->str) > 28) break;
+		strcat(prop->str, " EV");
+		break;
 
 	case EXIF_T_DISTANCE:
 		if (exif4byte(t->btiff + prop->value, o) == 0xffffffff) {
@@ -409,8 +419,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 {
 	int i;
 	u_int16_t v = (u_int16_t)prop->value;
-	u_int32_t un, ud;
-	int32_t sn, sd;
+	u_int32_t un, ud, ut;
+	int32_t sn, sd, st;
 	char buf[32], *c, *d;
 
 	/* Set description if we have a lookup table. */
@@ -592,8 +602,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	/*
 	 * Rational types.  (Note that we'll redo some in our later pass.)
-	 * We'll try to be semi-smart about the fraction, but make no attempt
-	 * to reduce it.
+	 * We'll reduce and simplify the fraction.
 	 */
 
 	if ((prop->type == TIFF_RTNL || prop->type == TIFF_SRTNL) &&
@@ -607,27 +616,17 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			un = exif4byte(t->btiff + prop->value, t->tifforder);
 			ud = exif4byte(t->btiff + prop->value + 4,
 			    t->tifforder);
-
-			if (!un) sprintf(prop->str, "0");
-			else if (!ud) sprintf(prop->str, "Infinite");
-			else if (un == ud) sprintf(prop->str, "1");
-			else if (ud == 1) snprintf(prop->str, 31, "%d", un);
-			else snprintf(prop->str, 31, "%d/%d", un, ud);
+			ut = gcd(un, ud);
+			fixfract(un, ud, ut);
 		} else {
 			sn = exif4sbyte(t->btiff + prop->value, t->tifforder);
 			sd = exif4sbyte(t->btiff + prop->value + 4,
 			    t->tifforder);
-
-			if (!sn) sprintf(prop->str, "0");
-			else if (!sd) sprintf(prop->str, "Infinite");
-			else if (sn == sd) sprintf(prop->str, "1");
-			else if (sd == 1) snprintf(prop->str, 31, "%d", sn);
-			else snprintf(prop->str, 31, "%d/%d", sn, sd);
+			st = sgcd(sn, sd);
+			fixfract(sn, sd, st);
 		}
-		prop->str[31] = '\0';
 		return (TRUE);
 	}
-
 	return (TRUE);
 }
 
