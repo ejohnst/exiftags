@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.37 2003/08/08 20:19:37 ejohnst Exp $
+ * $Id: canon.c,v 1.38 2003/08/08 20:40:55 ejohnst Exp $
  */
 
 /*
@@ -1102,11 +1102,10 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			break;
 		}
 
-		if (!strcasecmp(t->model, "canon eos 10d"))
+		if (strstr(t->model, "10D"))
 			canon_custom(prop, t->md.btiff + prop->value,
 			    t->md.order, canon_10dcustom);
-		else if (!strcasecmp(t->model, "canon eos d30") ||
-		    !strcasecmp(t->model, "canon eos d60"))
+		else if (strstr(t->model, "D30") || strstr(t->model, "D60"))
 			canon_custom(prop, t->md.btiff + prop->value,
 			    t->md.order, canon_d30custom);
 		else
