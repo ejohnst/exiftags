@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.45 2004/10/09 01:15:36 ejohnst Exp $
+ * $Id: canon.c,v 1.46 2004/11/06 18:36:46 ejohnst Exp $
  */
 
 /*
@@ -1352,6 +1352,8 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 struct ifd *
 canon_ifd(u_int32_t offset, struct tiffmeta *md)
 {
+	struct ifd *myifd;
 
-	return(readifds(offset, canon_tags, md));
+	readifd(offset, &myifd, canon_tags, md);
+	return(myifd);
 }

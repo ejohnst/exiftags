@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.25 2004/08/20 22:31:45 ejohnst Exp $
+ * $Id: exifutil.c,v 1.26 2004/11/06 18:36:46 ejohnst Exp $
  */
 
 /*
@@ -393,6 +393,11 @@ readifds(u_int32_t offset, struct exiftag *tagset, struct tiffmeta *md)
 {
 	struct ifd *firstifd, *curifd;
 
+	/*
+	 * XXX Note: we really should be checking to see if this IFD
+	 * has already been visited...
+	 */
+	
 	/* Fetch our first one. */
 
 	offset = readifd(offset, &firstifd, tagset, md);
