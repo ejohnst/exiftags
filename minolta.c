@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.10 2003/01/25 01:17:12 ejohnst Exp $
+ * $Id: minolta.c,v 1.11 2003/01/25 08:00:29 ejohnst Exp $
  *
  */ 
 
@@ -411,8 +411,9 @@ void
 minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
     struct exiftag *thetags)
 {
-	int i, j;
+	int i, j, k;
 	u_int32_t v;
+	int32_t model;
 	double d;
 	unsigned char *cp, *valbuf;
 	struct exifprop *aprop;
@@ -420,6 +421,19 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 	valbuf = NULL;
 
 	for (i = 0; i * 4 < prop->count; i++) {
+
+		/*
+		 * XXX It appears that the 7Hi oddly inserts a value at
+		 * position 51, pushing everything down one.  We'll just
+		 * skip #51.
+		 */
+
+		if (thetags == minolta_0TLM && i >= 51 && model == 5) {
+			if (i == 51) continue;
+			k = i - 1;
+		} else
+			k = i;
+
 		aprop = childprop(prop);
 		aprop->subtag = i;
 
@@ -429,7 +443,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 		/* Lookup property name and description. */
 
 		for (j = 0; thetags[j].tag < EXIF_T_UNKNOWN &&
-			thetags[j].tag != i; j++);
+			thetags[j].tag != k; j++);
 		aprop->name = thetags[j].name;
 		aprop->descr = thetags[j].descr;
 		aprop->lvl = thetags[j].lvl;
@@ -445,6 +459,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 		 * this section will have to be specific to the set of
 		 * tags passed in.
 		 */
+
 		if (thetags != minolta_0TLM)
 			continue;
 
@@ -454,7 +469,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 			valbuf[15] = '\0';
 		}
 
-		switch (i) {
+		switch (k) {
 
 		/* Interval time and sequence number. */
 
@@ -474,6 +489,12 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 				    ((double)aprop->value - 6) / 3);
 			else
 				snprintf(aprop->str, 15, "Normal");
+			break;
+
+		/* Camera model (saved for 7Hi stupidity). */
+
+		case 37:
+			model = aprop->value;
 			break;
 
 		/* Focal length. */
@@ -629,6 +650,26 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 
 
 /*
+ * Make sure meaningless values are meaningless.
+ */
+void
+minolta_naval(struct exifprop *props, u_int16_t tag, int16_t subtag)
+{
+	struct exifprop *prop;
+	const char *na = "n/a";
+
+	if (!(prop = findsprop(props, tag, subtag)))
+		return;
+
+	free(prop->str);
+	if (!(prop->str = (char *)malloc(strlen(na) + 1)))
+		exifdie((const char *)strerror(errno));
+	strcpy(prop->str, na);
+	prop->lvl = ED_VRB;
+}
+
+
+/*
  * Process Minolta maker note tags.
  */
 void
@@ -636,6 +677,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
 	struct exiftag *fielddefs;
+	struct exifprop *tmpprop;
 
 	/*
 	 * Don't process properties we've created while looking at other
@@ -702,6 +744,60 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			fielddefs = minolta_0TLM;
 		minolta_cprop(prop, t->btiff + prop->value, t, fielddefs);
 		break;
+	}
+
+	/* Override meaningless values. */
+
+	if (prop->tag == 0x0001 || prop->tag == 0x0003) {
+
+		/* Drive mode (bracketing step & mode). */
+
+		if ((tmpprop = findsprop(t->props, prop->tag, 6)))
+			if (tmpprop->value != 4) {
+				minolta_naval(t->props, prop->tag, 14);
+				minolta_naval(t->props, prop->tag, 50);
+			}
+
+		/* Focus mode (wide focus area, AF zone, point X & Y). */
+
+		if ((tmpprop = findsprop(t->props, prop->tag, 48)))
+			if (tmpprop->value == 1) {
+				minolta_naval(t->props, prop->tag, 45);
+				minolta_naval(t->props, prop->tag, 46);
+				minolta_naval(t->props, prop->tag, 47);
+				minolta_naval(t->props, prop->tag, 49);
+			}
+
+		/* Flash fired (flash comp, mode, & internal flash). */
+
+		if ((tmpprop = findsprop(t->props, prop->tag, 20)))
+			if (tmpprop->value != 1) {
+				minolta_naval(t->props, prop->tag, 2);
+				minolta_naval(t->props, prop->tag, 35);
+				minolta_naval(t->props, prop->tag, 43);
+			}
+
+		/* Exposure mode (meter mode, exposure comp). */
+
+		if ((tmpprop = findprop(t->props, EXIF_T_EXPMODE)))
+			if (tmpprop->value == 1) {
+				minolta_naval(t->props, prop->tag, 7);
+				minolta_naval(t->props, prop->tag, 13);
+			}
+
+		/* Exposure prog (scene capture type). */
+
+		if ((tmpprop = findsprop(t->props, prop->tag, 1)))
+			if (tmpprop->value != 0)
+				minolta_naval(t->props, prop->tag, 34);
+
+		/* Interval mode (interval pics, time). */
+
+		if ((tmpprop = findsprop(t->props, prop->tag, 38)))
+			if (tmpprop->value != 1) {
+				minolta_naval(t->props, prop->tag, 16);
+				minolta_naval(t->props, prop->tag, 17);
+			}
 	}
 }
 
