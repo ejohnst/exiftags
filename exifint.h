@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.13 2003/01/20 21:38:32 ejohnst Exp $
+ * $Id: exifint.h,v 1.14 2003/01/24 08:36:42 ejohnst Exp $
  */
 
 /*
@@ -115,6 +115,10 @@ struct ifd {
 	else if (!d) sprintf(prop->str, "Infinite"); \
 	else if (n == d) sprintf(prop->str, "1"); \
 	else if (d == 1) snprintf(prop->str, 31, "%d", n); \
+	else if (abs(n) > abs(d)) snprintf(prop->str, 31, "%.1f", \
+	    (double)n / (double)d); \
+	else if (abs(d) > 2 && abs(n) > 1) snprintf(prop->str, 31, \
+	    "%.1f", (double)n/(double)d); \
 	else snprintf(prop->str, 31, "%d/%d", n, d); \
 	prop->str[31] = '\0'; \
 }
