@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.5 2002/06/30 23:27:09 ejohnst Exp $
+ * $Id: canon.c,v 1.6 2002/07/01 08:36:06 ejohnst Exp $
  */
 
 /*
@@ -38,12 +38,14 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
-#include "exiftags.h"
-#include "exif.h"
+#include "exiftags.h"			/* XXX For exifdie(). */
+#include "exifint.h"
+#include "makers.h"
 
 
 /* Maker note IFD tags. */
@@ -218,14 +220,14 @@ static struct descrip canon_whitebal[] = {
  */
 
 static void
-canon_prop1(struct exifprop *prop, char *off)
+canon_prop1(struct exifprop *prop, char *off, enum order o)
 {
 	int i, j;
 	u_int16_t v;
 	struct exifprop *aprop;
 
 	for (i = 0; i < (int)prop->count; i++) {
-		v = exif2byte(off + i * 2);
+		v = exif2byte(off + i * 2, o);
 
 		aprop = childprop(prop);
 		aprop->value = (u_int32_t)v;
@@ -262,7 +264,7 @@ canon_prop1(struct exifprop *prop, char *off)
 
 			/* Change "Single" to "Timed" if #2 > 0. */
 
-			if (!v && exif2byte(off + 2 * 2))
+			if (!v && exif2byte(off + 2 * 2, o))
 				strcpy(aprop->str, "Timed");
 			break;
 		case 7:
@@ -286,8 +288,8 @@ canon_prop1(struct exifprop *prop, char *off)
 				if (!(aprop->str = (char *)malloc(32)))
 					exifdie((const char *)strerror(errno));
 				snprintf(aprop->str, 31, "x%.1f", 2 *
-				    (float)exif2byte(off + 37 * 2) /
-				    (float)exif2byte(off + 36 * 2));
+				    (float)exif2byte(off + 37 * 2, o) /
+				    (float)exif2byte(off + 36 * 2, o));
 				aprop->str[31] = '\0';
 			} else
 				aprop->str = finddescr(canon_dzoom, v);
@@ -315,14 +317,14 @@ canon_prop1(struct exifprop *prop, char *off)
  */
 
 static void
-canon_prop4(struct exifprop *prop, char *off)
+canon_prop4(struct exifprop *prop, char *off, enum order o)
 {
 	int i, j;
 	u_int16_t v;
 	struct exifprop *aprop;
 
 	for (i = 0; i < (int)prop->count; i++) {
-		v = exif2byte(off + i * 2);
+		v = exif2byte(off + i * 2, o);
 
 		aprop = childprop(prop);
 		aprop->value = (u_int32_t)v;
@@ -362,7 +364,7 @@ canon_prop4(struct exifprop *prop, char *off)
 /* Process Canon maker note tags. */
 
 void
-canon_prop(struct exifprop *prop)
+canon_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
 	char *offset;
@@ -391,9 +393,10 @@ canon_prop(struct exifprop *prop)
 			once = 1;
 		}
 
-	        for (i = 0; types[i].type && types[i].type != prop->type; i++);
+	        for (i = 0; ftypes[i].type &&
+		    ftypes[i].type != prop->type; i++);
 		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    types[i].name, prop->count, prop->value);
+		    ftypes[i].name, prop->count, prop->value);
 	}
 
 	switch (prop->tag) {
@@ -401,23 +404,23 @@ canon_prop(struct exifprop *prop)
 	/* Various image data. */
 
 	case 0x0001:
-		offset = btiff + prop->value;
-		if (exif2byte(offset) != 2 * prop->count) {
+		offset = t->btiff + prop->value;
+		if (exif2byte(offset, t->tifforder) != 2 * prop->count) {
 			exifwarn("Canon maker note appears corrupt (0x0001)");
 			break;
 		}
 
-		canon_prop1(prop, offset);
+		canon_prop1(prop, offset, t->tifforder);
 		break;
 
 	case 0x0004:
-		offset = btiff + prop->value;
-		if (exif2byte(offset) != 2 * prop->count) {
+		offset = t->btiff + prop->value;
+		if (exif2byte(offset, t->tifforder) != 2 * prop->count) {
 			exifwarn("Canon maker note appears corrupt (0x0004)");
 			break;
 		}
 
-		canon_prop4(prop, offset);
+		canon_prop4(prop, offset, t->tifforder);
 		break;
 
 	/* Image number. */

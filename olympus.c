@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.2 2002/07/01 01:56:09 ejohnst Exp $
+ * $Id: olympus.c,v 1.3 2002/07/01 08:36:06 ejohnst Exp $
  */
 
 /*
@@ -39,12 +39,14 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
 #include "exiftags.h"
-#include "exif.h"
+#include "exifint.h"
+#include "makers.h"
 
 
 /* Maker note IFD tags. */
@@ -91,7 +93,7 @@ static struct descrip olympus_quality[] = {
 /* Process Olympus maker note tags. */
 
 void
-olympus_prop(struct exifprop *prop)
+olympus_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
 	char *offset;
@@ -121,9 +123,10 @@ olympus_prop(struct exifprop *prop)
 			once = 1;
 		}
 
-	        for (i = 0; types[i].type && types[i].type != prop->type; i++);
+	        for (i = 0; ftypes[i].type &&
+		    ftypes[i].type != prop->type; i++);
 		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    types[i].name, prop->count, prop->value);
+		    ftypes[i].name, prop->count, prop->value);
 	}
 
 	switch (prop->tag) {
@@ -131,7 +134,7 @@ olympus_prop(struct exifprop *prop)
 	/* Various image data. */
 
 	case 0x0200:
-		offset = btiff + prop->value;
+		offset = t->btiff + prop->value;
 
 		/*
 		 * XXX Would be helpful to test this with a panoramic.
@@ -143,7 +146,7 @@ olympus_prop(struct exifprop *prop)
 		/* Picture taking mode. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset);
+		aprop->value = exif4byte(offset, t->tifforder);
 		aprop->name = "OlympusPicMode";
 		aprop->descr = "Picture Mode";
 		aprop->lvl = ED_UNK;
@@ -151,7 +154,7 @@ olympus_prop(struct exifprop *prop)
 		/* Sequence number. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset + 4);
+		aprop->value = exif4byte(offset + 4, t->tifforder);
 		aprop->name = "OlympusSeqNum";
 		aprop->descr = "Sequence Number";
 		aprop->lvl = ED_UNK;
@@ -159,7 +162,7 @@ olympus_prop(struct exifprop *prop)
 		/* Panorama direction. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset + 8);
+		aprop->value = exif4byte(offset + 8, t->tifforder);
 		aprop->name = "OlympusPanDir";
 		aprop->descr = "Panoramic Direction";
 		aprop->lvl = ED_UNK;
@@ -190,7 +193,7 @@ olympus_prop(struct exifprop *prop)
 /* Try to read an Olympus maker note IFD. */
 
 struct ifd *
-olympus_ifd(u_int32_t offset)
+olympus_ifd(u_int32_t offset, struct exiftags *t)
 {
 	struct ifd *myifd;
 
@@ -199,10 +202,10 @@ olympus_ifd(u_int32_t offset)
 	 * try reading the IFD starting at offset + 8 ("OLYMP" + 3).
 	 */
 
-	if (!strcmp(btiff + offset, "OLYMP"))
-		readifd(btiff + offset + strlen("OLYMP") + 3, &myifd);
+	if (!strcmp(t->btiff + offset, "OLYMP"))
+		readifd(t->btiff + offset + strlen("OLYMP") + 3, &myifd, t);
 	else
-		readifd(btiff + offset, &myifd);
+		readifd(t->btiff + offset, &myifd, t);
 
 	return (myifd);
 }
