@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2005, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.73 2005/01/04 21:25:45 ejohnst Exp $
+ * $Id: exif.c,v 1.74 2005/01/04 23:28:25 ejohnst Exp $
  */
 
 /*
@@ -90,6 +90,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	prop->tag = exif2byte(afield->tag, dir->md.order);
 	prop->type = exif2byte(afield->type, dir->md.order);
 	prop->count = exif4byte(afield->count, dir->md.order);
+	/* XXX Makes dealing with two shorts somewhat messy. */
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
 	    prop->count <= 1)
 		prop->value = exif2byte(afield->value, dir->md.order);
@@ -550,22 +551,14 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	/* Record the Exif version. */
 
 	case EXIF_T_VERSION:
-		/* These contortions are to make 0220 = 2.20. */
-		exifstralloc(&prop->str, 8);
-
-		/* Platform byte order affects this... */
-
-		i = 1;
-		if (*(char *)&i == 1)
-			strncpy(buf, (const char *)&prop->value, 4);
-		else
-			for (i = 0; i < 4; i++)
-				buf[i] = ((const char *)&prop->value)[3 - i];
+		byte4exif(prop->value, (unsigned char *)buf, o);
 		buf[4] = '\0';
 		t->exifmin = (short)atoi(buf + 2);
 		buf[2] = '\0';
 		t->exifmaj = (short)atoi(buf);
-		snprintf(prop->str, 7, "%d.%d", t->exifmaj, t->exifmin);
+
+		exifstralloc(&prop->str, 8);
+		snprintf(prop->str, 7, "%d.%02d", t->exifmaj, t->exifmin);
 		break;
 
 	/* Process a maker note. */
@@ -702,7 +695,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		/* Should fit in the value field. */
 		if (prop->count < 5) {
 			exifstralloc(&prop->str, 5);
-			byte4exif(prop->value, prop->str, o);
+			byte4exif(prop->value, (unsigned char *)prop->str, o);
 			return;
 		}
 
@@ -749,8 +742,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 * note tags frequently consist of many shorts; we don't really
 	 * want to be spitting these out.  (Plus, TransferFunction is huge.)
 	 *
-	 * XXX Note that this might not apply to two shorts (could just be
-	 * stuffed into the value, e.g. Nikon ISO values).
+	 * XXX Note that this doesn't apply to two shorts, which are
+	 * stuffed into the value.
 	 */
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
@@ -837,9 +830,9 @@ exifscan(unsigned char *b, int len, int domkr)
 
 	/* Determine endianness of the TIFF data. */
 
-	if (*((u_int16_t *)b) == 0x4d4d)
+	if (!memcmp(b, "MM", 2))
 		t->md.order = BIG;
-	else if (*((u_int16_t *)b) == 0x4949)
+	else if (!memcmp(b, "II", 2))
 		t->md.order = LITTLE;
 	else {
 		exifwarn("invalid TIFF header");
