@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.10 2003/08/08 22:31:32 ejohnst Exp $
+ * $Id: exifgps.c,v 1.11 2003/08/16 02:25:41 ejohnst Exp $
  */
 
 /*
@@ -51,7 +51,7 @@
 /* Speed. */
 
 static struct descrip gps_speed[] = {
-	{ 'K',	"km/hr" },
+	{ 'K',	"km/h" },
 	{ 'M',	"mph" },
 	{ 'N',	"knots" },
 	{ -1,	"" },
