@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2002/07/12 21:35:53 ejohnst Exp $
+# $Id: Makefile,v 1.9 2002/10/15 03:35:03 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
@@ -13,8 +13,8 @@ DEBUG=
 CFLAGS=$(DEBUG)
 PREFIX=/usr/local
 
-OBJS=exiftags.o exif.o tagdefs.o exifutil.o jpeg.o $(MKRS)
-HDRS=exif.h exifint.h exiftags.h jpeg.h makers.h
+OBJS=exif.o tagdefs.o exifutil.o jpeg.o $(MKRS)
+HDRS=exif.h exifint.h jpeg.h makers.h
 
 
 .SUFFIXES: .o .c
@@ -22,16 +22,19 @@ HDRS=exif.h exifint.h exiftags.h jpeg.h makers.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 
-all: exiftags
+all: exiftags exifcom
 
-exiftags: $(OBJS) $(HDRS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) -lm
+exiftags: exiftags.o $(OBJS) $(HDRS)
+	$(CC) $(CFLAGS) -o $@ exiftags.o $(OBJS) -lm
+
+exifcom: exifcom.o $(OBJS) $(HDRS)
+	$(CC) $(CFLAGS) -o $@ exifcom.o $(OBJS) -lm
 
 clean:
-	@rm -f $(OBJS) exiftags
+	@rm -f $(OBJS) exiftags.o exifcom.o exiftags exifcom
 
-install: exiftags
-	cp exiftags $(PREFIX)/bin
-	chmod a+x $(PREFIX)/bin
-	cp exiftags.1 $(PREFIX)/man/man1
-	chmod a+r $(PREFIX)/man/man1/exiftags.1
+install: all
+	cp exiftags exifcom $(PREFIX)/bin
+	chmod a+x $(PREFIX)/bin/exiftags $(PREFIX)/bin/exifcom
+	cp exiftags.1 exifcom.1 $(PREFIX)/man/man1
+	chmod a+r $(PREFIX)/man/man1/exiftags.1 $(PREFIX)/man/man1/exifcom.1
