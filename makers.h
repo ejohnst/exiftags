@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.6 2002/11/03 02:01:09 ejohnst Exp $
+ * $Id: makers.h,v 1.7 2002/11/03 06:46:25 ejohnst Exp $
  */
 
 /*
@@ -58,7 +58,7 @@ struct makerfun {
 extern struct makerfun makers[];
 
 
-/* Maker note defines. */
+/* Maker note defines (must match makers[] in tagdefs.c). */
 
 #define EXIF_MKR_CANON		1
 #define EXIF_MKR_OLYMPUS	2
