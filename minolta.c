@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.6 2003/01/21 03:29:26 ejohnst Exp $
+ * $Id: minolta.c,v 1.7 2003/01/21 05:31:08 ejohnst Exp $
  *
  */ 
 
@@ -75,8 +75,8 @@ static struct descrip minolta_brackstep[] = {
 /* Sharpness. */
 
 static struct descrip minolta_sharp[] = {
-	{ 0,	"Normal" },
-	{ 1,	"Hard" },
+	{ 0,	"Hard" },
+	{ 1,	"Normal" },
 	{ 2,	"Soft" },
 	{ -1,	"Unknown" },
 };
@@ -268,6 +268,16 @@ static struct descrip minolta_model[] = {
 };
 
 
+/* Metering mode. */
+
+static struct descrip minolta_metermode[] = {
+	{ 0,	"Multi-Segment" },
+	{ 1,	"Center Weighted Average" },
+	{ 2,	"Spot" },
+	{ -1,	"Unknown" },
+};
+
+
 /* Maker note IFD tags. */
 
 static struct exiftag minolta_tags[] = {
@@ -306,7 +316,7 @@ static struct exiftag minolta_0TLM[] = {
 	{ 6,  TIFF_LONG, 1, ED_IMG, "MinoltaDriveMode",
 	  "Drive Mode", minolta_drive },
 	{ 7,  TIFF_LONG, 1, ED_UNK, "MinoltaMeterMode",
-	  "Metering Mode", NULL },
+	  "Metering Mode", minolta_metermode },
 	{ 8,  TIFF_LONG, 1, ED_UNK, "MinoltaFilmSpeed",
 	  "Film Speed", NULL },
 	{ 9,  TIFF_LONG, 1, ED_VRB, "MinoltaExpTime",
@@ -317,7 +327,7 @@ static struct exiftag minolta_0TLM[] = {
 	  "Macro", minolta_bool },
 	{ 12, TIFF_LONG, 1, ED_IMG, "MinoltaDigiZoom",
 	  "Digital Zoom", minolta_bool },
-	{ 13, TIFF_LONG, 1, ED_UNK, "MinoltaExpComp",
+	{ 13, TIFF_LONG, 1, ED_VRB, "MinoltaExpComp",
 	  "Exposure Compensation", NULL },
 	{ 14, TIFF_LONG, 1, ED_IMG, "MinoltaBracketStep",
 	  "Bracketing Step", minolta_brackstep },
@@ -462,7 +472,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 			aprop->str = valbuf;
 			valbuf = NULL;
 			if (aprop->value != 6)
-				snprintf(aprop->str, 15, "%+0.1f",
+				snprintf(aprop->str, 15, "%+0.1f EV",
 				    ((double)aprop->value - 6) / 3);
 			else
 				snprintf(aprop->str, 15, "Normal");
@@ -522,7 +532,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 			else
 				snprintf(aprop->str, 15, "1/%d",
 				    (unsigned int)d);
-
+#if 0
 			/*
 			 * Bulb mode D7i bug: always recorded as 30 sec in
 			 * EXIF_T_EXPOSURE, so override.
@@ -531,6 +541,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 				aprop->override = EXIF_T_EXPOSURE;
 				aprop->lvl = ED_IMG;
 			}
+#endif
 			break;
 
 		/* Focus distance. */
@@ -576,6 +587,18 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 
 		case 3:
 			aprop->override = EXIF_T_WHITEBAL;
+			break;
+
+		/* Sharpness. */
+
+		case 33:
+			aprop->override = EXIF_T_SHARPNESS;
+			break;
+
+		/* Metering mode. */
+
+		case 7:
+			aprop->override = EXIF_T_METERMODE;
 			break;
 
 		/* Saturation, contrast, & color filter. */
