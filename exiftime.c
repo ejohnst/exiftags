@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.5 2004/04/20 17:20:38 ejohnst Exp $
+ * $Id: exiftime.c,v 1.6 2004/04/20 18:35:08 ejohnst Exp $
  */
 
 /*
@@ -43,7 +43,7 @@
 #include <string.h>
 #include <errno.h>
 
-/* For getopt() and mergesort(). */
+/* For getopt(). */
 
 #ifndef WIN32
 #include <unistd.h>
@@ -51,7 +51,6 @@
 extern char *optarg;
 extern int optind, opterr, optopt;
 int getopt(int, char * const [], const char *);
-int mergesort(void *, size_t, size_t, int (*)(const void *, const void *));
 #endif
 
 #include "jpeg.h"
@@ -527,12 +526,14 @@ main(int argc, char **argv)
 	}
 
 	/*
-	 * We use mergesort() here (instead of qsort()) because qsort() isn't
-	 * stable w/members that compare equal and we exepect the list of
-	 * files to frequently already be in order.
+	 * We'd like to use mergesort() here (instead of qsort()) because
+	 * qsort() isn't stable w/members that compare equal and we exepect
+	 * the list of files to frequently already be in order.  However,
+	 * FreeBSD seems to be the only platform with mergesort(), and I'm
+	 * not inclined to include the function...
 	 */
 	if (lflag) {
-		eval = mergesort(lorder, argc, sizeof(struct linfo), lcomp);
+		eval = qsort(lorder, argc, sizeof(struct linfo), lcomp);
 		for (fnum = 0; fnum < argc; fnum++)
 			printf("%s\n", lorder[fnum].fn);
 		free(lorder);	/* XXX Over in usage()? */

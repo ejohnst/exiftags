@@ -113,10 +113,6 @@ SOURCE=.\makers_stub.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mergesort.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\tagdefs.c
 # End Source File
 # Begin Source File
