@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.4 2002/07/10 18:04:05 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.5 2002/07/11 02:07:21 ejohnst Exp $
  */
 
 /*
@@ -251,6 +251,7 @@ struct makerfun makers[] = {
 	{ EXIF_MKR_CANON, "Canon", canon_prop, NULL },
 	{ EXIF_MKR_OLYMPUS, "Olympus", olympus_prop, olympus_ifd },
 	{ EXIF_MKR_FUJI, "Fujifilm", fuji_prop, fuji_ifd },
+	{ EXIF_MKR_NIKON, "Nikon", nikon_prop, nikon_ifd },
 	{ EXIF_MKR_UNKNOWN, "Unknown", NULL, NULL },
 };
 

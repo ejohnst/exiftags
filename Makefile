@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.6 2002/07/10 18:04:27 ejohnst Exp $
+# $Id: Makefile,v 1.7 2002/07/11 02:07:21 ejohnst Exp $
 
 #
 # Add any new maker note modules here.
 #
-MKRS=canon.o olympus.o fuji.o
+MKRS=canon.o olympus.o fuji.o nikon.o
 
 #
 # A few parameters...
