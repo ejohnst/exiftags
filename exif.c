@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.41 2003/01/25 01:17:12 ejohnst Exp $
+ * $Id: exif.c,v 1.42 2003/01/25 03:01:43 ejohnst Exp $
  */
 
 /*
@@ -604,7 +604,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
-	    prop->count > 1) {
+	    prop->count > 1 && (prop->value + prop->count * 2 <=
+	    (u_int32_t)(t->etiff - t->btiff))) {
 
 		if (prop->count > 8)
 			return (TRUE);
