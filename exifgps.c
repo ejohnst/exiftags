@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2003-2005, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.12 2003/08/16 03:05:07 ejohnst Exp $
+ * $Id: exifgps.c,v 1.13 2005/01/05 00:28:22 ejohnst Exp $
  */
 
 /*
@@ -116,7 +116,7 @@ struct exiftag gpstags[] = {
 	    "GPSAltitude", "Altitude", NULL },
 	{ 0x0007, TIFF_RTNL,  3,  ED_IMG,
 	    "GPSTimeStamp", "Time (UTC)", NULL },
-	{ 0x0008, TIFF_ASCII, 0,  ED_UNK,
+	{ 0x0008, TIFF_ASCII, 0,  ED_IMG,
 	    "GPSSatellites", "GPS Satellites", NULL },
 	{ 0x0009, TIFF_ASCII, 2,  ED_IMG,
 	    "GPSStatus", "GPS Status", gps_status },
@@ -200,6 +200,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 	/*
 	 * Reference values.  The value is 2-count nul-terminated ASCII,
 	 * not an offset to the ASCII string.
+	 * XXX Shouldn't really be necessary now that short ASCII strings work.
 	 */
 
 	case 0x0001:
