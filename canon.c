@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.36 2003/08/06 02:26:42 ejohnst Exp $
+ * $Id: canon.c,v 1.37 2003/08/08 20:19:37 ejohnst Exp $
  */
 
 /*
@@ -354,6 +354,8 @@ static struct exiftag canon_tags04[] = {
 static struct exiftag canon_tagsA0[] = {
 	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonColorTemp",
 	  "Color Temperature", NULL },
+	{ 10, TIFF_SHORT, 0, ED_IMG, "CanonColorMatrix",
+	  "Color Matrix", NULL },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonA0Unknown",
 	  "Canon TagA0 Unknown", NULL },
 };
