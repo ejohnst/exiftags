@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.2 2002/11/03 05:36:22 ejohnst Exp $
+ * $Id: casio.c,v 1.3 2002/11/03 10:07:28 ejohnst Exp $
  */
 
 /*
@@ -132,6 +132,19 @@ static struct descrip casio_range[] = {
 };
 
 
+/* Sensitivity. */
+
+static struct descrip casio_sensitive[] = {
+	{ 64,	"Normal" },
+	{ 80,	"Normal" },
+	{ 100,	"High" },
+	{ 125,	"+1.0" },
+	{ 244,	"+3.0" },
+	{ 250,	"+2.0" },
+	{ -1,	"Unknown" },
+};
+
+
 /* Maker note IFD tags. */
 
 static struct exiftag casio_tags0[] = {
@@ -145,7 +158,7 @@ static struct exiftag casio_tags0[] = {
 	  "Flash Mode", casio_flash },
 	{ 0x0005, TIFF_SHORT, 1, ED_IMG, "CasioIntensity",
 	  "Flash Intensity", casio_intense },
-	{ 0x0006, TIFF_LONG, 1, ED_IMG, "CasioDistance",
+	{ 0x0006, TIFF_LONG, 1, ED_VRB, "CasioDistance",
 	  "Object Distance", NULL },
 	{ 0x0007, TIFF_SHORT, 1, ED_IMG, "CasioWhiteB",
 	  "White Balance", casio_whiteb },
@@ -158,7 +171,7 @@ static struct exiftag casio_tags0[] = {
 	{ 0x000d, TIFF_SHORT, 1, ED_IMG, "CasioSaturate",
 	  "Saturation", casio_range },
 	{ 0x0014, TIFF_SHORT, 1, ED_IMG, "CasioSensitive",
-	  "Sensitivity", NULL },
+	  "Sensitivity", casio_sensitive },
 	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "CasioUnknown",
 	  "Casio Unknown", NULL },
 };
@@ -176,7 +189,7 @@ static struct exiftag casio_tags1[] = {
 };
 
 
-/* Process normal Casio maker note tags. */
+/* Process older Casio maker note tags. */
 
 static void
 casio_prop0(struct exifprop *prop, struct exiftags *t)
@@ -193,36 +206,10 @@ casio_prop0(struct exifprop *prop, struct exiftags *t)
 	prop->lvl = casio_tags0[i].lvl;
 	if (casio_tags0[i].table)
 		prop->str = finddescr(casio_tags0[i].table, v);
-
-	if (debug) {
-		static int once = 0;	/* XXX Breaks on multiple files. */
-
-		if (!once) {
-			printf("Processing Casio Maker Note\n");
-			once = 1;
-		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
-	}
-
-	switch (prop->tag) {
-
-	/* Maker note version. */
-
-	case 0x0000:
-		if (!(prop->str = (char *)malloc(prop->count + 1)))
-			exifdie((const char *)strerror(errno));
-		strncpy(prop->str, (const char*)(&prop->value), prop->count);
-		prop->str[prop->count] = '\0';
-		break;
-	}
 }
 
 
-/* Process normal Casio maker note tags. */
+/* Process newer Casio maker note tags. */
 
 static void
 casio_prop1(struct exifprop *prop, struct exiftags *t)
@@ -239,34 +226,6 @@ casio_prop1(struct exifprop *prop, struct exiftags *t)
 	prop->lvl = casio_tags1[i].lvl;
 	if (casio_tags1[i].table)
 		prop->str = finddescr(casio_tags1[i].table, v);
-
-	if (debug) {
-		static int once = 0;	/* XXX Breaks on multiple files. */
-
-		if (!once) {
-			printf("Processing Casio Maker Note\n");
-			once = 1;
-		}
-
-	        for (i = 0; ftypes[i].type &&
-		    ftypes[i].type != prop->type; i++);
-		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
-		printf("XXX %s (0x%04X): %s \t%d\t%d\n", prop->name, prop->tag,
-		    ftypes[i].name, prop->count, prop->value);
-	}
-
-	switch (prop->tag) {
-
-	/* Maker note version. */
-
-	case 0x0000:
-		if (!(prop->str = (char *)malloc(prop->count + 1)))
-			exifdie((const char *)strerror(errno));
-		strncpy(prop->str, (const char*)(&prop->value), prop->count);
-		prop->str[prop->count] = '\0';
-		break;
-	}
 }
 
 
@@ -275,6 +234,7 @@ casio_prop1(struct exifprop *prop, struct exiftags *t)
 void
 casio_prop(struct exifprop *prop, struct exiftags *t)
 {
+	int i;
 
 	/*
 	 * Don't process properties we've created while looking at other
@@ -294,6 +254,23 @@ casio_prop(struct exifprop *prop, struct exiftags *t)
 		casio_prop1(prop, t);
 	else
 		casio_prop0(prop, t);
+
+	if (debug) {
+		static int once = 0;	/* XXX Breaks on multiple files. */
+
+		if (!once) {
+			printf("Processing Casio Maker Note (%d)\n",
+			    t->mkrinfo);
+			once = 1;
+		}
+
+	        for (i = 0; ftypes[i].type &&
+		    ftypes[i].type != prop->type; i++);
+		printf("   %s (0x%04X): %s, %d, %d\n", prop->name, prop->tag,
+		    ftypes[i].name, prop->count, prop->value);
+		printf("XXX %s (0x%04X): %s \t%d\t%d\n", prop->name, prop->tag,
+		    ftypes[i].name, prop->count, prop->value);
+	}
 }
 
 
