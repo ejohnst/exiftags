@@ -25,7 +25,7 @@
  *
  * Lifted from FreeBSD: src/bin/date/vary.c,v 1.15
  *
- * $Id: timevary.c,v 1.1 2004/04/08 05:55:58 ejohnst Exp $
+ * $Id: timevary.c,v 1.2 2004/04/08 07:29:21 ejohnst Exp $
  *
  */
 
@@ -417,6 +417,9 @@ vary_apply(const struct vary *v, struct tm *t)
   size_t len;
   int val;
 
+  /* Ignore effects of DST. */
+  t->tm_isdst = -1;
+
   for (; v; v = v->next) {
     type = *v->arg;
     arg = v->arg;
@@ -427,9 +430,6 @@ vary_apply(const struct vary *v, struct tm *t)
     len = strlen(arg);
     if (len < 2)
       return v;
-
-    if (type == '\0')
-      t->tm_isdst = -1;
 
     if (strspn(arg, digits) != len-1) {
       val = trans(trans_wday, arg);
@@ -462,22 +462,18 @@ vary_apply(const struct vary *v, struct tm *t)
             return v;
           break;
         case 'd':
-          t->tm_isdst = -1;
           if (!adjday(t, type, val, 1))
             return v;
           break;
         case 'w':
-          t->tm_isdst = -1;
           if (!adjwday(t, type, val, 0, 1))
             return v;
           break;
         case 'm':
-          t->tm_isdst = -1;
           if (!adjmon(t, type, val, 0, 1))
             return v;
           break;
         case 'y':
-          t->tm_isdst = -1;
           if (!adjyear(t, type, val, 1))
             return v;
           break;
