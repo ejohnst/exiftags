@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.12 2002/10/05 22:49:39 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.13 2002/10/06 19:36:59 ejohnst Exp $
  */
 
 /*
@@ -378,7 +378,7 @@ struct exiftag tags[] = {
 	    "SpectralSensitivity", "Spectral Sensitivity", NULL },
 	{ 0x8825, TIFF_LONG,  1,  ED_UNK,
 	    "GPSInfo", "GPS Info IFD Pointer", NULL },
-	{ 0x8827, TIFF_SHORT, 0,  ED_PAS,
+	{ 0x8827, TIFF_SHORT, 0,  ED_IMG,
 	    "ISOSpeedRatings", "ISO Speed Rating", NULL },
 	{ 0x8828, TIFF_UNDEF, 0,  ED_CAM,
 	    "OECF", "Opto-Electric Conversion Factor", NULL },
