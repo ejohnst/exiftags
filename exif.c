@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.12 2002/07/11 17:59:37 ejohnst Exp $
+ * $Id: exif.c,v 1.13 2002/07/12 21:18:38 ejohnst Exp $
  */
 
 /*
@@ -288,7 +288,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		fval = (float)exif4sbyte(t->btiff + prop->value, o) /
 		    (float)exif4sbyte(t->btiff + prop->value + 4, o);
 		/* 1 / (2^speed) */
-		snprintf(prop->str, 31, "1/%d", (int)rintf(powf(2, fval)));
+		snprintf(prop->str, 31, "1/%d",
+		    (int)rint(pow(2, (double)fval)));
 		prop->str[31] = '\0';
 		/* FALLTHROUGH */
 
