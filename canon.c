@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.20 2003/01/25 00:13:31 ejohnst Exp $
+ * $Id: canon.c,v 1.21 2003/01/25 01:17:12 ejohnst Exp $
  */
 
 /*
@@ -621,8 +621,7 @@ canon_subval(struct exifprop *prop, char *off, struct exiftags *t,
 		if (subtags[j].table)
 			aprop->str = finddescr(subtags[j].table, v);
 
-		if (debug)
-			dumpprop(aprop);
+		dumpprop(aprop, NULL);
 
 		/* Process individual values.  Returns false if unknown. */
 
@@ -673,8 +672,7 @@ canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 		aprop->descr = prop->descr;
 		aprop->lvl = prop->lvl;
 
-		if (debug)
-			dumpprop(aprop);
+		dumpprop(aprop, NULL);
 
 		/* If we have a table, lookup function name and value. */
 
@@ -741,7 +739,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			printf("Processing Canon Maker Note\n");
 			once = 1;
 		}
-		dumpprop(prop);
+		dumpprop(prop, NULL);
 	}
 
 	switch (prop->tag) {

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.8 2003/01/25 00:55:25 ejohnst Exp $
+ * $Id: olympus.c,v 1.9 2003/01/25 01:17:12 ejohnst Exp $
  */
 
 /*
@@ -125,7 +125,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 			printf("Processing Olympus Maker Note\n");
 			once = 1;
 		}
-		dumpprop(prop);
+		dumpprop(prop, NULL);
 	}
 
 	switch (prop->tag) {

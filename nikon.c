@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.8 2003/01/25 00:55:12 ejohnst Exp $
+ * $Id: nikon.c,v 1.9 2003/01/25 01:17:12 ejohnst Exp $
  */
 
 /*
@@ -280,7 +280,7 @@ nikon_prop(struct exifprop *prop, struct exiftags *t)
 			    t->mkrinfo);
 			once = 1;
 		}
-		dumpprop(prop);
+		dumpprop(prop, NULL);
 	}
 }
 

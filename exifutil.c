@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.14 2003/01/25 00:15:20 ejohnst Exp $
+ * $Id: exifutil.c,v 1.15 2003/01/25 01:17:12 ejohnst Exp $
  */
 
 /*
@@ -235,23 +235,52 @@ childprop(struct exifprop *parent)
 
 
 /*
- * Print debug info for a property.
+ * Print hex values of a buffer.
  */
 void
-dumpprop(struct exifprop *prop)
+hexprint(unsigned char *b, int len)
 {
 	int i;
 
+	for (i = 0; i < len; i++)
+		printf(" %02X", b[i]);
+}
+
+
+/*
+ * Print debug info for a property.
+ */
+void
+dumpprop(struct exifprop *prop, struct field *afield)
+{
+	int i;
+
+	if (!debug) return;
+
 	for (i = 0; ftypes[i].type && ftypes[i].type != prop->type; i++);
 
-	if (prop->subtag < -1)
-		printf("   %s (0x%04X): %s, %d; %d, 0x%04X\n", prop->name,
-		    prop->tag, ftypes[i].name, prop->count, prop->value,
+	if (prop->subtag < -1) {
+		if (afield) {
+			printf("   %s (0x%04X): %s, %d; %d\n", prop->name,
+			    prop->tag, ftypes[i].name, prop->count,
+			    prop->value);
+			printf("      ");
+			hexprint(afield->tag, 2);
+			printf(" |");
+			hexprint(afield->type, 2);
+			printf(" |");
+			hexprint(afield->count, 4);
+			printf(" |");    
+			hexprint(afield->value, 4);
+			printf("\n");
+		} else
+			printf("   %s (0x%04X): %s, %d; %d, 0x%04X\n",
+			    prop->name, prop->tag, ftypes[i].name,
+			    prop->count, prop->value, prop->value);
+	} else
+		printf("     %s (%d): %s, %d; %d, 0x%04X\n", prop->name,
+		    prop->subtag, ftypes[i].name, prop->count, prop->value,
 		    prop->value);
-	else
-		printf("     %s (0x%04X:%d): %s, %d; %d, 0x%04X\n", prop->name,
-		    prop->tag, prop->subtag, ftypes[i].name, prop->count,
-		    prop->value, prop->value);
 }
 
 

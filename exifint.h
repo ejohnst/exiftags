@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.15 2003/01/25 00:16:18 ejohnst Exp $
+ * $Id: exifint.h,v 1.16 2003/01/25 01:17:12 ejohnst Exp $
  */
 
 /*
@@ -146,7 +146,8 @@ extern struct exifprop *findsprop(struct exifprop *prop, u_int16_t tag,
 extern char *finddescr(struct descrip *table, u_int16_t val);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
-extern void dumpprop(struct exifprop *prop);
+extern void hexprint(unsigned char *b, int len);
+extern void dumpprop(struct exifprop *prop, struct field *afield);
 extern struct ifd *readifds(u_int32_t offset, struct exiftags *t);
 extern u_int32_t readifd(unsigned char *b, struct ifd **dir,
     struct exiftags *t);

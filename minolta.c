@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.9 2003/01/25 00:54:54 ejohnst Exp $
+ * $Id: minolta.c,v 1.10 2003/01/25 01:17:12 ejohnst Exp $
  *
  */ 
 
@@ -437,8 +437,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 			aprop->str = finddescr(thetags[j].table,
 			    aprop->value);
 
-		if (debug)
-			dumpprop(aprop);
+		dumpprop(aprop, NULL);
 
 		/*
 		 * Further process known properties.
@@ -661,7 +660,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			printf("Processing Minolta Maker Note\n");
 			once = 1;
 		}
-		dumpprop(prop);
+		dumpprop(prop, NULL);
 	}
 
 	switch (prop->tag) {

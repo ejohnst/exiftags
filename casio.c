@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.5 2003/01/25 00:54:20 ejohnst Exp $
+ * $Id: casio.c,v 1.6 2003/01/25 01:17:12 ejohnst Exp $
  */
 
 /*
@@ -258,7 +258,7 @@ casio_prop(struct exifprop *prop, struct exiftags *t)
 			    t->mkrinfo);
 			once = 1;
 		}
-		dumpprop(prop);
+		dumpprop(prop, NULL);
 	}
 }
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.6 2003/01/25 00:54:36 ejohnst Exp $
+ * $Id: fuji.c,v 1.7 2003/01/25 01:17:12 ejohnst Exp $
  */
 
 /*
@@ -220,7 +220,7 @@ fuji_prop(struct exifprop *prop, struct exiftags *t)
 			printf("Processing Fuji Maker Note\n");
 			once = 1;
 		}
-		dumpprop(prop);
+		dumpprop(prop, NULL);
 	}
 
 	switch (prop->tag) {
