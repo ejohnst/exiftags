@@ -85,6 +85,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\asahi.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\canon.c
 # End Source File
 # Begin Source File
@@ -118,6 +122,10 @@ SOURCE=.\getopt.c
 # Begin Source File
 
 SOURCE=.\jpeg.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\leica.c
 # End Source File
 # Begin Source File
 
