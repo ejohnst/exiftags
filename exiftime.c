@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.4 2004/04/10 07:44:47 ejohnst Exp $
+ * $Id: exiftime.c,v 1.5 2004/04/20 17:20:38 ejohnst Exp $
  */
 
 /*
@@ -43,7 +43,7 @@
 #include <string.h>
 #include <errno.h>
 
-/* For getopt(). */
+/* For getopt() and mergesort(). */
 
 #ifndef WIN32
 #include <unistd.h>
@@ -51,6 +51,7 @@
 extern char *optarg;
 extern int optind, opterr, optopt;
 int getopt(int, char * const [], const char *);
+int mergesort(void *, size_t, size_t, int (*)(const void *, const void *));
 #endif
 
 #include "jpeg.h"
@@ -63,7 +64,7 @@ struct linfo {
 	time_t ts;
 };
 
-static const char *version = "0.99";
+static const char *version = "0.99a";
 static int iflag, lflag, qflag, wflag, ttags;
 static const char *delim = ": ";
 static const char *fname;
@@ -273,7 +274,7 @@ writets(FILE *fp, long pos, struct exiftags *t, struct exifprop *p,
  */
 static int
 procts(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf,
-    u_int32_t tag, const char *ttype)
+    u_int16_t tag, const char *ttype)
 {
 	int rc;
 	char nts[EXIFTIMELEN];
@@ -311,6 +312,8 @@ static int
 procall(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf)
 {
 	int r, rc, found;
+
+	found = 0;
 
 	/*
 	 * If ttags = 0, process them all or an error if there are none.
