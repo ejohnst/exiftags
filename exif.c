@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.5 2002/06/30 08:58:48 ejohnst Exp $
+ * $Id: exif.c,v 1.6 2002/06/30 23:28:59 ejohnst Exp $
  */
 
 /*
@@ -55,6 +55,9 @@
 
 #include "exiftags.h"
 #include "exif.h"
+
+#define OLYMPUS_BUGS		/* Work around Olympus stupidity. */
+#define WINXP_BUGS		/* Work around Windows XP stupidity. */
 
 
 static struct exifprop *head;	/* Start of our property list. */
@@ -104,7 +107,18 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir)
 	prop->tag = exif2byte(afield->tag);
 	prop->type = exif2byte(afield->type);
 	prop->count = exif4byte(afield->count);
-	prop->value = exif4byte(afield->value);
+
+	/*
+	 * Fetch the value.
+	 * WinXP doesn't seem to zero out values when mucking with the data.
+	 */
+
+#ifdef WINXP_BUGS
+	if (prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT)
+		prop->value = exif2byte(afield->value);
+	else
+#endif
+		prop->value = exif4byte(afield->value);
 
 	/* IFD identifying info. */
 
@@ -138,8 +152,11 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir)
 		 * tags to UserComment without changing the type appropriately.
 		 */
 
-		if (tags[i].type && tags[i].type != prop->type &&
-		   prop->tag != EXIF_T_USERCOMMENT)
+		if (tags[i].type && tags[i].type != prop->type
+#ifdef WINXP_BUGS
+		    && prop->tag != EXIF_T_USERCOMMENT
+#endif
+		    )
 			exifwarn2("field type mismatch", prop->name);
 
 		/* Check the field count. */
@@ -343,11 +360,13 @@ parsetag(struct exifprop *prop, struct ifd *dir)
 		/*
 		 * XXX Olympus cameras don't seem to include a proper offset
 		 * at the end of the ExifOffset IFD, so just read one IFD.
+		 * Hopefully this won't cause us to miss anything...
 		 */
-
+#ifdef OLYMPUS_BUGS
 		if (prop->tag == EXIF_T_EXIFIFD)
 			readifd(btiff + prop->value, &dir->next);
 		else
+#endif
 			dir->next = readifds(prop->value);
 
 		if (!dir->next) {
@@ -358,10 +377,10 @@ parsetag(struct exifprop *prop, struct ifd *dir)
 			 * Olympus cameras, and we don't want to abort things
 			 * things on an IFD we don't really care about anyway.
 			 */
-
+#ifdef OLYMPUS_BUGS
 			if (prop->tag == EXIF_T_INTEROP)
 				break;
-
+#endif
 			exifdie("invalid Exif format (IFD length mismatch)");
 		}
 
@@ -457,7 +476,15 @@ parsetag(struct exifprop *prop, struct ifd *dir)
 		prop->str = finddescr(imgsensors, v);
 		return (TRUE);
 	case EXIF_T_FILESRC:
+		/*
+		 * This 'undefined' field is one byte; runs afoul of XP
+		 * not zeroing out stuff.
+		 */
+#ifdef WINXP_BUGS
+		prop->str = finddescr(filesrcs, v & 0xFF);
+#else
 		prop->str = finddescr(filesrcs, v);
+#endif
 		return (TRUE);
 	case EXIF_T_SCENETYPE:
 		prop->str = finddescr(scenetypes, v);
