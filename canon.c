@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.43 2004/08/21 20:27:10 ejohnst Exp $
+ * $Id: canon.c,v 1.44 2004/10/09 01:12:23 ejohnst Exp $
  */
 
 /*
@@ -653,6 +653,37 @@ static struct descrip ccstm_assistbut[] = {
 	{ -1,	"Unknown" },
 };
 
+static struct descrip ccstm_20dexplvl[] = {
+	{ 0,	"1/3 Stop" },
+	{ 1,	"1/2 Stop" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_20dflashsync[] = {
+	{ 0,	"Auto" },
+	{ 1,	"1/250 (Fixed)" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_20dflash[] = {
+	{  0,	"Fires" },
+	{  1,	"Does Not Fire" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_20dafpsel[] = {
+	{  0,	"Normal" },
+	{  1,	"Multi-Controller Direct" },
+	{  2,	"Quick Control Dial Direct" },
+	{ -1,	"Unknown" },
+};
+
+static struct descrip ccstm_20dettl[] = {
+	{  0,	"Evaluative" },
+	{  1,	"Average" },
+	{ -1,	"Unknown" },
+};
+
 
 /* D30/D60 custom functions. */
 
@@ -780,6 +811,49 @@ static struct exiftag canon_10dcustom[] = {
 	  "Lens AF stop button", ccstm_lensaf },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "10DCustomUnknown",
 	  "Canon 10D Custom Unknown", NULL },
+};
+
+/* 20D custom functions. */
+
+static struct exiftag canon_20dcustom[] = {
+	{ 0,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "SET button function when shooting", ccstm_10dsetbut },
+	{ 1,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Long exposure noise reduction", ccstm_offon },
+	{ 2,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Flash sync speed in Av mode", ccstm_20dflashsync },
+	{ 3,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Shutter button/AE lock button", ccstm_10dshutter },
+	{ 4,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "AF-assist beam", ccstm_assistflash },
+	{ 5,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Exposure level increments", ccstm_20dexplvl },
+	{ 6,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Flash firing", ccstm_20dflash },
+	{ 7,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "ISO expansion", ccstm_offon },
+	{ 8,  TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "AEB sequence/auto cancellation", ccstm_aebseq },
+	{ 9, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Superimposed display", ccstm_onoff },
+	{ 10, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Menu button display position", ccstm_10dmenubut },
+	{ 11, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Mirror lockup", ccstm_disen },
+	{ 12, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "AF point selection method", ccstm_20dafpsel },
+	{ 13, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "E-TTL II", ccstm_20dettl },
+	{ 14, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Shutter curtain sync", ccstm_shutsync },
+	{ 15, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Safety shift in Av or Tv", ccstm_disen },
+	{ 16, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Lens AF stop button", ccstm_lensaf1 },
+	{ 17, TIFF_SHORT, 0, ED_VRB, "20DCustom",
+	  "Add original decision data", ccstm_offon },
+	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "20DCustomUnknown",
+	  "Canon 20D Custom Unknown", NULL },
 };
 
 
@@ -1204,8 +1278,11 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		else if (strstr(t->model, "D30") || strstr(t->model, "D60"))
 			canon_custom(prop, t->md.btiff + prop->value,
 			    t->md.order, canon_d30custom);
+		else if (strstr(t->model, "20D"))
+			canon_custom(prop, t->md.btiff + prop->value,
+			    t->md.order, canon_20dcustom);
 		else
-			exifwarn2("Custom function unsupported for %s; please "
+			exifwarn2("Custom function unsupported; please "
 			    "report to author", t->model);
 		break;
 
