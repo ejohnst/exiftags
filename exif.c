@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.66 2004/12/18 01:42:40 ejohnst Exp $
+ * $Id: exif.c,v 1.67 2004/12/23 18:14:51 ejohnst Exp $
  */
 
 /*
@@ -705,6 +705,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	/*
 	 * Rational types.  (Note that we'll redo some in our later pass.)
 	 * We'll reduce and simplify the fraction.
+	 *
+	 * XXX Misses multiple rationals.
 	 */
 
 	if ((prop->type == TIFF_RTNL || prop->type == TIFF_SRTNL) &&
@@ -732,6 +734,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 * XXX For now, we're going to ignore tags with count > 8.  Maker
 	 * note tags frequently consist of many shorts; we don't really
 	 * want to be spitting these out.  (Plus, TransferFunction is huge.)
+	 *
+	 * XXX Note that this might not apply to two shorts (could just be
+	 * stuffed into the value, e.g. Nikon ISO values).
 	 */
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
