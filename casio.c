@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.6 2003/01/25 01:17:12 ejohnst Exp $
+ * $Id: casio.c,v 1.7 2003/01/25 08:00:51 ejohnst Exp $
  */
 
 /*
@@ -237,7 +237,6 @@ casio_prop1(struct exifprop *prop, struct exiftags *t)
 void
 casio_prop(struct exifprop *prop, struct exiftags *t)
 {
-	int i;
 
 	/*
 	 * XXX This is a rather ugly hack, but we don't really have a way
