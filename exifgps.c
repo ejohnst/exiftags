@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.1 2003/08/01 19:21:14 ejohnst Exp $
+ * $Id: exifgps.c,v 1.2 2003/08/02 17:45:44 ejohnst Exp $
  */
 
 /*
@@ -175,6 +175,8 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 	u_int16_t v = (u_int16_t)prop->value;
 	double deg, min, sec;
 	char fmt[32], buf[8];
+	unsigned char *c;
+	struct exifprop *tmpprop;
 
 	/* Lookup field description values. */
 
@@ -211,8 +213,13 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	/*
-	 * Reference values.  The value itself is 2-count nul-terminated
-	 * ASCII, not an offset to the ASCII string (at least with Nikon).
+	 * Reference values.  The value is 2-count nul-terminated ASCII,
+	 * not an offset to the ASCII string.  Being a little lazy here
+	 * with how I'm extracting the byte: both the byte orders of the
+	 * platform and the file matter.  So, I just look to see where the
+	 * non-zero byte is in the value and assume it's the one I want.
+	 * (All this is due primarily to the fact that the value is normally
+	 * an offset to the string, not the string itself.)
 	 */
 
 	case 0x0001:
@@ -226,13 +233,14 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 	case 0x0015:
 	case 0x0017:
 	case 0x0019:
+		for (i = 0; i < 3 && !((unsigned char *)&prop->value)[i]; i++);
 		if (gpstags[x].table)
 			prop->str = finddescr(gpstags[x].table,
-			    prop->value >> 24);
+			    ((unsigned char *)&prop->value)[i]);
 		else {
 			if (!(prop->str = (char *)malloc(2)))
 				exifdie((const char *)strerror(errno));
-			prop->str[0] = prop->value >> 24;
+			prop->str[0] = ((unsigned char *)&prop->value)[i];
 			prop->str[1] = '\0';
 		}
 		break;
@@ -258,7 +266,26 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 
 		if (!(prop->str = (char *)malloc(32)))
 			exifdie((const char *)strerror(errno));
-		prop->str[0] = '\0';
+		prop->str[0] = prop->str[31] = '\0';
+
+		/* Figure out the reference prefix. */
+
+		switch (prop->tag) {
+		case 0x0002:
+			tmpprop = findtprop(t->props, gpstags, 0x0001);
+			break;
+		case 0x0004:
+			tmpprop = findtprop(t->props, gpstags, 0x0003);
+			break;
+		case 0x0014:
+			tmpprop = findtprop(t->props, gpstags, 0x0013);
+			break;
+		case 0x0016:
+			tmpprop = findtprop(t->props, gpstags, 0x0015);
+			break;
+		default:
+			tmpprop = NULL;
+		}
 
 		/* Degrees. */
 
@@ -266,13 +293,13 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		n = exif4byte(t->btiff + prop->value + i * 8, t->tifforder);
 		d = exif4byte(t->btiff + prop->value + 4 + i * 8, t->tifforder);
 
-		strcpy(fmt, "%.f° ");
+		strcpy(fmt, "%s %.f° ");
 		if (!n)				/* Punt. */
 			deg = 0.0;
 		else {
 			deg = (double)n / (double)d;
 			if (d != 1)
-				sprintf(fmt, "%%.%df° ",
+				sprintf(fmt, "%%s %%.%df° ",
 				    (int)log10((double)d));
 		}
 
@@ -284,14 +311,14 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 
 		if (!n) {			/* Punt. */
 			min = 0.0;
-			strcat(fmt, "%f'");
+			strcat(fmt, "%.f'");
 		} else {
 			min = (double)n / (double)d;
 			if (d != 1) {
 				sprintf(buf, "%%.%df'", (int)log10((double)d));
 				strcat(fmt, buf);
 			} else
-				strcat(fmt, "%f'");
+				strcat(fmt, "%.f'");
 		}
 
 		/*
@@ -299,27 +326,24 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		 * should just ignore seconds.
 		 */
 
-		if (n && n != 1) {
-			snprintf(prop->str, 31, fmt, deg, min);
-			break;
-		}
-
 		i++;
 		n = exif4byte(t->btiff + prop->value + i * 8, t->tifforder);
 		d = exif4byte(t->btiff + prop->value + 4 + i * 8, t->tifforder);
 
-		if (!n) {			/* Punt. */
-			sec = 0.0;
-			strcat(fmt, " %f");
+		if (!n) {			/* Assume no seconds. */
+			snprintf(prop->str, 31, fmt, tmpprop && tmpprop->str ?
+			    tmpprop->str : "", deg, min);
+			break;
 		} else {
 			sec = (double)n / (double)d;
 			if (d != 1) {
 				sprintf(buf, " %%.%df", (int)log10((double)d));
 				strcat(fmt, buf);
 			} else
-				strcat(fmt, " %f");
+				strcat(fmt, " %.f");
 		}
-		snprintf(prop->str, 31, fmt, deg, min, sec);
+		snprintf(prop->str, 31, fmt, tmpprop && tmpprop->str ?
+		    tmpprop->str : "", deg, min, sec);
 		break;
 	}
 }
