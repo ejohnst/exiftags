@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.22 2004/08/20 22:31:45 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.23 2004/12/28 06:39:21 ejohnst Exp $
  */
 
 /*
@@ -529,11 +529,11 @@ struct exiftag tags[] = {
 	    "MakerNote", "Manufacturer Notes", NULL },
 	{ 0x9286, TIFF_UNDEF, 0,  ED_UNK,
 	    "UserComment", "Comment", NULL },
-	{ 0x9290, TIFF_ASCII, 0,  ED_IMG,
+	{ 0x9290, TIFF_ASCII, 0,  ED_VRB,
 	    "SubsecTime", "DateTime Second Fraction", NULL },
-	{ 0x9291, TIFF_ASCII, 0,  ED_IMG,
+	{ 0x9291, TIFF_ASCII, 0,  ED_VRB,
 	    "SubsecTimeOrginal", "DateTimeOriginal Second Fraction", NULL },
-	{ 0x9292, TIFF_ASCII, 0,  ED_IMG,
+	{ 0x9292, TIFF_ASCII, 0,  ED_VRB,
 	    "SubsecTimeDigitized", "DateTimeDigitized Second Fraction", NULL },
 	{ 0xa000, TIFF_UNDEF, 4,  ED_UNK,
 	    "FlashPixVersion", "Supported FlashPix Version", NULL },
