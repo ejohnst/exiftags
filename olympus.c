@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.13 2003/08/03 06:51:17 ejohnst Exp $
+ * $Id: olympus.c,v 1.14 2003/08/04 06:04:05 ejohnst Exp $
  */
 
 /*
@@ -42,7 +42,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "makers.h"
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.7 2003/08/03 06:51:16 ejohnst Exp $
+ * $Id: exifgps.c,v 1.8 2003/08/04 06:04:18 ejohnst Exp $
  */
 
 /*
@@ -42,7 +42,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <math.h>
 
 #include "exif.h"

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.8 2003/08/03 00:50:02 ejohnst Exp $
+ * $Id: casio.c,v 1.9 2003/08/04 06:04:05 ejohnst Exp $
  */
 
 /*
@@ -40,7 +40,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "makers.h"
 
