@@ -1,0 +1,125 @@
+.TH EXIFCOM 1
+.\"
+.\" Copyright (c) 2002, Eric M. Johnston <emj@postal.net>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"      This product includes software developed by Eric M. Johnston.
+.\" 4. Neither the name of the author nor the names of any co-contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+.\" OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+.\" IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+.\" INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+.\" NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+.\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\" $Id: exifcom.1,v 1.1 2002/10/08 07:51:46 ejohnst Exp $
+.\"
+.SH NAME
+.B exifcom
+\- display or set the UserComment tag contained in a JPEG Exif section
+.SH SYNOPSIS
+.B exifcom
+[
+.B \-bifv
+] [
+.B \-w
+.I comment
+]
+.I file ...
+.SH DESCRIPTION
+When invoked without arguments, the
+.B exifcom
+utility displays the contents of the Exif UserComment tag contained in
+.I file
+to the standard output.  Otherwise, depending on the options specified,
+.B exifcom
+will blank the tag or set it to
+.IR comment  .
+
+Some digital cameras include a standard UserComment tag in the Exif
+data added to the image files they produce.  This comment tag is
+fixed-length and supports multi-byte character sets (though
+.B exifcom
+does not).  Note that not all cameras will include the tag.
+
+The utility is conservative to its approach in writing the UserComment tag.
+It does not modify, extend, or otherwise adulterate an image's Exif
+metadata structure.  When writing the tag it merely changes pre-allocated
+bytes.  Therefore,
+.B exifcom
+is at the mercy of the Exif data creator for both the presence of the tag
+and its length.  It cannot create a UserComment tag when the camera does not
+include one, nor can it write a comment longer than the space pre-allocated
+by the camera.
+.B exifcom
+only displays and writes ASCII character set comments.
+.SH OPTIONS
+.IP -b
+Blank the UserComment tag, overwriting both the character code and comment
+fields with NUL.  The character code specifies how the comment is
+represented; it is "undefined" when blank.  This is the state to which many
+cameras initialize the tag.  When used in conjunction with the
+.B \-w
+option,
+.B exifcom
+will blank the comment prior to setting it to
+.IR comment  .
+.IP -f
+Overwrite or blank existing or unsupported comments without prompting
+for confirmation.
+.IP -i
+Write a prompt to standard error before overwriting or blanking an
+existing or unsupported comment.  If the response from the standard
+input begins with 'y' or 'Y', the comment is overwritten.  This option
+takes precedence over the
+.B \-f
+option and is default behavior.
+.IP -v
+Be verbose when printing the contents of the UserComment tag.  Besides
+the comment itself (if present and supported),
+.B exifcom
+will display the maximum supported comment length, the character code of
+the comment, and the length of the comment.
+.IP -w
+Set UserComment to the ASCII string
+.IR comment  .
+If
+.IR comment
+is longer than what the tag supports, it will be truncated to fit.
+.SH DIAGNOSTICS
+The
+.B exifcom
+utility exits 0 on success.  When displaying a comment from a single file,
+if the UserComment tag is missing, it exits 1; if blank, it exits 2; if in
+an unsupported character code, it exits 3.  Otherwise, it exits 1 if an
+error occurs.
+.SH "SEE ALSO"
+exiftags(1)
+.SH STANDARDS
+The
+.B exifcom
+utility was developed using the June 1998 Exif standard, version 2.1
+(http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF).
+.SH BUGS
+If the tag doesn't exist or is too short, too bad.
+.SH AUTHOR
+The
+.B exifcom
+utility and this man page were written by Eric M. Johnston <emj@postal.net>.
