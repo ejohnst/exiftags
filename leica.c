@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: leica.c,v 1.1 2004/04/03 11:38:37 ejohnst Exp $
+ * $Id: leica.c,v 1.2 2004/04/03 22:07:40 ejohnst Exp $
  */
 
 /*
@@ -93,18 +93,18 @@ static struct descrip leica_focus[] = {
 
 static struct descrip leica_flashev[] = {
 	{ 0,		"0 EV" },
-	{ 1,		"0.3 EV" },
-	{ 2,		"0.7 EV" },
+	{ 1,		"0.33 EV" },
+	{ 2,		"0.67 EV" },
 	{ 3,		"1 EV" },
-	{ 4,		"1.3 EV" },
-	{ 5,		"1.7 EV" },
+	{ 4,		"1.33 EV" },
+	{ 5,		"1.67 EV" },
 	{ 6,		"2 EV" },
 	{ 0xfffa,	"-2 EV" },
-	{ 0xfffb,	"-1.7 EV" },
-	{ 0xfffc,	"-1.3 EV" },
+	{ 0xfffb,	"-1.67 EV" },
+	{ 0xfffc,	"-1.33 EV" },
 	{ 0xfffd,	"-1 EV" },
-	{ 0xfffe,	"-0.7 EV" },
-	{ 0xffff,	"-0.3 EV" },
+	{ 0xfffe,	"-0.67 EV" },
+	{ 0xffff,	"-0.33 EV" },
 	{ -1,		"Unknown" },
 };
 
