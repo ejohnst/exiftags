@@ -1,5 +1,7 @@
+20020928 version: exiftags 0.94
+20020928 support ASCII UserComment (thanks: Alan Judge)
 20020831 version: exiftags 0.93
-20020831 print warnings instead of dying on some errors
+20020831 print warnings instead of dying on some errors (thanks: Ian Morgan)
 20020801 version: exiftags 0.92
 20020731 prevent potential NaN values
 20020731 portability changes for Windows
@@ -10,4 +12,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.5 2002/08/31 11:07:33 ejohnst Exp $
+$Id: CHANGES,v 1.6 2002/09/28 20:48:44 ejohnst Exp $
