@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.50 2004/12/29 07:37:55 ejohnst Exp $
+ * $Id: canon.c,v 1.51 2005/01/11 20:11:01 ejohnst Exp $
  */
 
 /*
@@ -52,8 +52,9 @@
  * Calculate and format an exposure value ("-n.nn EV").
  */
 static float
-calcev(char **c, int16_t v)
+calcev(char *c, int l, int16_t v)
 {
+#if 0	/* Adjustment seems silly.  If someone complains, I'll reconsider. */
 	int16_t n;
 
 	/*
@@ -63,13 +64,9 @@ calcev(char **c, int16_t v)
 	n = (abs(v) - 32) * (v & 0x8000 ? -1 : 1);
 	if (n == 20 || n == -12) v++;
 	else if (n == -20 || n == 12) v--;
+#endif
 
-	exifstralloc(c, 10);
-	if (abs(v) > 64) {
-		sprintf(*c, "Unknown");
-		return (0.0);
-	}
-	snprintf(*c, 9, "%.2f EV", (float)v / 32);
+	if (c) snprintf(c, l, "%.2f EV", (float)v / 32);
 	return ((float)v / 32);
 }
 
@@ -248,8 +245,10 @@ static struct descrip canon_whitebal[] = {
 	{ 7,	"Black & White" },
 	{ 8,	"Shade" },
 	{ 9,	"Manual Temperature" },
+	{ 14,	"Daylight Fluorescent" },
 	{ 15,	"Custom 1" },
 	{ 16,	"Custom 2" },
+	{ 17,	"Underwater" },
 	{ -1,	"Unknown" },
 };
 
@@ -284,7 +283,7 @@ static struct exiftag canon_tags[] = {
 };
 
 
-/* Fields under tag 0x0001. */
+/* Fields under tag 0x0001 (camera settings). */
 
 static struct exiftag canon_tags01[] = {
 	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon1Len",
@@ -342,11 +341,15 @@ static struct exiftag canon_tags01[] = {
 };
 
 
-/* Fields under tag 0x0004. */
+/* Fields under tag 0x0004 (shot info). */
 
 static struct exiftag canon_tags04[] = {
 	{ 0,  TIFF_SHORT, 0, ED_VRB, "Canon4Len",
 	  "Canon Tag4 Length", NULL },
+	{ 2,  TIFF_SHORT, 0, ED_IMG, "CanonSensorSpeed",
+	  "Sensor ISO Speed", NULL },
+	{ 6,  TIFF_SHORT, 0, ED_IMG, "CanonExpComp",
+	  "Exposure Compensation", NULL },
 	{ 7,  TIFF_SHORT, 0, ED_IMG, "CanonWhiteB",
 	  "White Balance", canon_whitebal },
 	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonSequence",
@@ -919,6 +922,10 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
 		}
 		aprop->override = EXIF_T_METERMODE;
 		break;
+	case 20:
+		/* With "Easy Shooting", shooting mode is all that matters. */
+		aprop->lvl = v ? ED_IMG : ED_VRB;
+		break;
 	default:
 		return (FALSE);
 	}
@@ -939,6 +946,13 @@ canon_prop04(struct exifprop *aprop, struct exifprop *prop,
 	int d;
 
 	switch (aprop->tag) {
+	case 6:
+		/* Calculate sensor speed (ISO units). */
+		exifstralloc(&aprop->str, 32);
+		snprintf(aprop->str, 31, "%d", (int)(exp(calcev(NULL, 0, v) *
+		    log(2)) * 100.0 / 32.0 + 0.5));
+		break;
+		
 	case 7:
 		aprop->override = EXIF_T_WHITEBAL;
 		break;
@@ -946,7 +960,8 @@ canon_prop04(struct exifprop *aprop, struct exifprop *prop,
 		aprop->lvl = v ? ED_IMG : ED_VRB;
 		break;
 	case 15:
-		if (calcev(&aprop->str, (int16_t)v) == 0.0)
+		exifstralloc(&aprop->str, 16);
+		if (calcev(aprop->str, 15, v) == 0.0)
 			aprop->lvl = ED_VRB;
 		break;
 
