@@ -22,7 +22,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.1 2002/01/20 23:39:32 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.2 2002/02/17 03:44:16 ejohnst Exp $
  */
 
 /*
@@ -172,7 +172,7 @@ struct exiftag tags[] = {
 	    "BrightnessValue", "Brightness" },
 	{ 0x9204, TIFF_SRTNL, 1,  ED_IMG,
 	    "ExposureBiasValue", "Exposure Bias" },
-	{ 0x9205, TIFF_RTNL,  1,  ED_IMG,
+	{ 0x9205, TIFF_RTNL,  1,  ED_CAM,
 	    "MaxApertureValue", "Maximum Lens Aperture" },
 	{ 0x9206, TIFF_RTNL,  1,  ED_IMG,		/* m */
 	    "SubjectDistance", "Subject Distance" },
