@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.22 2003/08/05 22:50:24 ejohnst Exp $
+ * $Id: minolta.c,v 1.23 2003/08/06 02:26:42 ejohnst Exp $
  *
  */ 
 
@@ -713,7 +713,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			fielddefs = minolta_unkn;
 		} else
 			fielddefs = minolta_0TLM;
-		minolta_cprop(prop, t->btiff + prop->value, t, fielddefs);
+		minolta_cprop(prop, t->md.btiff + prop->value, t, fielddefs);
 		break;
 
 	case 0x0003:
@@ -722,7 +722,7 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 			fielddefs = minolta_unkn;
 		} else
 			fielddefs = minolta_0TLM;
-		minolta_cprop(prop, t->btiff + prop->value, t, fielddefs);
+		minolta_cprop(prop, t->md.btiff + prop->value, t, fielddefs);
 		break;
 	}
 
@@ -786,12 +786,12 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
  * Try to read a Minolta maker note IFD, which differs by model.
  */
 struct ifd *
-minolta_ifd(u_int32_t offset, struct exiftags *t)
+minolta_ifd(u_int32_t offset, struct tiffmeta *md)
 {
 
 	/* DiMAGE E201. */
 
-	if (!strcmp((const char *)(t->btiff + offset), "+M")) {
+	if (!strcmp((const char *)(md->btiff + offset), "+M")) {
 		exifwarn("Minolta maker note version not supported");
 		return (NULL);
 	}
@@ -801,12 +801,11 @@ minolta_ifd(u_int32_t offset, struct exiftags *t)
 	 * Takes care of the unfortunate DiMAGE 2300 & EX.
 	 */
 
-	if (exif2byte(t->btiff + offset, t->tifforder) > 0xff ||
-	    exif2byte(t->btiff + offset, t->tifforder) < 0x02) {
+	if (exif2byte(md->btiff + offset, md->order) > 0xff ||
+	    exif2byte(md->btiff + offset, md->order) < 0x02) {
 		exifwarn("Minolta maker note version not supported");
 		return (NULL);
 	}
 
-	return (readifds(t->btiff, t->etiff, offset, minolta_tags,
-	    t->tifforder));
+	return (readifds(offset, minolta_tags, md));
 }

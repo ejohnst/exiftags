@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.10 2003/08/05 00:40:30 ejohnst Exp $
+ * $Id: casio.c,v 1.11 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -192,7 +192,7 @@ static struct exiftag casio_tags1[] = {
  * Try to read a Casio maker note IFD.
  */
 struct ifd *
-casio_ifd(u_int32_t offset, struct exiftags *t)
+casio_ifd(u_int32_t offset, struct tiffmeta *md)
 {
 	struct ifd *myifd;
 
@@ -202,13 +202,11 @@ casio_ifd(u_int32_t offset, struct exiftags *t)
 	 * format; the other starts at offset + 6 ("QVC\0\0\0").
 	 */
 
-	if (!memcmp("QVC\0\0\0", t->btiff + offset, 6)) {
-		readifd(t->btiff, t->etiff, + offset + strlen("QVC") + 3,
-		    &myifd, casio_tags1, t->tifforder);
+	if (!memcmp("QVC\0\0\0", md->btiff + offset, 6)) {
+		readifd(offset + strlen("QVC") + 3, &myifd, casio_tags1, md);
 		exifwarn("Casio maker note version not supported");
 	} else
-		readifd(t->btiff, t->etiff, offset, &myifd, casio_tags0,
-		    t->tifforder);
+		readifd(offset, &myifd, casio_tags0, md);
 
 	return (myifd);
 }

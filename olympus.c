@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.15 2003/08/05 00:40:30 ejohnst Exp $
+ * $Id: olympus.c,v 1.16 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -102,7 +102,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	/* Various image data. */
 
 	case 0x0200:
-		offset = t->btiff + prop->value;
+		offset = t->md.btiff + prop->value;
 
 		/*
 		 * XXX Would be helpful to test this with a panoramic.
@@ -114,7 +114,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 		/* Picture taking mode. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset, t->tifforder);
+		aprop->value = exif4byte(offset, t->md.order);
 		aprop->name = "OlympusPicMode";
 		aprop->descr = "Picture Mode";
 		aprop->lvl = ED_UNK;
@@ -122,7 +122,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 		/* Sequence number. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset + 4, t->tifforder);
+		aprop->value = exif4byte(offset + 4, t->md.order);
 		aprop->name = "OlympusSeqNum";
 		aprop->descr = "Sequence Number";
 		aprop->lvl = ED_UNK;
@@ -130,7 +130,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 		/* Panorama direction. */
 
 		aprop = childprop(prop);
-		aprop->value = exif4byte(offset + 8, t->tifforder);
+		aprop->value = exif4byte(offset + 8, t->md.order);
 		aprop->name = "OlympusPanDir";
 		aprop->descr = "Panoramic Direction";
 		aprop->lvl = ED_UNK;
@@ -140,8 +140,8 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	/* Digital zoom. */
 
 	case 0x0204:
-		a = exif4byte(t->btiff + prop->value, t->tifforder);
-		b = exif4byte(t->btiff + prop->value + 4, t->tifforder);
+		a = exif4byte(t->md.btiff + prop->value, t->md.order);
+		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
 
 		if (a == b)
 			snprintf(prop->str, 31, "None");
@@ -164,7 +164,7 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
  * Try to read an Olympus maker note IFD.
  */
 struct ifd *
-olympus_ifd(u_int32_t offset, struct exiftags *t)
+olympus_ifd(u_int32_t offset, struct tiffmeta *md)
 {
 	struct ifd *myifd;
 
@@ -173,12 +173,10 @@ olympus_ifd(u_int32_t offset, struct exiftags *t)
 	 * try reading the IFD starting at offset + 8 ("OLYMP" + 3).
 	 */
 
-	if (!strcmp((const char *)(t->btiff + offset), "OLYMP"))
-		readifd(t->btiff, t->etiff, offset + strlen("OLYMP") + 3,
-		    &myifd, olympus_tags, t->tifforder);
+	if (!strcmp((const char *)(md->btiff + offset), "OLYMP"))
+		readifd(offset + strlen("OLYMP") + 3, &myifd, olympus_tags, md);
 	else
-		readifd(t->btiff, t->etiff, offset, &myifd, olympus_tags,
-		    t->tifforder);
+		readifd(offset, &myifd, olympus_tags, md);
 
 	return (myifd);
 }

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.57 2003/08/05 00:40:30 ejohnst Exp $
+ * $Id: exif.c,v 1.58 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -86,20 +86,20 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 	/* Field info. */
 
-	prop->tag = exif2byte(afield->tag, dir->ifdorder);
-	prop->type = exif2byte(afield->type, dir->ifdorder);
-	prop->count = exif4byte(afield->count, dir->ifdorder);
+	prop->tag = exif2byte(afield->tag, dir->md.order);
+	prop->type = exif2byte(afield->type, dir->md.order);
+	prop->count = exif4byte(afield->count, dir->md.order);
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
 	    prop->count <= 1)
-		prop->value = exif2byte(afield->value, dir->ifdorder);
+		prop->value = exif2byte(afield->value, dir->md.order);
 	else
-		prop->value = exif4byte(afield->value, dir->ifdorder);
+		prop->value = exif4byte(afield->value, dir->md.order);
 
 	/* IFD identifying info. */
 
 	prop->ifdseq = ifdseq;
 	prop->par = dir->par;
-	prop->tagset = dir->tagset ? dir->tagset : tags;
+	prop->tagset = dir->tagset;
 
 	/* Lookup the field name. */
 
@@ -180,9 +180,6 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
  * the count here.  Root IFDs (0 and 1) are processed first (along with any
  * other "root" IFDs we find), then any nested IFDs in the order they're
  * encountered.
- *
- * XXX To work around some Fuji braindeadness, if we're dealing with the
- * maker note we set our byte order to little endian.
  */
 static void
 readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
@@ -211,7 +208,8 @@ readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
  * Exif tags read in (but not maker tags), so it's safe to work out
  * dependencies between tags.
  *
- * XXX Byte order.
+ * XXX At this point, we've lost IFD-level TIFF metadata.  Therefore,
+ * assumptions about byte order and beginning of the TIFF might be false.
  */
 static void
 postprop(struct exifprop *prop, struct exiftags *t)
@@ -220,7 +218,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	u_int16_t v;
 	u_int32_t val;
 	float fval;
-	enum order o = t->tifforder;
+	enum byteorder o = t->md.order;
 	struct exifprop *h = t->props;
 
 	/*
@@ -262,8 +260,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 			if (!(tmpprop = findprop(h, tags, EXIF_T_FPRESUNITS)))
 				break;
 		}
-		val = exif4byte(t->btiff + prop->value, o) /
-		    exif4byte(t->btiff + prop->value + 4, o);
+		val = exif4byte(t->md.btiff + prop->value, o) /
+		    exif4byte(t->md.btiff + prop->value + 4, o);
 		snprintf(prop->str, 31, "%d dp%s", val, tmpprop->str);
 		prop->str[31] = '\0';
 		break;
@@ -275,8 +273,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	 */
 
 	case EXIF_T_SHUTTER:
-		fval = (float)exif4sbyte(t->btiff + prop->value, o) /
-		    (float)exif4sbyte(t->btiff + prop->value + 4, o);
+		fval = (float)exif4sbyte(t->md.btiff + prop->value, o) /
+		    (float)exif4sbyte(t->md.btiff + prop->value + 4, o);
 		if (isnan(fval)) fval = 0;
 		/* 1 / (2^speed) */
 		snprintf(prop->str, 31, "1/%d",
@@ -292,8 +290,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	case EXIF_T_FNUMBER:
-		fval = (float)exif4byte(t->btiff + prop->value, o) /
-		    (float)exif4byte(t->btiff + prop->value + 4, o);
+		fval = (float)exif4byte(t->md.btiff + prop->value, o) /
+		    (float)exif4byte(t->md.btiff + prop->value + 4, o);
 		if (isnan(fval)) fval = 0;
 		snprintf(prop->str, 31, "f/%.1f", fval);
 		prop->str[31] = '\0';
@@ -301,8 +299,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 
 	case EXIF_T_LAPERTURE:
 	case EXIF_T_MAXAPERTURE:
-		fval = (float)exif4byte(t->btiff + prop->value, o) /
-		    (float)exif4byte(t->btiff + prop->value + 4, o);
+		fval = (float)exif4byte(t->md.btiff + prop->value, o) /
+		    (float)exif4byte(t->md.btiff + prop->value + 4, o);
 		if (isnan(fval)) fval = 0;
 		/* sqrt(2)^aperture */
 		snprintf(prop->str, 31, "f/%.1f", pow(1.4142, (double)fval));
@@ -310,7 +308,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	case EXIF_T_BRIGHTVAL:
-		if (exif4byte(t->btiff + prop->value, o) == 0xffffffff) {
+		if (exif4byte(t->md.btiff + prop->value, o) == 0xffffffff) {
 			strcpy(prop->str, "Unknown");
 			break;
 		}
@@ -322,16 +320,16 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	case EXIF_T_DISTANCE:
-		if (exif4byte(t->btiff + prop->value, o) == 0xffffffff) {
+		if (exif4byte(t->md.btiff + prop->value, o) == 0xffffffff) {
 			strcpy(prop->str, "Infinity");
 			break;
 		}
-		if (exif4byte(t->btiff + prop->value + 4, o) == 0) {
+		if (exif4byte(t->md.btiff + prop->value + 4, o) == 0) {
 			strcpy(prop->str, "Unknown");
 			break;
 		}
-		fval = (float)exif4byte(t->btiff + prop->value, o) /
-		    (float)exif4byte(t->btiff + prop->value + 4, o);
+		fval = (float)exif4byte(t->md.btiff + prop->value, o) /
+		    (float)exif4byte(t->md.btiff + prop->value + 4, o);
 		if (isnan(fval)) fval = 0;
 		snprintf(prop->str, 31, "%.2f m", fval);
 		prop->str[31] = '\0';
@@ -348,8 +346,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	case EXIF_T_FOCALLEN:
-		fval = (float)exif4byte(t->btiff + prop->value, o) /
-		    (float)exif4byte(t->btiff + prop->value + 4, o);
+		fval = (float)exif4byte(t->md.btiff + prop->value, o) /
+		    (float)exif4byte(t->md.btiff + prop->value + 4, o);
 		if (isnan(fval)) fval = 0;
 		snprintf(prop->str, 31, "%.2f mm", fval);
 		prop->str[31] = '\0';
@@ -358,10 +356,10 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	/* Digital zoom: set to verbose if numerator is 0 or fraction = 1. */
 
 	case EXIF_T_DIGIZOOM:
-		if (!exif4byte(t->btiff + prop->value, o))
+		if (!exif4byte(t->md.btiff + prop->value, o))
 			strcpy(prop->str, "Unused");
-		else if (exif4byte(t->btiff + prop->value, o) !=
-		    exif4byte(t->btiff + prop->value + 4, o))
+		else if (exif4byte(t->md.btiff + prop->value, o) !=
+		    exif4byte(t->md.btiff + prop->value + 4, o))
 			break;
 		prop->lvl = ED_VRB;
 		break;
@@ -429,7 +427,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	u_int32_t un, ud, denom;
 	int32_t sn, sd;
 	char buf[32], *c, *d;
-	enum order ifdorder;
+	struct tiffmeta *md;
+	unsigned char *btiff = dir->md.btiff;
+	enum byteorder o = dir->md.order;
 
 	/* Set description if we have a lookup table. */
 
@@ -449,9 +449,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	case EXIF_T_EXIFIFD:
 	case EXIF_T_GPSIFD:
 	case EXIF_T_INTEROP:
-		c = dir->btiff;
-		d = dir->etiff;
-		ifdorder = dir->ifdorder;
+		md = &dir->md;
 		while (dir->next)
 			dir = dir->next;
 
@@ -462,15 +460,14 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		 */
 #ifdef OLYMPUS_BUGS
 		if (prop->tag == EXIF_T_EXIFIFD)
-			readifd(c, d, prop->value, &dir->next, tags, ifdorder);
+			readifd(prop->value, &dir->next, tags, md);
 		else
 #endif
-			if (prop->tag == EXIF_T_GPSIFD)
-				dir->next = readifds(c, d, prop->value,
-				    gpstags, ifdorder);
-			else
-				dir->next = readifds(c, d, prop->value, NULL,
-				    ifdorder);
+			if (prop->tag == EXIF_T_GPSIFD) {
+				dir->next = readifds(prop->value, gpstags, md);
+			} else {
+				dir->next = readifds(prop->value, tags, md);
+			}
 
 		if (!dir->next) {
 
@@ -488,6 +485,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			break;
 		}
 
+		/* XXX Doesn't catch multiple IFDs. */
 		dir->next->par = prop;
 		return;
 
@@ -518,6 +516,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		if (!domkr)
 			return;
 
+		md = &dir->md;
 		while (dir->next)
 			dir = dir->next;
 
@@ -530,21 +529,21 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		 */
 
 		if (makers[t->mkrval].ifdfun)
-			dir->next = makers[t->mkrval].ifdfun(prop->value, t);
+			dir->next = makers[t->mkrval].ifdfun(prop->value, md);
 		else
 			exifwarn("maker note not supported");
 
 		if (!dir->next)
 			break;
 
+		/* XXX Doesn't catch multiple IFDs. */
 		dir->next->par = prop;
 		return;
 
 	/* Lookup functions for maker note. */
 
 	case EXIF_T_EQUIPMAKE:
-		strncpy(buf, (const char *)(dir->btiff + prop->value),
-		    sizeof(buf));
+		strncpy(buf, (const char *)(btiff + prop->value), sizeof(buf));
 		buf[sizeof(buf) - 1] = '\0';
 		for (c = buf; *c; c++) *c = tolower(*c);
 
@@ -577,7 +576,6 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		/* FALLTHROUGH */
 
 	case EXIF_T_USERCOMMENT:
-
 		if (prop->count < 8)
 			break;
 
@@ -591,16 +589,15 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		/* Lookup the comment type. */
 
 		for (i = 0; ucomment[i].descr; i++)
-			if (!memcmp(ucomment[i].descr,
-			    dir->btiff + prop->value, 8))
+			if (!memcmp(ucomment[i].descr, btiff + prop->value, 8))
 				break;
 
 		/* Handle an ASCII comment; strip any trailing whitespace. */
 
 		if (ucomment[i].val == TIFF_ASCII &&
 		    (prop->value + prop->count <
-		    (u_int32_t)(dir->etiff - dir->btiff))) {
-			c = (char *)(dir->btiff + prop->value + 8);
+		    (u_int32_t)(dir->md.etiff - btiff))) {
+			c = (char *)(btiff + prop->value + 8);
 			d = strlen(c) < prop->count - 8 ? c + strlen(c) :
 			    c + prop->count - 8;
 
@@ -633,9 +630,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	if (prop->type == TIFF_ASCII &&
 	    (prop->value + prop->count <=
-	    (u_int32_t)(dir->etiff - dir->btiff))) {
+	    (u_int32_t)(dir->md.etiff - btiff))) {
 		exifstralloc(&prop->str, prop->count + 1);
-		strncpy(prop->str, (const char *)(dir->btiff + prop->value),
+		strncpy(prop->str, (const char *)(btiff + prop->value),
 		    prop->count);
 		return;
 	}
@@ -647,21 +644,18 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	if ((prop->type == TIFF_RTNL || prop->type == TIFF_SRTNL) &&
 	    (prop->value + prop->count * 8 <=
-	    (u_int32_t)(dir->etiff - dir->btiff))) {
+	    (u_int32_t)(dir->md.etiff - btiff))) {
 
 		exifstralloc(&prop->str, 32);
 
 		if (prop->type == TIFF_RTNL) {
-			un = exif4byte(dir->btiff + prop->value, dir->ifdorder);
-			ud = exif4byte(dir->btiff + prop->value + 4,
-			    dir->ifdorder);
+			un = exif4byte(btiff + prop->value, o);
+			ud = exif4byte(btiff + prop->value + 4, o);
 			denom = gcd(un, ud);
 			fixfract(prop->str, un, ud, denom);
 		} else {
-			sn = exif4sbyte(dir->btiff + prop->value,
-			    dir->ifdorder);
-			sd = exif4sbyte(dir->btiff + prop->value + 4,
-			    dir->ifdorder);
+			sn = exif4sbyte(btiff + prop->value, o);
+			sd = exif4sbyte(btiff + prop->value + 4, o);
 			denom = gcd(abs(sn), abs(sd));
 			fixfract(prop->str, sn, sd, (int32_t)denom);
 		}
@@ -677,7 +671,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
 	    prop->count > 1 && (prop->value + prop->count * 2 <=
-	    (u_int32_t)(dir->etiff - dir->btiff))) {
+	    (u_int32_t)(dir->md.etiff - btiff))) {
 
 		if (prop->count > 8)
 			return;
@@ -688,13 +682,13 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			if (prop->type == TIFF_SHORT)
 				snprintf(prop->str + strlen(prop->str),
 				    len - strlen(prop->str) - 1, "%d, ",
-				    exif2byte(dir->btiff + prop->value +
-				    (i * 2), dir->ifdorder));
+				    exif2byte(btiff + prop->value +
+				    (i * 2), o));
 			else
 				snprintf(prop->str + strlen(prop->str),
 				    len - strlen(prop->str) - 1, "%d, ",
-				    exif2sbyte(dir->btiff + prop->value +
-				    (i * 2), dir->ifdorder));
+				    exif2sbyte(btiff + prop->value +
+				    (i * 2), o));
 		}
 		prop->str[strlen(prop->str) - 2] = '\0';
 		return;
@@ -741,7 +735,7 @@ exifscan(unsigned char *b, int len, int domkr)
 	memset(t, 0, sizeof(struct exiftags));
 
 	seq = 0;
-	t->etiff = b + len;	/* End of TIFF. */
+	t->md.etiff = b + len;	/* End of TIFF. */
 
 	/*
 	 * Make sure we've got the proper Exif header.  If not, we're
@@ -757,21 +751,21 @@ exifscan(unsigned char *b, int len, int domkr)
 	/* Determine endianness of the TIFF data. */
 
 	if (*((u_int16_t *)b) == 0x4d4d)
-		t->tifforder = BIG;
+		t->md.order = BIG;
 	else if (*((u_int16_t *)b) == 0x4949)
-		t->tifforder = LITTLE;
+		t->md.order = LITTLE;
 	else {
 		exifwarn("invalid TIFF header");
 		exiffree(t);
 		return (NULL);
 	}
 
-	t->btiff = b;		/* Beginning of TIFF. */
+	t->md.btiff = b;	/* Beginning of TIFF. */
 	b += 2;
 
 	/* Verify the TIFF header. */
 
-	if (exif2byte(b, t->tifforder) != 42) {
+	if (exif2byte(b, t->md.order) != 42) {
 		exifwarn("invalid TIFF header");
 		exiffree(t);
 		return (NULL);
@@ -780,8 +774,8 @@ exifscan(unsigned char *b, int len, int domkr)
 
 	/* Get the 0th IFD, where all of the good stuff should start. */
 
-	ifdoff = exif4byte(b, t->tifforder);
-	curifd = readifds(t->btiff, t->etiff, ifdoff, tags, t->tifforder);
+	ifdoff = exif4byte(b, t->md.order);
+	curifd = readifds(ifdoff, tags, &t->md);
 	if (!curifd) {
 		exifwarn("invalid Exif format (couldn't read IFD0)");
 		exiffree(t);

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.22 2003/08/05 00:40:30 ejohnst Exp $
+ * $Id: exifutil.c,v 1.23 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -84,7 +84,7 @@ exifwarn2(const char *msg1, const char *msg2)
  * Read an unsigned 2-byte int from the buffer.
  */
 u_int16_t
-exif2byte(unsigned char *b, enum order o)
+exif2byte(unsigned char *b, enum byteorder o)
 {
 
 	if (o == BIG)
@@ -98,7 +98,7 @@ exif2byte(unsigned char *b, enum order o)
  * Read a signed 2-byte int from the buffer.
  */
 int16_t
-exif2sbyte(unsigned char *b, enum order o)
+exif2sbyte(unsigned char *b, enum byteorder o)
 {
 
 	if (o == BIG)
@@ -112,7 +112,7 @@ exif2sbyte(unsigned char *b, enum order o)
  * Read an unsigned 4-byte int from the buffer.
  */
 u_int32_t
-exif4byte(unsigned char *b, enum order o)
+exif4byte(unsigned char *b, enum byteorder o)
 {
 
 	if (o == BIG)
@@ -126,7 +126,7 @@ exif4byte(unsigned char *b, enum order o)
  * Write an unsigned 4-byte int to a buffer.
  */
 void
-byte4exif(u_int32_t n, unsigned char *b, enum order o)
+byte4exif(u_int32_t n, unsigned char *b, enum byteorder o)
 {
 	int i;
 
@@ -143,7 +143,7 @@ byte4exif(u_int32_t n, unsigned char *b, enum order o)
  * Read a signed 4-byte int from the buffer.
  */
 int32_t
-exif4sbyte(unsigned char *b, enum order o)
+exif4sbyte(unsigned char *b, enum byteorder o)
 {
 
 	if (o == BIG)
@@ -295,10 +295,13 @@ dumpprop(struct exifprop *prop, struct field *afield)
  * Exif buffer, returns the IFD and an offset to the next IFD.
  */
 u_int32_t
-readifd(unsigned char *b, unsigned char *e, u_int32_t off, struct ifd **dir,
-    struct exiftag *set, enum order o)
+readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
+    struct tiffmeta *md)
 {
 	u_int32_t ifdsize;
+	unsigned char *b;
+
+	b = md->btiff;
 
 	/*
 	 * Verify that we have a valid offset.  Some maker note IFDs prepend
@@ -306,7 +309,7 @@ readifd(unsigned char *b, unsigned char *e, u_int32_t off, struct ifd **dir,
 	 * (Number of directory entries is in the first 2 bytes.)
 	 */
 
-	if (b + off + 2 > e) {
+	if (b + offset + 2 > md->etiff) {
 		*dir = NULL;
 		return (0);
 	}
@@ -315,19 +318,18 @@ readifd(unsigned char *b, unsigned char *e, u_int32_t off, struct ifd **dir,
 	if (!*dir)
 		exifdie((const char *)strerror(errno));
 
-	(*dir)->next = NULL;
-	(*dir)->num = exif2byte(b + off, o);
-	(*dir)->tagset = set;
-	(*dir)->ifdorder = o;
-	(*dir)->btiff = b;
-	(*dir)->etiff = e;
+	(*dir)->num = exif2byte(b + offset, md->order);
 	(*dir)->par = NULL;
+	(*dir)->tagset = tagset;
+	(*dir)->md = *md;
+	(*dir)->next = NULL;
+
 	ifdsize = (*dir)->num * sizeof(struct field);
-	b += off + 2;
+	b += offset + 2;
 
 	/* Sanity check our sizes. */
 
-	if (b + ifdsize > e) {
+	if (b + ifdsize > md->etiff) {
 		free(*dir);
 		*dir = NULL;
 		return (0);
@@ -340,7 +342,7 @@ readifd(unsigned char *b, unsigned char *e, u_int32_t off, struct ifd **dir,
 	/*
 	 * While we're here, find the offset to the next IFD.
 	 *
-	 * XXX Note that this offset isn't always going to be valid.  It
+	 * Note that this offset isn't always going to be valid.  It
 	 * seems that some camera implementations of Exif ignore the spec
 	 * and do not include the offset for all IFDs (e.g., maker note).
 	 * Therefore, it may be necessary to call readifd() directly (in
@@ -348,7 +350,8 @@ readifd(unsigned char *b, unsigned char *e, u_int32_t off, struct ifd **dir,
 	 * standard IFDs.
 	 */
 
-	return ((b + ifdsize + 4 > e) ? 0 : exif4byte(b + ifdsize, o));
+	return ((b + ifdsize + 4 > md->etiff) ? 0 :
+	    exif4byte(b + ifdsize, md->order));
 }
 
 
@@ -357,20 +360,19 @@ readifd(unsigned char *b, unsigned char *e, u_int32_t off, struct ifd **dir,
  * node in a chain of IFDs.  Note that it can return NULL.
  */
 struct ifd *
-readifds(unsigned char *beg, unsigned char *end, u_int32_t off,
-    struct exiftag *set, enum order o)
+readifds(u_int32_t offset, struct exiftag *tagset, struct tiffmeta *md)
 {
 	struct ifd *firstifd, *curifd;
 
 	/* Fetch our first one. */
 
-	off = readifd(beg, end, off, &firstifd, set, o);
+	offset = readifd(offset, &firstifd, tagset, md);
 	curifd = firstifd;
 
 	/* Fetch any remaining ones. */
 
-	while (off) {
-		off = readifd(beg, end, off, &(curifd->next), set, o);
+	while (offset) {
+		offset = readifd(offset, &(curifd->next), tagset, md);
 		curifd = curifd->next;
 	}
 	return (firstifd);

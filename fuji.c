@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.12 2003/08/05 00:40:30 ejohnst Exp $
+ * $Id: fuji.c,v 1.13 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -216,12 +216,14 @@ fuji_prop(struct exifprop *prop, struct exiftags *t)
  * Try to read a Fuji maker note IFD.
  */
 struct ifd *
-fuji_ifd(u_int32_t offset, struct exiftags *t)
+fuji_ifd(u_int32_t offset, struct tiffmeta *md)
 {
 	struct ifd *myifd;
 	int fujilen, fujioff;
+	struct tiffmeta mkrmd;
 
 	fujilen = strlen("FUJIFILM");
+	mkrmd = *md;
 
 	/*
 	 * The Fuji maker note appears to be in Intel byte order
@@ -230,12 +232,12 @@ fuji_ifd(u_int32_t offset, struct exiftags *t)
 	 * offset relative to the MakerNote tag.
 	 */
 
-	if (!strncmp((const char *)(t->btiff + offset), "FUJIFILM", fujilen)) {
-		fujioff = exif2byte(t->btiff + offset + fujilen, LITTLE);
-		readifd(t->btiff, t->etiff, offset + fujioff, &myifd,
-		    fuji_tags, LITTLE);
+	if (!strncmp((const char *)(md->btiff + offset), "FUJIFILM", fujilen)) {
+		fujioff = exif2byte(md->btiff + offset + fujilen, LITTLE);
+		mkrmd.order = LITTLE;
+		readifd(offset + fujioff, &myifd, fuji_tags, &mkrmd);
 	} else
-		readifd(t->btiff, t->etiff, offset, &myifd, NULL, t->tifforder);
+		readifd(offset, &myifd, fuji_tags, &mkrmd);
 
 	return (myifd);
 }

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.10 2003/08/03 04:47:08 ejohnst Exp $
+ * $Id: makers.h,v 1.11 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -72,21 +72,21 @@ extern struct makerfun makers[];
 /* Maker note functions. */
 
 extern void canon_prop(struct exifprop *prop, struct exiftags *t);
-extern struct ifd *canon_ifd(u_int32_t offset, struct exiftags *t);
+extern struct ifd *canon_ifd(u_int32_t offset, struct tiffmeta *md);
 
 extern void olympus_prop(struct exifprop *prop, struct exiftags *t);
-extern struct ifd *olympus_ifd(u_int32_t offset, struct exiftags *t);
+extern struct ifd *olympus_ifd(u_int32_t offset, struct tiffmeta *md);
 
 extern void fuji_prop(struct exifprop *prop, struct exiftags *t);
-extern struct ifd *fuji_ifd(u_int32_t offset, struct exiftags *t);
+extern struct ifd *fuji_ifd(u_int32_t offset, struct tiffmeta *md);
 
 extern void nikon_prop(struct exifprop *prop, struct exiftags *t);
-extern struct ifd *nikon_ifd(u_int32_t offset, struct exiftags *t);
+extern struct ifd *nikon_ifd(u_int32_t offset, struct tiffmeta *md);
 
 extern void casio_prop(struct exifprop *prop, struct exiftags *t);
-extern struct ifd *casio_ifd(u_int32_t offset, struct exiftags *t);
+extern struct ifd *casio_ifd(u_int32_t offset, struct tiffmeta *md);
 
 extern void minolta_prop(struct exifprop *prop, struct exiftags *t);
-extern struct ifd *minolta_ifd(u_int32_t offset, struct exiftags *t);
+extern struct ifd *minolta_ifd(u_int32_t offset, struct tiffmeta *md);
 
 #endif

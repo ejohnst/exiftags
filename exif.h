@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.32 2003/08/03 04:47:08 ejohnst Exp $
+ * $Id: exif.h,v 1.33 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -155,7 +155,7 @@ typedef __int32 int32_t;
 
 /* Byte order. */
 
-enum order { LITTLE, BIG };
+enum byteorder { LITTLE, BIG };
 
 
 /* Generic field description lookup table. */
@@ -198,22 +198,40 @@ struct exifprop {
 };
 
 
+/*
+ * TIFF/IFD metadata.
+ *
+ * Implementation note: ordinarily, this information wouldn't be stored
+ * at the directory (IFD) level -- it's characteristic of the TIFF itself.
+ * However, the format of some maker notes force this level of detail.
+ * For example, Fuji notes can be in a different byte order than the rest of
+ * the TIFF.  Also, some Nikon notes actually contain a full TIFF header
+ * and specify their own byte order and offset base.
+ *
+ * Therefore, while this information is generally true for the TIFF, it
+ * may not apply to maker note properties.
+ */
+
+struct tiffmeta {
+	enum byteorder order;	/* Endianness of IFD. */
+	unsigned char *btiff;	/* Beginning of TIFF (offset base). */
+	unsigned char *etiff;	/* End of TIFF. */
+};
+
+
 /* Image info and exifprop pointer returned by exifscan(). */
 
 struct exiftags {
 	struct exifprop *props;	/* The good stuff. */
-
-	enum order tifforder;	/* Endianness of TIFF. */
-	unsigned char *btiff;	/* Beginning of TIFF. */
-	unsigned char *etiff;	/* End of TIFF. */
+	struct tiffmeta md;	/* Beginning, end, and endianness of TIFF. */
 
 	const char *model;	/* Camera model, to aid maker tag processing. */
+	short mkrval;		/* Maker index (see makers.h). */
 
 	/* Version info. */
 
 	short exifmaj;		/* Exif version, major. */
 	short exifmin;		/* Exif version, minor. */
-	short mkrval;		/* Maker index (XXX uhh, somewhat opaque). */
 };
 
 

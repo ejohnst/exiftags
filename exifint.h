@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.25 2003/08/05 00:40:30 ejohnst Exp $
+ * $Id: exifint.h,v 1.26 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -81,12 +81,9 @@ struct field {
 struct ifd {
 	u_int16_t num;		/* Number of fields. */
 	struct field *fields;	/* Array of fields. */
-	struct exiftag *tagset;	/* Tag definitions. */
-
-	enum order ifdorder;	/* Endianness of IFD. */
-	unsigned char *btiff;	/* Beginning of TIFF. */
-	unsigned char *etiff;	/* End of TIFF. */
 	struct exifprop *par;	/* Parent property association. */
+	struct exiftag *tagset;	/* Tag definitions. */
+	struct tiffmeta md;	/* Metadata. */
 	struct ifd *next;
 };
 
@@ -118,21 +115,21 @@ extern struct descrip filesrcs[];
 
 /* Utility functions from exifutil.c. */
 
-extern u_int16_t exif2byte(unsigned char *b, enum order o);
-extern int16_t exif2sbyte(unsigned char *b, enum order o);
-extern u_int32_t exif4byte(unsigned char *b, enum order o);
-extern void byte4exif(u_int32_t n, unsigned char *b, enum order o);
-extern int32_t exif4sbyte(unsigned char *b, enum order o);
+extern u_int16_t exif2byte(unsigned char *b, enum byteorder o);
+extern int16_t exif2sbyte(unsigned char *b, enum byteorder o);
+extern u_int32_t exif4byte(unsigned char *b, enum byteorder o);
+extern void byte4exif(u_int32_t n, unsigned char *b, enum byteorder o);
+extern int32_t exif4sbyte(unsigned char *b, enum byteorder o);
 extern char *finddescr(struct descrip *table, u_int16_t val);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
 extern void exifstralloc(char **str, int len);
 extern void hexprint(unsigned char *b, int len);
 extern void dumpprop(struct exifprop *prop, struct field *afield);
-extern struct ifd *readifds(unsigned char *beg, unsigned char *end,
-    u_int32_t off, struct exiftag *set, enum order o);
-extern u_int32_t readifd(unsigned char *b, unsigned char *e, u_int32_t off,
-    struct ifd **dir, struct exiftag *set, enum order o);
+extern struct ifd *readifds(u_int32_t offset, struct exiftag *tagset,
+    struct tiffmeta *md);
+extern u_int32_t readifd(u_int32_t offset, struct ifd **dir,
+    struct exiftag *tagset, struct tiffmeta *md);
 extern u_int32_t gcd(u_int32_t a, u_int32_t b);
 
 /* Interface to exifgps.c. */

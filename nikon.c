@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.14 2003/08/05 22:51:28 ejohnst Exp $
+ * $Id: nikon.c,v 1.15 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -211,8 +211,8 @@ nikon_prop0(struct exifprop *prop, struct exiftags *t)
 	/* Manual focus distance. */
 
 	case 0x0085:
-		a = exif4byte(t->btiff + prop->value, t->tifforder);
-		b = exif4byte(t->btiff + prop->value + 4, t->tifforder);
+		a = exif4byte(t->md.btiff + prop->value, t->md.order);
+		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
 
 		if (a == b) {
 			snprintf(prop->str, 31, "N/A");
@@ -224,8 +224,8 @@ nikon_prop0(struct exifprop *prop, struct exiftags *t)
 	/* Digital zoom. */
 
 	case 0x0086:
-		a = exif4byte(t->btiff + prop->value, t->tifforder);
-		b = exif4byte(t->btiff + prop->value + 4, t->tifforder);
+		a = exif4byte(t->md.btiff + prop->value, t->md.order);
+		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
 
 		if (a == b) {
 			snprintf(prop->str, 31, "None");
@@ -250,8 +250,8 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	/* Digital zoom. */
 
 	case 0x000a:
-		a = exif4byte(t->btiff + prop->value, t->tifforder);
-		b = exif4byte(t->btiff + prop->value + 4, t->tifforder);
+		a = exif4byte(t->md.btiff + prop->value, t->md.order);
+		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
 
 		if (!a) {
 			snprintf(prop->str, 31, "None");
@@ -281,13 +281,14 @@ nikon_prop(struct exifprop *prop, struct exiftags *t)
  * Try to read a Nikon maker note IFD.
  */
 struct ifd *
-nikon_ifd(u_int32_t offset, struct exiftags *t)
+nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 {
 	struct ifd *myifd;
-	unsigned char *b, *bmaker;
-	enum order makerorder;
+	unsigned char *b;
+	struct tiffmeta mkrmd;
 
-	b = t->btiff + offset;
+	b = md->btiff + offset;
+	mkrmd = *md;
 
 	/*
 	 * Seems that some Nikon maker notes start with an ID string.
@@ -298,8 +299,7 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 
 		switch (*((u_int16_t *)b)) {
 		case 0x0001:
-			readifd(t->btiff, t->etiff, offset + 8, &myifd,
-			    nikon_tags1, t->tifforder);
+			readifd(offset + 8, &myifd, nikon_tags1, &mkrmd);
 			return (myifd);
 
 		case 0x0002:
@@ -313,30 +313,30 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 			/* Determine endianness of the TIFF data. */
 
 			if (*((u_int16_t *)b) == 0x4d4d)
-				makerorder = BIG;
+				mkrmd.order = BIG;
 			else if (*((u_int16_t *)b) == 0x4949)
-				makerorder = LITTLE;
+				mkrmd.order = LITTLE;
 			else {
 				exifwarn("invalid Nikon TIFF header");
 				return (NULL);
 			}
-			bmaker = b;	/* Beginning of maker. */
+			mkrmd.btiff = b;	/* Beginning of maker. */
 			b += 2;
 
 			/* Verify the TIFF header. */
 
-			if (exif2byte(b, makerorder) != 42) {
+			if (exif2byte(b, mkrmd.order) != 42) {
 				exifwarn("invalid Nikon TIFF header");
 				return (NULL);
 			}
 			b += 2;
 
-			readifd(bmaker, t->etiff, exif4byte(b, makerorder),
-			    &myifd, nikon_tags2, makerorder);
+			readifd(exif4byte(b, mkrmd.order), &myifd,
+			    nikon_tags2, &mkrmd);
 			return (myifd);
 		}
 	}
 
-	readifd(t->btiff, t->etiff, offset, &myifd, nikon_tags0, t->tifforder);
+	readifd(offset, &myifd, nikon_tags0, &mkrmd);
 	return (myifd);
 }

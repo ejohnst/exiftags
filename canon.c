@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.35 2003/08/05 00:40:29 ejohnst Exp $
+ * $Id: canon.c,v 1.36 2003/08/06 02:26:42 ejohnst Exp $
  */
 
 /*
@@ -766,7 +766,7 @@ static struct exiftag canon_10dcustom[] = {
  */
 static int
 canon_prop01(struct exifprop *aprop, struct exifprop *prop,
-    unsigned char *off, enum order o)
+    unsigned char *off, enum byteorder o)
 {
 	u_int16_t v = (u_int16_t)aprop->value;
 
@@ -827,7 +827,7 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
  */
 static int
 canon_prop04(struct exifprop *aprop, struct exifprop *prop,
-    unsigned char *off, enum order o)
+    unsigned char *off, enum byteorder o)
 {
 
 	switch (aprop->tag) {
@@ -850,7 +850,7 @@ canon_prop04(struct exifprop *aprop, struct exifprop *prop,
  */
 static int
 canon_propA0(struct exifprop *aprop, struct exifprop *prop,
-    unsigned char *off, enum order o)
+    unsigned char *off, enum byteorder o)
 {
 
 	switch (aprop->tag) {
@@ -877,11 +877,11 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 	int i, j;
 	u_int16_t v;
 	struct exifprop *aprop;
-	unsigned char *off = t->btiff + prop->value;
+	unsigned char *off = t->md.btiff + prop->value;
 
 	/* Check size of tag (first value) if we're not debugging. */
 
-	if (valfun && exif2byte(off, t->tifforder) != 2 * prop->count) {
+	if (valfun && exif2byte(off, t->md.order) != 2 * prop->count) {
 		exifwarn("Canon maker tag appears corrupt");
 		return (FALSE);
 	}
@@ -891,7 +891,7 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 		    prop->name, prop->tag, prop->count);
 
 	for (i = 0; i < (int)prop->count; i++) {
-		v = exif2byte(off + i * 2, t->tifforder);
+		v = exif2byte(off + i * 2, t->md.order);
 
 		aprop = childprop(prop);
 		aprop->value = (u_int32_t)v;
@@ -930,7 +930,7 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
  * Process custom function tag values.
  */
 static void
-canon_custom(struct exifprop *prop, unsigned char *off, enum order o,
+canon_custom(struct exifprop *prop, unsigned char *off, enum byteorder o,
     struct exiftag *table)
 {
 	int i, j = -1;
@@ -1028,10 +1028,10 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		 */
 
 		if (prop->count >= 25) {
-			offset = t->btiff + prop->value;
-			flmax = exif2byte(offset + 23 * 2, t->tifforder);
-			flmin = exif2byte(offset + 24 * 2, t->tifforder);
-			flunit = exif2byte(offset + 25 * 2, t->tifforder);
+			offset = t->md.btiff + prop->value;
+			flmax = exif2byte(offset + 23 * 2, t->md.order);
+			flmin = exif2byte(offset + 24 * 2, t->md.order);
+			flunit = exif2byte(offset + 25 * 2, t->md.order);
 		}
 
 		if (flunit && (flmin || flmax)) {
@@ -1101,19 +1101,19 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		}
 
 		if (!strcasecmp(t->model, "canon eos 10d"))
-			canon_custom(prop, t->btiff + prop->value,
-			    t->tifforder, canon_10dcustom);
+			canon_custom(prop, t->md.btiff + prop->value,
+			    t->md.order, canon_10dcustom);
 		else if (!strcasecmp(t->model, "canon eos d30") ||
 		    !strcasecmp(t->model, "canon eos d60"))
-			canon_custom(prop, t->btiff + prop->value,
-			    t->tifforder, canon_d30custom);
+			canon_custom(prop, t->md.btiff + prop->value,
+			    t->md.order, canon_d30custom);
 		else
 			exifwarn2("Custom function unsupported for %s; please "
 			    "report to author", t->model);
 		break;
 
 	case 0x0090:
-		canon_custom(prop, t->btiff + prop->value, t->tifforder,
+		canon_custom(prop, t->md.btiff + prop->value, t->md.order,
 		    canon_1dcustom);
 		break;
 
@@ -1131,7 +1131,8 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
  * Try to read Canon maker note IFDs.
  */
 struct ifd *
-canon_ifd(u_int32_t offset, struct exiftags *t)
+canon_ifd(u_int32_t offset, struct tiffmeta *md)
 {
-	return(readifds(t->btiff, t->etiff, offset, canon_tags, t->tifforder));
+
+	return(readifds(offset, canon_tags, md));
 }
