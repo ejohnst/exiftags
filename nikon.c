@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.26 2005/01/04 21:32:38 ejohnst Exp $
+ * $Id: nikon.c,v 1.27 2005/01/04 23:29:31 ejohnst Exp $
  */
 
 /*
@@ -325,7 +325,7 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	 */
 
 	case 0x0001:
-		byte4exif(prop->value, buf, t->mkrmd.order);
+		byte4exif(prop->value, (unsigned char *)buf, t->mkrmd.order);
 		buf[4] = '\0';
 		v[1] = atoi(buf + 2);
 		buf[2] = '\0';
@@ -409,6 +409,28 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 		    (v[4] && !v[5]) || (v[6] && !v[7])) {
 			snprintf(prop->str, 31, "n/a");
 			prop->lvl = ED_VRB;
+			break;
+		}
+
+		/* XXX Err, kind of a mess. */
+		if (v[0] == v[2] && v[1] == v[3]) {
+			if (v[4] == v[6] && v[5] == v[7]) {
+				snprintf(prop->str, 31, "%.1f mm; f/%.1f",
+				    (float)v[0] / (float)v[1], 
+				    (float)v[4] / (float)v[5]);
+				break;
+			}
+
+			snprintf(prop->str, 31, "%.1f mm; f/%.1f - f/%.1f",
+			    (float)v[0] / (float)v[1], (float)v[4] /
+			    (float)v[5], (float)v[6] / (float)v[7]);
+			break;
+		}
+
+		if (v[4] == v[6] && v[5] == v[7]) {
+			snprintf(prop->str, 31, "%.1f - %.1f mm; f/%.1f",
+			    (float)v[0] / (float)v[1], (float)v[2] /
+			    (float)v[3], (float)v[4] / (float)v[5]);
 			break;
 		}
 
@@ -670,9 +692,9 @@ nikon_ifd(u_int32_t offset, struct tiffmeta *md)
 
 			/* Determine endianness of the TIFF data. */
 
-			if (*((u_int16_t *)b) == 0x4d4d)
+			if (!memcmp(b, "MM", 2))
 				md->order = BIG;
-			else if (*((u_int16_t *)b) == 0x4949)
+			else if (!memcmp(b, "II", 2))
 				md->order = LITTLE;
 			else {
 				exifwarn("invalid Nikon TIFF header");
