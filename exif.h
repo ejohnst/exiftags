@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.22 2003/01/24 00:55:42 ejohnst Exp $
+ * $Id: exif.h,v 1.23 2003/01/25 00:15:48 ejohnst Exp $
  */
 
 /*
@@ -168,6 +168,7 @@ struct exifprop {
 	int ifdseq;		/* Sequence number of parent IFD. */
 	u_int16_t ifdtag;	/* Parent IFD tag association. */
 	u_int16_t override;	/* Override display of another tag. */
+	int16_t subtag;		/* Index of a tag's sub-value (def: -1). */
 	struct exifprop *next;
 };
 
