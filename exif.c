@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.58 2003/08/06 02:26:42 ejohnst Exp $
+ * $Id: exif.c,v 1.59 2003/08/16 02:25:09 ejohnst Exp $
  */
 
 /*
@@ -109,23 +109,18 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 	prop->descr = prop->tagset[i].descr;
 	prop->lvl = prop->tagset[i].lvl;
 
-	/* Lookup and check the field type. */
+	/*
+	 * Lookup and check the field type.
+	 *
+	 * We have to be pretty severe with entries that have an invalid
+	 * field type -- too many assumptions in the rest of the code.
+	 */
 
 	for (j = 0; ftypes[j].type && ftypes[j].type != prop->type; j++);
 	if (!ftypes[j].type) {
-		/*
-		 * XXX It seems that some editing program mangles the TIFF
-		 * data type in the Interoperability IFD.  We'll let this
-		 * slide (noisily) if the tag is unknown anyway.
-		 */
-
-#ifdef UNCREDITED_BUGS
-		if (prop->lvl == ED_UNK) {
-			prop->type = TIFF_UNKN;
-			exifwarn("unknown TIFF field type");
-		} else
-#endif
-			exifdie("unknown TIFF field type");
+		exifwarn2("unknown TIFF field type; discarding", prop->name);
+		free(tmpprop);
+		return;
 	}
 
 	/* Skip sanity checking on maker note tags; we'll get to them later. */
@@ -730,8 +725,11 @@ exifscan(unsigned char *b, int len, int domkr)
 	/* Create and initialize our file info structure. */
 
 	t = (struct exiftags *)malloc(sizeof(struct exiftags));
-	if (!t)
-		exifdie((const char *)strerror(errno));
+	if (!t) {
+		exifwarn2("can't allocate file info",
+		    (const char *)strerror(errno));
+		return (NULL);
+	}
 	memset(t, 0, sizeof(struct exiftags));
 
 	seq = 0;
