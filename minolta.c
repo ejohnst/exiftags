@@ -30,24 +30,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.4 2003/01/11 19:17:45 ejohnst Exp $
+ * $Id: minolta.c,v 1.5 2003/01/14 05:44:55 ejohnst Exp $
  *
  */ 
 
 /*
  * Exif tag definitions for Minolta DiMAGE maker notes.
+ * Tags deciphered by Javier Crespo <jcrespoc@dsland.org>.
  *
- * Compatibility:
+ * Mostly supported models: DiMAGE 5, 7, 7i, and 7Hi.
  *
- *   DiMAGE 5		OK, except MMN_IMAGESIZE
- *   DiMAGE 7		OK
- *   DiMAGE 7i v1.0e	OK
- *   DiMAGE 7Hi 1.00u	OK
- *
- *   DiMAGE S404	not OK; short TAG0x01; interpreted with errors
- *   DiMAGE S304	not OK; short TAG0x01; interpreted with errors
- *   DiMAGE F100	not OK; no TAG0x01
- *   DiMAGE X		not OK; no TAG0x01
  */
 
 #include <stdio.h>
@@ -57,25 +49,6 @@
 #include <math.h>
 
 #include "makers.h"
-
-
-/*
- * Uncomment this to overwrite standard tags with more appropriate values 
- *
- * i.e.  Exposure Program: Not Defined
- *       Scene Capture Type: Protrait 
- *       with
- *       Exposure Program: Program AE (Portrait)
- *
- * or    Flash: Flash, Compulsory
- *       with
- *       Flash: Flash, Compulsory (Fill Flash) 
- *
- *  In any case, you'll get the Minolta custom fields as verbose properties
- * 
- */
-
-#define REDEFINE_STANDARD TRUE
 
 
 /* Bracketing mode. */
@@ -251,7 +224,7 @@ static struct descrip minolta_prog[] = {
 
 /*
  * Image size.
- * This valid only for 5 megapixel cameras (D7's) but is wrong for D5.
+ * Valid only for 5 megapixel cameras (D7's), wrong for D5.
  */
 
 static struct descrip minolta_size[] = {
@@ -320,32 +293,32 @@ static struct exiftag minolta_tags[] = {
 /* Fields under tags 0x0001 and 0x0003. */
 
 static struct exiftag minolta_0TLM[] = {
-	{ 1,  TIFF_LONG, 1, ED_UNK, "MinoltaExpProg",
-	  NULL, minolta_prog },
-	{ 2,  TIFF_LONG, 1, ED_VRB, "MinoltaFlashMode",
+	{ 1,  TIFF_LONG, 1, ED_IMG, "MinoltaExpProg",
+	  "Exposure Program", minolta_prog },
+	{ 2,  TIFF_LONG, 1, ED_IMG, "MinoltaFlashMode",
 	  "Flash Mode", minolta_flash },
 	{ 3,  TIFF_LONG, 1, ED_IMG, "MinoltaWhiteB",
 	  "White Balance", minolta_whitebal },
 	{ 4,  TIFF_LONG, 1, ED_UNK, "MinoltaSize",
-	  NULL, minolta_size },
+	  "Image Size", minolta_size },
 	{ 5,  TIFF_LONG, 1, ED_IMG, "MinoltaQuality",
 	  "Image Quality", minolta_quality },
 	{ 6,  TIFF_LONG, 1, ED_IMG, "MinoltaDriveMode",
 	  "Drive Mode", minolta_drive },
 	{ 7,  TIFF_LONG, 1, ED_UNK, "MinoltaMeterMode",
-	  NULL, NULL },
-	{ 8,  TIFF_LONG, 1, ED_UNK, "MinoltaISO",
-	  NULL, NULL },
-	{ 9,  TIFF_LONG, 1, ED_UNK, "MinoltaExpTime",
-	  NULL, NULL },
+	  "Metering Mode", NULL },
+	{ 8,  TIFF_LONG, 1, ED_UNK, "MinoltaISOXXX",		/* ? */
+	  "ISO Speed RatingXXX", NULL },
+	{ 9,  TIFF_LONG, 1, ED_VRB, "MinoltaExpTime",
+	  "Exposure Time", NULL },
 	{ 10, TIFF_LONG, 1, ED_UNK, "MinoltaAperture",
-	  NULL, NULL },
+	  "Lens Aperture", NULL },
 	{ 11, TIFF_LONG, 1, ED_IMG, "MinoltaMacro",
 	  "Macro", minolta_bool },
 	{ 12, TIFF_LONG, 1, ED_IMG, "MinoltaDigiZoom",
 	  "Digital Zoom", minolta_bool },
 	{ 13, TIFF_LONG, 1, ED_UNK, "MinoltaExpComp",
-	  NULL, NULL },
+	  "Exposure Compensation", NULL },
 	{ 14, TIFF_LONG, 1, ED_IMG, "MinoltaBracketStep",
 	  "Bracketing Step", minolta_brackstep },
 	{ 16, TIFF_LONG, 1, ED_VRB, "MinoltaIntrvlTime",
@@ -353,7 +326,7 @@ static struct exiftag minolta_0TLM[] = {
 	{ 17, TIFF_LONG, 1, ED_VRB, "MinoltaIntrvlPics",
 	  "Interval Pics", NULL },
 	{ 18, TIFF_LONG, 1, ED_UNK, "MinoltaFocalLen",
-	  NULL, NULL },
+	  "Focal Length", NULL },
 	{ 19, TIFF_LONG, 1, ED_IMG, "MinoltaFocusDist",
 	  "Focus Distance", NULL },
 	{ 20, TIFF_LONG, 1, ED_VRB, "MinoltaFlash",
@@ -363,7 +336,7 @@ static struct exiftag minolta_0TLM[] = {
 	{ 22, TIFF_LONG, 1, ED_VRB, "MinoltaTime",
 	  "Time", NULL },
 	{ 23, TIFF_LONG, 1, ED_UNK, "MinoltaMaxAperture",
-	  NULL, NULL },
+	  "Maximum Lens Aperture", NULL },
 	{ 26, TIFF_LONG, 1, ED_VRB, "MinoltaRmbrFileNum",
 	  "File Number Memory", minolta_bool },
 	{ 27, TIFF_LONG, 1, ED_VRB, "MinoltaSequence",
@@ -373,7 +346,7 @@ static struct exiftag minolta_0TLM[] = {
 	{ 32, TIFF_LONG, 1, ED_IMG, "MinoltaContrast",
 	  "Contrast", NULL },
 	{ 33, TIFF_LONG, 1, ED_IMG, "MinoltaSharpness",
-	  "Sharp", minolta_sharp },
+	  "Sharpness", minolta_sharp },
 	{ 34, TIFF_LONG, 1, ED_IMG, "MinoltaScene",
 	  "Scene Capture Type", minolta_scene },
 	{ 35, TIFF_LONG, 1, ED_IMG, "MinoltaFlashComp",
@@ -381,7 +354,7 @@ static struct exiftag minolta_0TLM[] = {
 	{ 36, TIFF_LONG, 1, ED_VRB, "MinoltaISO",
 	  "ISO Speed Rating", minolta_iso },
 	{ 37, TIFF_LONG, 1, ED_UNK, "MinoltaModel",
-	  NULL, minolta_model },
+	  "Camera Model", minolta_model },
 	{ 38, TIFF_LONG, 1, ED_VRB, "MinoltaIntervalMode",
 	  "Interval Mode", minolta_bool },
 	{ 39, TIFF_LONG, 1, ED_VRB, "MinoltaFolder",
@@ -413,18 +386,29 @@ static struct exiftag minolta_0TLM[] = {
 };
 
 
+/* Stub to display unknown fields for some models. */
+
+static struct exiftag minolta_unkn[] = {
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "MinoltaUnknown",
+	  "Minolta Field Unknown", NULL },
+};
+
+
 /*
- * Process maker note tag 0x0001 and 0x0003 values.
+ * Process maker note tag 0x0001 and 0x0003 fields.
  */
 
 void
-minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
+minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
+    struct exiftag *thetags)
 {
 	int i, j;
 	u_int32_t v;
 	double d;
-	unsigned char *cp;
+	unsigned char *cp, *valbuf;
 	struct exifprop *aprop;
+
+	valbuf = NULL;
 
 	for (i = 0; i * 4 < prop->count; i++) {
 		aprop = childprop(prop);
@@ -434,20 +418,33 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 
 		/* Lookup property name and description. */
 
-		for (j = 0; minolta_0TLM[j].tag < EXIF_T_UNKNOWN &&
-			minolta_0TLM[j].tag != i; j++);
-		aprop->name = minolta_0TLM[j].name;
-		aprop->descr = minolta_0TLM[j].descr;
-		aprop->lvl = minolta_0TLM[j].lvl;
-		if (minolta_0TLM[j].table)
-			aprop->str = finddescr(minolta_0TLM[j].table,
+		for (j = 0; thetags[j].tag < EXIF_T_UNKNOWN &&
+			thetags[j].tag != i; j++);
+		aprop->name = thetags[j].name;
+		aprop->descr = thetags[j].descr;
+		aprop->lvl = thetags[j].lvl;
+		if (thetags[j].table)
+			aprop->str = finddescr(thetags[j].table,
 			    aprop->value);
 
 		if (debug)
 			printf("     %s (%d): %d\n", aprop->name, i,
 			    aprop->value);
 
-		/* Further process known properties. */
+		/*
+		 * Further process known properties.
+		 * XXX If currently unsupported fields are implemented,
+		 * this section will have to be specific to the set of
+		 * tags passed in.
+		 */
+		if (thetags != minolta_0TLM)
+			continue;
+
+		if (!valbuf) {
+			if (!(valbuf = (char *)malloc(16)))
+				exifdie((const char *)strerror(errno));
+			valbuf[15] = '\0';
+		}
 
 		switch (i) {
 
@@ -455,208 +452,158 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t)
 
 		case 16:
 		case 27:
-			prop->value += 1;
+			aprop->value += 1;
 			break;
 
 		/* Exposure and flash compensation. */
 
 		case 13:
 		case 35:
-			prop->str = strdup("-0.7");
-			if (prop->value != 6)
-				snprintf(prop->str, 5, "%0.1f",
-				    ((double)prop->value - 6) / 3);
+			aprop->str = valbuf;
+			valbuf = NULL;
+			if (aprop->value != 6)
+				snprintf(aprop->str, 15, "%+0.1f",
+				    ((double)aprop->value - 6) / 3);
 			else
-				strcpy(prop->str, "0");
+				snprintf(aprop->str, 15, "Normal");
 			break;
 
 		/* Focal length. */
 
 		case 18:
-			prop->str = strdup("11.11");
-			snprintf(prop->str, 6, "%02f", (double)prop->value / 256);
+			aprop->str = valbuf;
+			valbuf = NULL;
+			snprintf(aprop->str, 15, "%02f",
+			    (double)aprop->value / 256);
 			break;
-#if 0
-		case MMN_UNKFLD_28:
-		case MMN_UNKFLD_29:
-		case MMN_UNKFLD_30:
-			prop->str=(char *)calloc(12,sizeof(char));
-			snprintf(prop->str,12,"%0.6f",(double)prop->value/256);
+
+		/* Still unknown. */
+
+		case 28:
+		case 29:
+		case 30:
+			aprop->str = valbuf;
+			valbuf = NULL;
+			snprintf(aprop->str, 15, "%0.6f",
+			    (double)aprop->value / 256);
 			break;
-#endif
+
 		/* ISO setting. */
 
 		case 36:
-			v = pow(2, ((double)prop->value / 8) - 1) * (double)3.125;
-			prop->str = (char *)calloc(4, sizeof(char));
-			snprintf(prop->str, 4, "%d", v);
+			aprop->str = valbuf;
+			valbuf = NULL;
+			v = pow(2, ((double)aprop->value / 8) - 1) *
+			    (double)3.125;
+			snprintf(aprop->str, 15, "%d", v);
 			break;
 
 		/* Aperture and max aperture. */
 
 		case 10:
 		case 23:
-			d = pow(2, ((double)prop->value / 16) - 0.5);
-			prop->str = (char *)calloc(20, sizeof(char));
-			snprintf(prop->str, 20, "%0.1f", d);
+			aprop->str = valbuf;
+			valbuf = NULL;
+			d = pow(2, ((double)aprop->value / 16) - 0.5);
+			snprintf(aprop->str, 15, "%0.1f", d);
 			break;
 
 		/* Exposure time. */
 
 		case 9:
-			d = (double)pow(2, ((double)abs(48 - prop->value)) / 8);
-			prop->str = (char *)calloc(20, sizeof(char));
+			aprop->str = valbuf;
+			valbuf = NULL;
+			d = (double)pow(2,
+			    ((double)abs(48 - aprop->value)) / 8);
 
-			//1 sec limit
-			if (prop->value<56)
-				snprintf(prop->str, 20, "%0.1f", d);
+			/* 1 sec limit. */
+			if (aprop->value < 56)
+				snprintf(aprop->str, 15, "%0.1f", d);
 			else
-				snprintf(prop->str, 20, "1/%d", (unsigned int)d);
+				snprintf(aprop->str, 15, "1/%d",
+				    (unsigned int)d);
 
-			/* Bulb mode D7i bug, always recorded as 30secs in standard EXIF
-			 * Replace EXIF_T_EXPOSURE data with correct value
+			/*
+			 * Bulb mode D7i bug: always recorded as 30 sec in
+			 * EXIF_T_EXPOSURE, so override.
 			 */
-			if (prop->value < 32) {
-				struct exifprop *tmpprop;
-
-				tmpprop=findprop((struct exifprop *)t->props,EXIF_T_EXPOSURE);
-				if (!tmpprop)
-					break;
-				free(tmpprop->str);
-				tmpprop->str=strdup(prop->str);
+			if (aprop->value < 32) {
+				aprop->override = EXIF_T_EXPOSURE;
+				aprop->lvl = ED_IMG;
 			}
 			break;
 
 		/* Focus distance. */
 
 		case 19:
-			if (!(prop->str=(char *)calloc(20,sizeof(char))))
-				exifdie((const char *)strerror(errno));
-			if (prop->value==0)
-				strcpy(prop->str,"Infinite");
+			aprop->str = valbuf;
+			valbuf = NULL;
+			if (!aprop->value)
+				strcpy(aprop->str, "Infinite");
 			else
-				snprintf(prop->str,20,"%.1f",(float)(prop->value/(float)1000));
-			prop->value/=100;
+				snprintf(aprop->str, 15, "%.1f",
+				    (float)(aprop->value / (float)1000));
+			aprop->value /= 100;
 			break;
 
-		/*
-		 * Flash mode.
-		 * Add Flash mode info to standard EXIF_T_FLASH
-		 * i.e. Flash. Compulsory (Fill Flash)
-		 */
-
-		case 2:
-			break; /* XXX */
-			if (REDEFINE_STANDARD) {
-				struct exifprop *tmpprop;
-
-				tmpprop = findprop((struct exifprop *)t->props, EXIF_T_FLASH);
-				if (!tmpprop)
-					break;
-
-				/* Flash fired */
-				if (tmpprop->value & 0x01) {
-					if ( !(tmpprop->str=realloc(tmpprop->str,
-						(strlen(tmpprop->str) + strlen(prop->str) + 4) * sizeof(char) )) )
-					exifdie((const char *)strerror(errno));
-					strcat(tmpprop->str," (");
-					strcat(tmpprop->str,prop->str);
-					strcat(tmpprop->str,")");
-				}
-			}
-			break;
-
-		/*
-		 * Exposure program.
-		 * Redefine EXIF_T_EXPPROG in benefict of custom Exposure Program field
-		 * with scene info.
-		 */
+		/* Exposure program. */
 
 		case 1:
-			if (prop->value==0 && REDEFINE_STANDARD) {
-				struct exifprop *tmpprop;
-				char *ptr;
-
-				/* Find MinoltaScene. */
-				if (!(tmpprop=findprop((struct exifprop *)t->props, 34)))
-					break;
-
-				if ( !(ptr=finddescr(minolta_scene, tmpprop->value)))
-					break;
-
-				if (!(tmpprop=findprop((struct exifprop *)t->props,EXIF_T_EXPPROG)))
-					break;
-
-				free(tmpprop->str);
-				if ( !(tmpprop->str=(char *)calloc(strlen(prop->str) + strlen(ptr) + 4, sizeof(char))))
-					exifdie((const char *)strerror(errno));
-
-				sprintf(tmpprop->str,"%s (%s)",prop->str,ptr);
-			}
+			aprop->override = EXIF_T_EXPPROG;
 			break;
 
 		/* Date. */
 
 		case 21:
-			cp = (unsigned char *)&prop->value;
-
-			if (!(prop->str = (char *)calloc(11, sizeof(char))))
-				exifdie((const char *)strerror(errno));
-			snprintf(prop->str, 11, "%02d/%02d/%04d", cp[0], cp[1], cp[3] << 8 | cp[2]);
+			aprop->str = valbuf;
+			valbuf = NULL;
+			cp = (unsigned char *)&aprop->value;
+			snprintf(aprop->str, 15, "%02d/%02d/%04d",
+			    cp[0], cp[1], cp[3] << 8 | cp[2]);
 			break;
 
 		/* Time. */
 
 		case 22:
-			cp = (unsigned char *)&prop->value;
-
-			if (!(prop->str = (char *)calloc(9, sizeof(char))))
-				exifdie((const char *)strerror(errno));
-			snprintf(prop->str, 9, "%02d:%02d:%02d", cp[2], cp[1], cp[0]);
+			aprop->str = valbuf;
+			valbuf = NULL;
+			cp = (unsigned char *)&aprop->value;
+			snprintf(aprop->str, 9, "%02d:%02d:%02d",
+			    cp[2], cp[1], cp[0]);
 			break;
 
 		/* White balance. */
 
 		case 3:
-			prop->override = EXIF_T_WHITEBAL;
+			aprop->override = EXIF_T_WHITEBAL;
 			break;
 
-		/* Color filter. */
+		/* Saturation, contrast, & color filter. */
 
+		case 31:
+		case 32:
+			aprop->override = (i == 31 ? EXIF_T_SATURATION :
+			    EXIF_T_CONTRAST);
+			/* FALLTHROUGH */
 		case 41:
-			prop->str=strdup(" 0");
-			prop->value-=3;
-			if (prop->value!=0)
-				snprintf(prop->str,3,"%+d",prop->value);
+			aprop->str = valbuf;
+			valbuf = NULL;
+			aprop->value -= 3;
+			if (aprop->value)
+				snprintf(aprop->str, 15, "%+d", aprop->value);
+			else
+				strcpy(aprop->str, "Normal");
 			break;
 
 		/* Scene. */
 
 		case 34:
-			prop->override = EXIF_T_SCENECAPTYPE;
-			break;
-
-		/* Contrast. */
-
-		case 32:
-			prop->str = strdup(" 0");
-			prop->value -= 3;
-			if (prop->value != 0)
-				snprintf(prop->str, 3, "%+d", prop->value);
-			prop->override = EXIF_T_CONTRAST;
-			break;
-
-		/* Saturation. */
-
-		case 31:
-			prop->str=strdup(" 0");
-			prop->value -= 3;
-			if (prop->value != 0)
-				snprintf(prop->str, 3, "%+d", prop->value);
-			prop->override = EXIF_T_SATURATION;
+			aprop->override = EXIF_T_SCENECAPTYPE;
 			break;
 		}
 	}
+	if (valbuf)
+		free(valbuf);
 }
 
 
@@ -666,6 +613,7 @@ void
 minolta_prop(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
+	struct exiftag *fielddefs;
 
 	/*
 	 * Don't process properties we've created while looking at other
@@ -709,12 +657,9 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 
 		/* We recognize two types: 0TLM and mlt0. */
 
-		if (strcmp(prop->str, "0TLM") && strcmp(prop->str, "mlt0")) {
+		if (strcmp(prop->str, "0TLM") && strcmp(prop->str, "mlt0"))
 			exifwarn2("Minolta maker note version not supported",
 			    prop->str);
-			t->mkrinfo = 0;
-		} else
-			t->mkrinfo = 1;
 		break;
 
 	/*
@@ -724,25 +669,27 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 
 	case 0x0001:
 		if (prop->count != 39 * 4) {
-			exifwarn("Minolta maker note version not supported");
-			break;
-		}
-		minolta_cprop(prop, t->btiff + prop->value, t);
+			exifwarn("Minolta maker note not fully supported");
+			fielddefs = minolta_unkn;
+		} else
+			fielddefs = minolta_0TLM;
+		minolta_cprop(prop, t->btiff + prop->value, t, fielddefs);
 		break;
 
 	case 0x0003:
 		if (prop->count != 56 * 4 && prop->count != 57 * 4) {
-			exifwarn("Minolta maker note version not supported");
-			break;
-		}
-		minolta_cprop(prop, t->btiff + prop->value, t);
+			exifwarn("Minolta maker note not fully supported");
+			fielddefs = minolta_unkn;
+		} else
+			fielddefs = minolta_0TLM;
+		minolta_cprop(prop, t->btiff + prop->value, t, fielddefs);
 		break;
 	}
 }
 
 
 /*
- * Try to read a Minolta maker note IFD, which differ by model.
+ * Try to read a Minolta maker note IFD, which differs by model.
  */
 
 struct ifd *
