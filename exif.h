@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.18 2003/01/11 06:28:46 ejohnst Exp $
+ * $Id: exif.h,v 1.19 2003/01/11 18:52:50 ejohnst Exp $
  */
 
 /*
@@ -141,6 +141,9 @@ typedef __int32 int32_t;
 #define EXIF_T_WHITEBAL		0xa403
 #define EXIF_T_DIGIZOOM		0xa404
 #define EXIF_T_FOCALLEN35	0xa405
+#define EXIF_T_SCENECAPTYPE	0xa406
+#define EXIF_T_CONTRAST		0xa408
+#define EXIF_T_SATURATION	0xa409
 
 
 /* Byte order. */
