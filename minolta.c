@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2002, Eric M. Johnston <emj@postal.net>
- * Copyright (c) 2002, Javier Crespo <jcrespoc@dsland.org>
+ * Copyright (c) 2003, Javier Crespo <jcrespoc@dsland.org>
+ * Copyright (c) 2003, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.5 2003/01/14 05:44:55 ejohnst Exp $
+ * $Id: minolta.c,v 1.6 2003/01/21 03:29:26 ejohnst Exp $
  *
  */ 
 
@@ -307,8 +307,8 @@ static struct exiftag minolta_0TLM[] = {
 	  "Drive Mode", minolta_drive },
 	{ 7,  TIFF_LONG, 1, ED_UNK, "MinoltaMeterMode",
 	  "Metering Mode", NULL },
-	{ 8,  TIFF_LONG, 1, ED_UNK, "MinoltaISOXXX",		/* ? */
-	  "ISO Speed RatingXXX", NULL },
+	{ 8,  TIFF_LONG, 1, ED_UNK, "MinoltaFilmSpeed",
+	  "Film Speed", NULL },
 	{ 9,  TIFF_LONG, 1, ED_VRB, "MinoltaExpTime",
 	  "Exposure Time", NULL },
 	{ 10, TIFF_LONG, 1, ED_UNK, "MinoltaAperture",
@@ -488,9 +488,9 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 			    (double)aprop->value / 256);
 			break;
 
-		/* ISO setting. */
+		/* Film speed. */
 
-		case 36:
+		case 8:
 			aprop->str = valbuf;
 			valbuf = NULL;
 			v = pow(2, ((double)aprop->value / 8) - 1) *
