@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.46 2004/11/06 18:36:46 ejohnst Exp $
+ * $Id: canon.c,v 1.47 2004/12/20 21:36:23 ejohnst Exp $
  */
 
 /*
@@ -167,6 +167,10 @@ static struct descrip canon_shoot[] = {
 	{ 9,	"Sports" },
 	{ 10,	"Macro/Close-Up" },
 	{ 11,	"Pan Focus" },
+	{ 19,	"Indoor" },
+	{ 22,	"Underwater" },
+	{ 24,	"Kids & Pets" },
+	{ 25,	"Night Snapshot" },
 	{ -1,	"Unknown" },
 };
 
