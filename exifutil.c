@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.24 2003/08/08 22:31:32 ejohnst Exp $
+ * $Id: exifutil.c,v 1.25 2004/08/20 22:31:45 ejohnst Exp $
  */
 
 /*
@@ -167,6 +167,35 @@ finddescr(struct descrip *table, u_int16_t val)
 		exifdie((const char *)strerror(errno));
 	strcpy(c, table[i].descr);
 	return (c);
+}
+
+
+/*
+ * Lookup and append description for a value.
+ * Doesn't do anything if the value is unknown; first adds ", " if dest
+ * contains a value; returns number of bytes added.  len is total size
+ * of destination buffer.
+ */
+int
+catdescr(char *c, struct descrip *table, u_int16_t val, int len)
+{
+	int i, l;
+
+	l = 0;
+	len -= 1;
+	c[len] = '\0';
+
+	for (i = 0; table[i].val != -1 && table[i].val != val; i++);
+	if (table[i].val == -1)
+		return (0);
+
+	if (strlen(c)) {
+		strncat(c, ", ", len - strlen(c));
+		l += 2;
+	}
+	strncat(c, table[i].descr, len - strlen(c));
+	l += strlen(table[i].descr);
+	return (l);
 }
 
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.28 2004/04/03 22:34:14 ejohnst Exp $
+ * $Id: exifint.h,v 1.29 2004/08/20 22:31:45 ejohnst Exp $
  */
 
 /*
@@ -109,7 +109,11 @@ struct ifd {
 
 extern struct fieldtype ftypes[];
 extern struct descrip ucomment[];
-extern struct descrip flashes[];
+extern struct descrip flash_fire[];
+extern struct descrip flash_return[];
+extern struct descrip flash_mode[];
+extern struct descrip flash_func[];
+extern struct descrip flash_redeye[];
 extern struct descrip filesrcs[];
 
 
@@ -121,6 +125,7 @@ extern u_int32_t exif4byte(unsigned char *b, enum byteorder o);
 extern void byte4exif(u_int32_t n, unsigned char *b, enum byteorder o);
 extern int32_t exif4sbyte(unsigned char *b, enum byteorder o);
 extern char *finddescr(struct descrip *table, u_int16_t val);
+extern int catdescr(char *c, struct descrip *table, u_int16_t val, int len);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
 extern void exifstralloc(char **str, int len);

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.63 2004/04/03 22:34:14 ejohnst Exp $
+ * $Id: exif.c,v 1.64 2004/08/20 22:31:45 ejohnst Exp $
  */
 
 /*
@@ -332,12 +332,25 @@ postprop(struct exifprop *prop, struct exiftags *t)
 
 	/* Flash consists of a number of bits, which expanded with v2.2. */
 
+#define FLASHMAX 96
+
 	case EXIF_T_FLASH:
 		if (t->exifmaj <= 2 && t->exifmin < 20)
 			v = (u_int16_t)(prop->value & 0x7);
 		else
 			v = (u_int16_t)(prop->value & 0x7F);
-		prop->str = finddescr(flashes, v);
+
+		exifstralloc(&prop->str, FLASHMAX);
+
+		/* Don't do anything else if there isn't a flash. */
+
+		if (catdescr(prop->str, flash_func, v & 0x20, FLASHMAX))
+			break;
+
+		catdescr(prop->str, flash_fire, v & 0x01, FLASHMAX);
+		catdescr(prop->str, flash_mode, v & 0x18, FLASHMAX);
+		catdescr(prop->str, flash_redeye, v & 0x40, FLASHMAX);
+		catdescr(prop->str, flash_return, v & 0x06, FLASHMAX);
 		break;
 
 	case EXIF_T_FOCALLEN:

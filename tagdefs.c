@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.21 2004/04/03 22:34:14 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.22 2004/08/20 22:31:45 ejohnst Exp $
  */
 
 /*
@@ -229,31 +229,46 @@ struct descrip lightsrcs[] = {
 };
 
 
-/* Flash modes. */
+/*
+ * Flash modes.
+ *
+ * The value is split into 5 sub-values:
+ *   Flash fired, bit 0;
+ *   Flash return, bits 1 & 2;
+ *   Flash mode, bits 3 & 4;
+ *   Flash function, bit 5; and
+ *   Red-eye mode, bit 6.
+ * Bit 7 is unused in the 2.21 spec.
+ *
+ * We'll just process each sub-value individually and concatenate them.
+ */
 
-struct descrip flashes[] = {
+struct descrip flash_fire[] = {
 	{ 0x00,	"No Flash" },
 	{ 0x01,	"Flash" },
-	{ 0x05,	"Flash, Return Not Detected" },
-	{ 0x07,	"Flash, Return Detected" },
-	{ 0x09,	"Flash, Compulsory" },
-	{ 0x0d,	"Flash, Compulsory, Return Not Detected" },
-	{ 0x0f,	"Flash, Compulsory, Return Detected" },
-	{ 0x10,	"No Flash, Compulsory" },
-	{ 0x18,	"No Flash, Auto" },
-	{ 0x19,	"Flash, Auto" },
-	{ 0x1d,	"Flash, Auto, Return Not Detected" },
-	{ 0x1f,	"Flash, Auto, Return Detected" },
+	{ -1,	"Unknown" },
+};
+
+struct descrip flash_return[] = {
+	{ 0x04, "Return Not Detected" },
+	{ 0x06,	"Return Detected" },
+	{ -1,	"Unknown" },
+};
+
+struct descrip flash_mode[] = {
+	{ 0x08, "Compulsory" },
+	{ 0x10,	"Compulsory" },
+	{ 0x18,	"Auto" },
+	{ -1,	"Unknown" },
+};
+
+struct descrip flash_func[] = {
 	{ 0x20,	"No Flash Function" },
-	{ 0x41,	"Flash, Red-Eye Reduce" },
-	{ 0x45,	"Flash, Red-Eye Reduce, Return Not Detected" },
-	{ 0x47,	"Flash, Red-Eye Reduce, Return Detected" },
-	{ 0x49,	"Flash, Compulsory, Red-Eye Reduce" },
-	{ 0x4d,	"Flash, Compulsory, Red-Eye Reduce, Return Not Detected" },
-	{ 0x4f,	"Flash, Compulsory, Red-Eye Reduce, Return Detected" },
-	{ 0x59,	"Flash, Auto, Red-Eye Reduce" },
-	{ 0x5d,	"Flash, Auto, Red-Eye Reduce, Return Not Detected" },
-	{ 0x5f,	"Flash, Auto, Red-Eye Reduce, Return Detected" },
+	{ -1,	"Unknown" },
+};
+
+struct descrip flash_redeye[] = {
+	{ 0x40,	"Red-Eye Reduce" },
 	{ -1,	"Unknown" },
 };
 
