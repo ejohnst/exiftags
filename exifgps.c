@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.11 2003/08/16 02:25:41 ejohnst Exp $
+ * $Id: exifgps.c,v 1.12 2003/08/16 03:05:07 ejohnst Exp $
  */
 
 /*
@@ -46,6 +46,8 @@
 
 #include "exif.h"
 #include "exifint.h"
+
+#define DEGREE "°"
 
 
 /* Speed. */
@@ -277,13 +279,13 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		n = exif4byte(t->md.btiff + prop->value + i * 8, o);
 		d = exif4byte(t->md.btiff + prop->value + 4 + i * 8, o);
 
-		strcpy(fmt, "%s %.f° ");
+		strcpy(fmt, "%s %.f%s ");
 		if (!n || !d)			/* Punt. */
 			deg = 0.0;
 		else {
 			deg = (double)n / (double)d;
 			if (d != 1)
-				sprintf(fmt, "%%s %%.%df° ",
+				sprintf(fmt, "%%s %%.%df%%s ",
 				    (int)log10((double)d));
 		}
 
@@ -316,7 +318,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 
 		if (!n || !d) {			/* Assume no seconds. */
 			snprintf(prop->str, 31, fmt, tmpprop && tmpprop->str ?
-			    tmpprop->str : "", deg, min);
+			    tmpprop->str : "", deg, DEGREE, min);
 			break;
 		} else {
 			sec = (double)n / (double)d;
@@ -327,7 +329,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 				strcat(fmt, " %.f");
 		}
 		snprintf(prop->str, 31, fmt, tmpprop && tmpprop->str ?
-		    tmpprop->str : "", deg, min, sec);
+		    tmpprop->str : "", deg, DEGREE, min, sec);
 		break;
 
 	/* Altitude. */
