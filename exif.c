@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.70 2004/12/29 20:35:35 ejohnst Exp $
+ * $Id: exif.c,v 1.71 2005/01/03 21:49:30 ejohnst Exp $
  */
 
 /*
@@ -353,7 +353,7 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		else
 			v = (u_int16_t)(prop->value & 0x7F);
 
-		exifstralloc(&prop->str, LFLASH);
+		exifstralloc(&prop->str, LFLSH);
 
 		/* Don't do anything else if there isn't a flash. */
 
