@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.27 2002/11/02 06:40:59 ejohnst Exp $
+ * $Id: exif.c,v 1.28 2002/11/02 22:30:40 ejohnst Exp $
  */
 
 /*
@@ -344,7 +344,9 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		strncpy(slop, (const char *)(&prop->value), 2);
 		strncpy(slop + 3, (const char *)(&prop->value) + 2, 2);
 		slop[2] = slop[5] = prop->str[7] = '\0';
-		snprintf(prop->str, 7, "%d.%d", atoi(slop), atoi(slop + 3));
+		t->exifmaj = (short)atoi(slop);
+		t->exifmin = (short)atoi(slop + 3);
+		snprintf(prop->str, 7, "%d.%d", t->exifmaj, t->exifmin);
 		break;
 		
 	}
@@ -478,7 +480,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 			if (!strncmp(buf, makers[i].name,
 			    strlen(makers[i].name)))
 				break;
-		t->mkrval = i;
+		t->mkrval = (short)i;
 
 		/* Keep processing (ASCII value). */
 		break;

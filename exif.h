@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.12 2002/10/15 02:55:08 ejohnst Exp $
+ * $Id: exif.h,v 1.13 2002/11/02 22:30:40 ejohnst Exp $
  */
 
 /*
@@ -168,8 +168,13 @@ struct exiftags {
 	enum order tifforder;	/* Endianness of TIFF. */
 	unsigned char *btiff;	/* Beginning of TIFF. */
 	unsigned char *etiff;	/* End of TIFF. */
-	int mkrval;		/* Maker index (XXX uhh, somewhat opaque). */
-	int mkrinfo;		/* Maker info (XXX uhh, a hack for Nikon). */
+
+	/* Version info. */
+
+	short exifmaj;		/* Exif version, major. */
+	short exifmin;		/* Exif version, minor. */
+	short mkrval;		/* Maker index (XXX uhh, somewhat opaque). */
+	short mkrinfo;		/* Maker info (XXX uhh, a hack for Nikon). */
 };
 
 
