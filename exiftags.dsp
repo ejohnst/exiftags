@@ -121,6 +121,10 @@ SOURCE=.\makers.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\minolta.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\nikon.c
 # End Source File
 # Begin Source File
