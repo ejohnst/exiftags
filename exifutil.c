@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.20 2003/08/03 06:51:17 ejohnst Exp $
+ * $Id: exifutil.c,v 1.21 2003/08/04 06:12:11 ejohnst Exp $
  */
 
 /*
@@ -318,6 +318,7 @@ readifd(unsigned char *b, struct ifd **dir, struct exiftag *set,
 	(*dir)->next = NULL;
 	(*dir)->num = exif2byte(b, t->tifforder);
 	(*dir)->tagset = set;
+	(*dir)->ifdorder = t->tifforder;
 	(*dir)->par = NULL;
 	ifdsize = (*dir)->num * sizeof(struct field);
 	b += 2;

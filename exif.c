@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.55 2003/08/03 06:51:16 ejohnst Exp $
+ * $Id: exif.c,v 1.56 2003/08/04 06:12:11 ejohnst Exp $
  */
 
 /*
@@ -57,7 +57,6 @@
 #include "makers.h"
 
 #define OLYMPUS_BUGS		/* Work around Olympus stupidity. */
-#define FUJI_BUGS		/* Work around Fuji stupidity. */
 #define WINXP_BUGS		/* Work around Windows XP stupidity. */
 #define UNCREDITED_BUGS		/* Work around uncredited stupidity. */
 
@@ -77,8 +76,22 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 {
 	int i, j;
 	struct exifprop *prop, *tmpprop;
+	u_int16_t tag;
+	enum order tmporder;
+
+	/*
+	 * XXX Some IFDs are in a different byte order than the TIFF itself.
+	 * Nasty hack to accomodate for now.
+	 */
+
+	tmporder = t->tifforder;
+	t->tifforder = dir->ifdorder;
 
 	prop = newprop();
+	if (dir->par)
+		tag = dir->par->tag;
+	else
+		tag = EXIF_T_UNKNOWN;
 
 	/* Field info. */
 
@@ -126,7 +139,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 	/* Skip sanity checking on maker note tags; we'll get to them later. */
 
-	if (prop->par && prop->par->tag != EXIF_T_MAKERNOTE) {
+	if (tag != EXIF_T_MAKERNOTE) {
 		/*
 		 * XXX Ignore UserComment -- a hack to get around an apparent
 		 * WinXP Picture Viewer bug (err, liberty).  When you rotate
@@ -165,6 +178,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 		tmpprop->next = prop;
 	} else
 		t->props = prop;
+	t->tifforder = tmporder;
 }
 
 
@@ -184,24 +198,9 @@ static void
 readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
 {
 	int i;
-	u_int16_t tag;
-#ifdef FUJI_BUGS
-	enum order tmporder;
-#endif
-
-	if (dir->par)
-		tag = dir->par->tag;
-	else
-		tag = EXIF_T_UNKNOWN;
-
-#ifdef FUJI_BUGS
-	tmporder = t->tifforder;
-	if (tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
-		t->tifforder = LITTLE;
-#endif
 
 	if (debug) {
-		if (tag != EXIF_T_UNKNOWN) {
+		if (dir->par && dir->par->tag != EXIF_T_UNKNOWN) {
 			printf("Processing %s directory, %d entries\n",
 			    dir->par->name, dir->num);
 		} else
@@ -212,10 +211,6 @@ readtags(struct ifd *dir, int seq, struct exiftags *t, int domkr)
 	for (i = 0; i < dir->num; i++)
 		readtag(&(dir->fields[i]), seq, dir, t, domkr);
 
-#ifdef FUJI_BUGS
-	if (tag == EXIF_T_MAKERNOTE && t->mkrval == EXIF_MKR_FUJI)
-		t->tifforder = tmporder;
-#endif
 	if (debug)
 		printf("\n");
 }
@@ -236,7 +231,10 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	enum order o = t->tifforder;
 	struct exifprop *h = t->props;
 
-	/* Process tags from special IFDs. */
+	/*
+	 * Process tags from special IFDs.
+	 * XXX Don't properly pass IFD byte order here.
+	 */
 
 	if (prop->par && prop->par->tagset == tags) {
 		switch (prop->par->tag) {

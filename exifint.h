@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.23 2003/08/03 06:51:16 ejohnst Exp $
+ * $Id: exifint.h,v 1.24 2003/08/04 06:12:11 ejohnst Exp $
  */
 
 /*
@@ -82,6 +82,7 @@ struct ifd {
 	u_int16_t num;		/* Number of fields. */
 	struct field *fields;	/* Array of fields. */
 	struct exiftag *tagset;	/* Tag definitions. */
+	enum order ifdorder;	/* Endianness of IFD. */
 	struct exifprop *par;	/* Parent property association. */
 	struct ifd *next;
 };
