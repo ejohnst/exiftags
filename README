@@ -2,9 +2,9 @@ exiftags-0.91
 20020712
 Eric M. Johnston, emj@postal.net
 
-Spits out Exif tags from a digital camera JPEG file.  See the included
-man page for usage and more information.  If you want to read the
-man page before installing it, just do:
+This utility spits out Exif tags from a digital camera JPEG file.  See
+the included man page for usage and more information.  If you want to
+read the man page before installing it, just do:
 
     nroff -man exiftags.1
 
@@ -22,7 +22,7 @@ of u_int16_t and u_int32_t.  If so, see exif.h.  One of these days I'll
 get around to making it compile under WIN32.
 
 Feel free to use the source within the confines of its BSD license.  Note
-that I do not wish it to be relicensed under some other Open Source
+that I do not wish it to be re-licensed under some other Open Source
 license (e.g., GPL).  I would be interested to know if you use parts of
 this program in your own and any thoughts you might have on its
 improvement.
@@ -33,4 +33,6 @@ from you.
 
 Please report bugs, incompatibilities, successes, etc. to
 emj@postal.net.  The latest version of this software will be posted
-at http://emj.postal.net/software/exifdump/.
+at http://emj.postal.net/sw/exifdump/.
+
+$Id: README,v 1.3 2002/07/15 03:21:25 ejohnst Exp $
