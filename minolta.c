@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.13 2003/01/28 22:34:40 ejohnst Exp $
+ * $Id: minolta.c,v 1.14 2003/02/07 17:33:18 ejohnst Exp $
  *
  */ 
 
@@ -419,6 +419,7 @@ minolta_cprop(struct exifprop *prop, char *off, struct exiftags *t,
 	struct exifprop *aprop;
 
 	valbuf = NULL;
+	model = -1;
 
 	for (i = 0; i * 4 < prop->count; i++) {
 

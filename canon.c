@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.26 2003/02/03 18:50:19 ejohnst Exp $
+ * $Id: canon.c,v 1.27 2003/02/07 17:33:18 ejohnst Exp $
  */
 
 /*
@@ -792,7 +792,7 @@ static void
 canon_custom(struct exifprop *prop, char *off, enum order o,
     struct ccstm *table)
 {
-	int i, j;
+	int i, j = -1;
 	const char *cn;
 	char *cv = NULL;
 	u_int16_t v;

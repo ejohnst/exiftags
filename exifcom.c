@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifcom.c,v 1.5 2003/01/20 22:31:13 ejohnst Exp $
+ * $Id: exifcom.c,v 1.6 2003/02/07 17:33:18 ejohnst Exp $
  */
 
 /*
@@ -263,6 +263,7 @@ doit(FILE *fp, const char *fname)
 	gotapp1 = FALSE;
 	first = 0;
 	exifbuf = NULL;
+	rc = 0;
 
 	while (jpegscan(fp, &mark, &len, !(first++))) {
 
@@ -295,6 +296,9 @@ doit(FILE *fp, const char *fname)
 			else
 				rc = printcom(findprop(t->props,
 				    EXIF_T_USERCOMMENT), t->btiff);
+		} else {
+			exifwarn("couldn't find Exif properties");
+			rc = 1;
 		}
 		exiffree(t);
 		free(exifbuf);
