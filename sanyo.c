@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sanyo.c,v 1.1 2003/08/06 06:28:43 ejohnst Exp $
+ * $Id: sanyo.c,v 1.2 2003/08/08 06:21:07 ejohnst Exp $
  */
 
 /*
@@ -67,15 +67,15 @@ static struct descrip sanyo_quality[] = {
 /* Resolution. */
 
 static struct descrip sanyo_res[] = {
-	{ 0,	"Very Low" },
-	{ 1,	"Low" },
-	{ 2,	"Medium Low" },
-	{ 3,	"Medium" },
-	{ 4,	"Medium High" },
-	{ 5,	"High" },
-	{ 6,	"Very High" },
-	{ 7,	"Super High" },
-	{ -1,	"Unknown" },
+	{ 0,	"Very Low Resolution" },
+	{ 1,	"Low Resolution" },
+	{ 2,	"Medium Low Resolution" },
+	{ 3,	"Medium Resolution" },
+	{ 4,	"Medium High Resolution" },
+	{ 5,	"High Resolution" },
+	{ 6,	"Very High Resolution" },
+	{ 7,	"Super High Resolution" },
+	{ -1,	"Unknown Resolution" },
 };
 
 
@@ -166,7 +166,7 @@ static struct descrip sanyo_flash[] = {
 static struct exiftag sanyo_tags[] = {
 	{ 0x0100, TIFF_UNKN, 0, ED_UNK, "SanyoThumb",
 	  "JPEG Thumbnail", NULL },
-	{ 0x0200, TIFF_LONG, 3, ED_IMG, "SanyoShootMode",
+	{ 0x0200, TIFF_LONG, 3, ED_VRB, "SanyoShootMode",
 	  "Shooting Mode", NULL },
 	{ 0x0201, TIFF_SHORT, 1, ED_IMG, "SanyoQuality",
 	  "Quality Setting", NULL },
@@ -217,7 +217,42 @@ static struct exiftag sanyo_tags[] = {
 	{ 0x0f00, TIFF_UNKN, 0, ED_UNK, "SanyoDump",
 	  "Data Dump", NULL },
 	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "SanyoUnknown",
-	  "Olympus Unknown", NULL },
+	  "Sanyo Unknown", NULL },
+};
+
+
+/* Picture mode. */
+
+static struct descrip sanyo_picmode[] = {
+	{ 0,	"Normal" },
+	{ 2,	"Fast" },
+	{ 3,	"Panorama" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Panoramic direction. */
+
+static struct descrip sanyo_pandir[] = {
+	{ 1,	"Left to Right" },
+	{ 2,	"Right to Left" },
+	{ 3,	"Bottom to Top" },
+	{ 4,	"Top to Bottom" },
+	{ -1,	"Unknown" },
+};
+
+
+/* Shooting mode subtags. */
+
+static struct exiftag sanyo_shoottags[] = {
+	{ 0x0000, TIFF_UNKN, 0, ED_IMG, "SanyoPicMode",
+	  "Picture Mode", sanyo_picmode },
+	{ 0x0001, TIFF_UNKN, 0, ED_IMG, "SanyoSeqNum",
+	  "Sequence Number", NULL },
+	{ 0x0002, TIFF_UNKN, 0, ED_IMG, "SanyoPanDir",
+	  "Panoramic Direction", sanyo_pandir },
+	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "SanyoShootUnknown",
+	  "Sanyo Shooting Unknown", NULL },
 };
 
 
@@ -227,84 +262,84 @@ static struct exiftag sanyo_tags[] = {
 void
 sanyo_prop(struct exifprop *prop, struct exiftags *t)
 {
+	int i, j;
 	u_int32_t a, b;
 	unsigned char *offset;
+	char *c1, *c2;
 	struct exifprop *aprop;
 
-#if 0
 	switch (prop->tag) {
-
-	/* Image quality. */
-
-	case 0x0201:
-		a = exif4byte(t->btiff + prop->value, t->tifforder);
-		b = exif4byte(t->btiff + prop->value + 4, t->tifforder);
-
-		if (a == b)
-			snprintf(prop->str, 31, "None");
-		else
-			snprintf(prop->str, 31, "x%.1f", (float)a / (float)b);
-		break;
 
 	/* Various image data. */
 
 	case 0x0200:
-		offset = t->btiff + prop->value;
+		if (debug)
+			printf("Processing %s (0x%04X) directory, %d entries\n",
+			    prop->name, prop->tag, prop->count);
 
-		/*
-		 * XXX Would be helpful to test this with a panoramic.
-		 * According to Peter Esherick these values are unsigned
-		 * longs; however, it appears they may be shorts.  Need to
-		 * experiment.
-		 */
+		for (i = 0; i < (int)prop->count; i++) {
+			a = exif4byte(t->md.btiff + prop->value + i * 2,
+			    t->md.order);
 
-		/* Picture taking mode. */
+			aprop = childprop(prop);
+			aprop->value = a;
+			aprop->tag = i;
+			aprop->tagset = sanyo_shoottags;
+			aprop->type = prop->type;
+			aprop->count = 1;
 
-		aprop = childprop(prop);
-		aprop->value = exif4byte(offset, t->tifforder);
-		aprop->name = "OlympusPicMode";
-		aprop->descr = "Picture Mode";
-		aprop->lvl = ED_UNK;
+			/* Lookup property name and description. */
 
-		/* Sequence number. */
+			for (j = 0; sanyo_shoottags[j].tag < EXIF_T_UNKNOWN &&
+			    sanyo_shoottags[j].tag != i; j++);
+			aprop->name = sanyo_shoottags[j].name;
+			aprop->descr = sanyo_shoottags[j].descr;
+			aprop->lvl = sanyo_shoottags[j].lvl;
+			if (sanyo_shoottags[j].table)
+				aprop->str =
+				    finddescr(sanyo_shoottags[j].table, a);
 
-		aprop = childprop(prop);
-		aprop->value = exif4byte(offset + 4, t->tifforder);
-		aprop->name = "OlympusSeqNum";
-		aprop->descr = "Sequence Number";
-		aprop->lvl = ED_UNK;
+			switch (aprop->tag) {
+			case 0x0001:
+				if (!aprop->value)
+					aprop->lvl = ED_VRB;
+				aprop->value += 1;
+				break;
+			}
 
-		/* Panorama direction. */
+			dumpprop(aprop, NULL);
+		}
+		break;
 
-		aprop = childprop(prop);
-		aprop->value = exif4byte(offset + 8, t->tifforder);
-		aprop->name = "OlympusPanDir";
-		aprop->descr = "Panoramic Direction";
-		aprop->lvl = ED_UNK;
+	/* Image quality & resolution. */
 
+	case 0x0201:
+		c1 = finddescr(sanyo_quality, (prop->value >> 8) & 0xff);
+		c2 = finddescr(sanyo_res, prop->value & 0xff);
+		exifstralloc(&prop->str, strlen(c1) + strlen(c2) + 3);
+		sprintf(prop->str, "%s, %s", c1, c2);
+		free(c1);
+		free(c2);
 		break;
 
 	/* Digital zoom. */
 
 	case 0x0204:
-		a = exif4byte(t->btiff + prop->value, t->tifforder);
-		b = exif4byte(t->btiff + prop->value + 4, t->tifforder);
+		a = exif4byte(t->md.btiff + prop->value, t->md.order);
+		b = exif4byte(t->md.btiff + prop->value + 4, t->md.order);
 
-		if (a == b)
+		if (!a || !b || a == b)
 			snprintf(prop->str, 31, "None");
 		else
 			snprintf(prop->str, 31, "x%.1f", (float)a / (float)b);
 		break;
 
-	/* Image number. */
+	/* Color adjust. */
 
-	case 0x0008:
-		exifstralloc(&prop->str, 32);
-		snprintf(prop->str, 31, "%03d-%04d", prop->value / 10000,
-		    prop->value % 10000);
+	case 0x0210:
+		prop->str = finddescr(sanyo_offon, !!prop->value);
 		break;
 	}
-#endif
 }
 
 
