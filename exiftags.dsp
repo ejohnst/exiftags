@@ -89,6 +89,10 @@ SOURCE=.\canon.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\casio.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\exif.c
 # End Source File
 # Begin Source File
