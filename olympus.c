@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.12 2003/08/03 04:47:08 ejohnst Exp $
+ * $Id: olympus.c,v 1.13 2003/08/03 06:51:17 ejohnst Exp $
  */
 
 /*
@@ -153,11 +153,9 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 	/* Image number. */
 
 	case 0x0008:
-		if (!(prop->str = (char *)malloc(32)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, 32);
 		snprintf(prop->str, 31, "%03d-%04d", prop->value / 10000,
 		    prop->value % 10000);
-		prop->str[31] = '\0';
 		break;
 	}
 }

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.22 2003/08/03 04:47:08 ejohnst Exp $
+ * $Id: exifint.h,v 1.23 2003/08/03 06:51:16 ejohnst Exp $
  */
 
 /*
@@ -101,7 +101,6 @@ struct ifd {
 	    ((double)(n) / (double)(d)) >= 0.1) \
 		snprintf((str), 31, "%.1f", (double)(n) / (double)(d)); \
 	else snprintf((str), 31, "%d/%d", (n), (d)); \
-	(str)[31] = '\0'; \
 }
 
 
@@ -123,6 +122,7 @@ extern int32_t exif4sbyte(unsigned char *b, enum order o);
 extern char *finddescr(struct descrip *table, u_int16_t val);
 extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
+extern void exifstralloc(char **str, int len);
 extern void hexprint(unsigned char *b, int len);
 extern void dumpprop(struct exifprop *prop, struct field *afield);
 extern struct ifd *readifds(u_int32_t offset, struct exiftag *set,

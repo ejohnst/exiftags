@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.32 2003/08/03 04:47:08 ejohnst Exp $
+ * $Id: canon.c,v 1.33 2003/08/03 06:51:16 ejohnst Exp $
  */
 
 /*
@@ -667,7 +667,7 @@ static struct exiftag canon_d30custom[] = {
 	{ 15, TIFF_SHORT, 0, ED_VRB, "D30Custom",
 	  "Shutter release w/o CF card", ccstm_yesno },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "D30CustomUnknown",
-	  "Canon D30 Custom Unknown", NULL },
+	  "Canon D30/D60 Custom Unknown", NULL },
 };
 
 
@@ -717,7 +717,7 @@ static struct exiftag canon_1dcustom[] = {
 	{ 20, TIFF_SHORT, 0, ED_VRB, "1DCustom",
 	  "AI servo tracking sensitivity", ccstm_aisens },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "1DCustomUnknown",
-	  "Canon 1D Custom Unknown", NULL },
+	  "Canon 1D/1Ds Custom Unknown", NULL },
 };
 
 /* 10D custom functions. */
@@ -774,10 +774,8 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
 	switch (aprop->tag) {
 	case 2:
 		aprop->lvl = v ? ED_IMG : ED_VRB;
-		if (!(aprop->str = (char *)malloc(32)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&aprop->str, 32);
 		snprintf(aprop->str, 31, "%d sec", v / 10);
-		aprop->str[31] = '\0';
 		break;
 	case 5:
 		/* Change "Single" to "Timed" if #2 > 0. */
@@ -794,12 +792,10 @@ canon_prop01(struct exifprop *aprop, struct exifprop *prop,
 		 */
 
 		if (v == 3 && prop->count >= 37) {
-			if (!(aprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
+			exifstralloc(&aprop->str, 32);
 			snprintf(aprop->str, 31, "x%.1f", 2 *
 			    (float)exif2byte(off + 37 * 2, o) /
 			    (float)exif2byte(off + 36 * 2, o));
-			aprop->str[31] = '\0';
 		} else
 			aprop->str = finddescr(canon_dzoom, v);
 		break;
@@ -860,10 +856,8 @@ canon_propA0(struct exifprop *aprop, struct exifprop *prop,
 
 	switch (aprop->tag) {
 	case 9:
-		if (!(aprop->str = (char *)malloc(32)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&aprop->str, 32);
 		snprintf(aprop->str, 31, "%d K", aprop->value);
-		aprop->str[31] = '\0';
 		break;
 	default:
 		return (FALSE);
@@ -893,8 +887,9 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 		return (FALSE);
 	}
 
-	printf("Processing %s (0x%04X) directory, %d entries\n", prop->name,
-	    prop->tag, prop->count);
+	if (debug)
+		printf("Processing %s (0x%04X) directory, %d entries\n",
+		    prop->name, prop->tag, prop->count);
 
 	for (i = 0; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2, t->tifforder);
@@ -921,11 +916,8 @@ canon_subval(struct exifprop *prop, struct exiftags *t,
 		if (valfun && !valfun(aprop, prop, off, t)) {
 			if (aprop->lvl != ED_UNK)
 				continue;
-
-			if (!(aprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
+			exifstralloc(&aprop->str, 32);
 			snprintf(aprop->str, 31, "num %02d, val 0x%04X", i, v);
-			aprop->str[31] = '\0';
 		}
 	}
 
@@ -961,8 +953,9 @@ canon_custom(struct exifprop *prop, unsigned char *off, enum order o,
 		return;
 	}
 
-	printf("Processing %s directory, %d entries\n", prop->name,
-	    prop->count);
+	if (debug)
+		printf("Processing %s directory, %d entries\n", prop->name,
+		    prop->count);
 
 	for (i = 1; i < (int)prop->count; i++) {
 		v = exif2byte(off + i * 2, o);
@@ -990,9 +983,8 @@ canon_custom(struct exifprop *prop, unsigned char *off, enum order o,
 
 		dumpprop(aprop, NULL);
 
-		if (!(aprop->str = (char *)malloc(4 + strlen(cn) +
-		    (cv ? strlen(cv) : 10))))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&aprop->str, 4 + strlen(cn) +
+		    (cv ? strlen(cv) : 10));
 
 		if (cv && j != -1) {
 			snprintf(aprop->str, 4 + strlen(cn) + strlen(cv),
@@ -1047,8 +1039,7 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			tmpprop = childprop(prop);
 			tmpprop->name = "CanonLensSz";
 			tmpprop->descr = "Lens Size";
-			if (!(tmpprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
+			exifstralloc(&tmpprop->str, 32);
 
 			if (flmin == flmax) {
 				snprintf(tmpprop->str, 31, "%.2f mm",
@@ -1083,18 +1074,15 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 	/* Image number. */
 
 	case 0x0008:
-		if (!(prop->str = (char *)malloc(32)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, 32);
 		snprintf(prop->str, 31, "%03d-%04d", prop->value / 10000,
 		    prop->value % 10000);
-		prop->str[31] = '\0';
 		break;
 
 	/* Serial number. */
 
 	case 0x000c:
-		if (!(prop->str = (char *)malloc(11)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, 11);
 		snprintf(prop->str, 11, "%010d", prop->value);
 		break;
 

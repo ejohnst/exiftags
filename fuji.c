@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.9 2003/08/03 00:50:03 ejohnst Exp $
+ * $Id: fuji.c,v 1.10 2003/08/03 06:51:17 ejohnst Exp $
  */
 
 /*
@@ -206,10 +206,8 @@ fuji_prop(struct exifprop *prop, struct exiftags *t)
 	/* Maker note version. */
 
 	case 0x0000:
-		if (!(prop->str = (char *)malloc(prop->count + 1)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, prop->count + 1);
 		strncpy(prop->str, (const char*)(&prop->value), prop->count);
-		prop->str[prop->count] = '\0';
 		break;
 	}
 }

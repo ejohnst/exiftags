@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.18 2003/08/03 04:47:08 ejohnst Exp $
+ * $Id: minolta.c,v 1.19 2003/08/03 06:51:17 ejohnst Exp $
  *
  */ 
 
@@ -466,11 +466,8 @@ minolta_cprop(struct exifprop *prop, unsigned char *off, struct exiftags *t,
 		if (thetags != minolta_0TLM)
 			continue;
 
-		if (!valbuf) {
-			if (!(valbuf = (char *)malloc(16)))
-				exifdie((const char *)strerror(errno));
-			valbuf[15] = '\0';
-		}
+		if (!valbuf)
+			exifstralloc(&valbuf, 16);
 
 		switch (k) {
 
@@ -665,8 +662,8 @@ minolta_naval(struct exifprop *props, struct exiftag *tags, int16_t tag)
 		return;
 
 	free(prop->str);
-	if (!(prop->str = (char *)malloc(strlen(na) + 1)))
-		exifdie((const char *)strerror(errno));
+	prop->str = NULL;
+	exifstralloc(&prop->str, strlen(na) + 1);
 	strcpy(prop->str, na);
 	prop->lvl = ED_BAD;
 }
@@ -696,10 +693,8 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 	/* Maker note type. */
 
 	case 0x0000:
-		if (!(prop->str = (char *)malloc(prop->count + 1)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, prop->count + 1);
 		strncpy(prop->str, (const char *)&prop->value, prop->count);
-		prop->str[prop->count] = '\0';
 
 		/* We recognize two types: 0TLM and mlt0. */
 

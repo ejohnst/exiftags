@@ -29,12 +29,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.6 2003/08/03 01:34:02 ejohnst Exp $
+ * $Id: exifgps.c,v 1.7 2003/08/03 06:51:16 ejohnst Exp $
  */
 
 /*
  * Exif GPS information tags.
  *
+ * Note: things aren't quite complete.  Waiting on additional examples
+ * that include the tags marked unknown.
  */
 
 #include <stdio.h>
@@ -94,7 +96,7 @@ static struct descrip gps_bear[] = {
 };
 
 
-/* GPS info version 2.2 tags. */
+/* GPS info version 2.2.0.0 tags. */
 
 struct exiftag gpstags[] = {
 	{ 0x0000, TIFF_BYTE,  4,  ED_VRB,
@@ -113,25 +115,25 @@ struct exiftag gpstags[] = {
 	    "GPSAltitude", "Altitude", NULL },
 	{ 0x0007, TIFF_RTNL,  3,  ED_IMG,
 	    "GPSTimeStamp", "Time (UTC)", NULL },
-	{ 0x0008, TIFF_ASCII, 0,  ED_IMG,
+	{ 0x0008, TIFF_ASCII, 0,  ED_UNK,
 	    "GPSSatellites", "GPS Satellites", NULL },
 	{ 0x0009, TIFF_ASCII, 2,  ED_IMG,
 	    "GPSStatus", "GPS Status", gps_status },
 	{ 0x000a, TIFF_ASCII, 2,  ED_IMG,
 	    "GPSMeasureMode", "GPS Measurement Mode", NULL },
-	{ 0x000b, TIFF_RTNL,  1,  ED_IMG,
+	{ 0x000b, TIFF_RTNL,  1,  ED_UNK,
 	    "GPSDOP", "GPS Degree of Precision", NULL },
 	{ 0x000c, TIFF_ASCII, 2,  ED_VRB,
 	    "GPSSpeedRef", "GPS Speed Reference", gps_speed },
-	{ 0x000d, TIFF_RTNL,  1,  ED_IMG,
+	{ 0x000d, TIFF_RTNL,  1,  ED_UNK,
 	    "GPSSpeed", "Movement Speed", NULL },
 	{ 0x000e, TIFF_ASCII, 2,  ED_VRB,
 	    "GPSTrackRef", "GPS Direction Reference", gps_bear },
-	{ 0x000f, TIFF_RTNL,  1,  ED_IMG,		/* degrees */
+	{ 0x000f, TIFF_RTNL,  1,  ED_UNK,		/* degrees */
 	    "GPSTrack", "Movement Direction", NULL },
 	{ 0x0010, TIFF_ASCII, 2,  ED_VRB,
 	    "GPSImgDirectionRef", "GPS Image Direction Ref", gps_bear },
-	{ 0x0011, TIFF_RTNL,  1,  ED_IMG,		/* degrees */
+	{ 0x0011, TIFF_RTNL,  1,  ED_UNK,		/* degrees */
 	    "GPSImgDirection",  "Image Direction", NULL },
 	{ 0x0012, TIFF_ASCII, 0,  ED_IMG,
 	    "GPSMapDatum", "Geodetic Survey Data", NULL },
@@ -145,11 +147,11 @@ struct exiftag gpstags[] = {
 	    "GPSDestLongitude", "Destination Longitude", NULL },
 	{ 0x0017, TIFF_ASCII, 2,  ED_VRB,
 	    "GPSDestBearingRef", "GPS Dest Bearing Ref", gps_bear },
-	{ 0x0018, TIFF_RTNL,  1,  ED_IMG,		/* degrees */
+	{ 0x0018, TIFF_RTNL,  1,  ED_UNK,		/* degrees */
 	    "GPSDestBearing", "Destination Direction", NULL },
 	{ 0x0019, TIFF_ASCII, 2,  ED_VRB,
 	    "GPSDestDistanceRef", "GPS Dest Distance Ref", gps_dist },
-	{ 0x001a, TIFF_RTNL,  1,  ED_IMG,
+	{ 0x001a, TIFF_RTNL,  1,  ED_UNK,
 	    "GPSDestDistance", "Destination Distance", NULL },
 	{ 0x001b, TIFF_UNDEF, 0,  ED_IMG,
 	    "GPSProcessingMethod", "GPS Processing Method", NULL },
@@ -181,8 +183,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 	/* Version. */
 
 	case 0x0000:
-		if (!(prop->str = (char *)malloc(8)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, 8);
 
 		/* Convert the value back into a string. */
 
@@ -214,6 +215,7 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 		/* Clean-up from any earlier processing. */
 
 		free(prop->str);
+		prop->str = NULL;
 
 		byte4exif(prop->value, (unsigned char *)buf, t->tifforder);
 
@@ -223,10 +225,8 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 			prop->str = finddescr(gpstags[i].table,
 			    (unsigned char)buf[0]);
 		else {
-			if (!(prop->str = (char *)malloc(2)))
-				exifdie((const char *)strerror(errno));
+			exifstralloc(&prop->str, 2);
 			prop->str[0] = buf[0];
-			prop->str[1] = '\0';
 		}
 		break;
 
@@ -249,9 +249,9 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 			break;
 		}
 
-		if (!(prop->str = (char *)malloc(32)))
-			exifdie((const char *)strerror(errno));
-		prop->str[0] = prop->str[31] = '\0';
+		free(prop->str);
+		prop->str = NULL;
+		exifstralloc(&prop->str, 32);
 
 		/* Figure out the reference prefix. */
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.19 2003/08/03 04:47:08 ejohnst Exp $
+ * $Id: exifutil.c,v 1.20 2003/08/03 06:51:17 ejohnst Exp $
  */
 
 /*
@@ -227,6 +227,22 @@ childprop(struct exifprop *parent)
 	parent->next = prop;
 
 	return (prop);
+}
+
+
+/*
+ * Allocate a buffer for a property's display string.
+ */
+void
+exifstralloc(char **str, int len)
+{
+
+	if (*str) {
+		exifwarn("tried to alloc over non-null string");
+		abort();
+	}
+	if (!(*str = (char *)calloc(1, len)))
+		exifdie((const char *)strerror(errno));
 }
 
 

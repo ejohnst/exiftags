@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.54 2003/08/03 04:47:08 ejohnst Exp $
+ * $Id: exif.c,v 1.55 2003/08/03 06:51:16 ejohnst Exp $
  */
 
 /*
@@ -377,10 +377,8 @@ postprop(struct exifprop *prop, struct exiftags *t)
 		break;
 
 	case EXIF_T_FOCALLEN35:
-		if (!(prop->str = (char *)malloc(16)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, 16);
 		snprintf(prop->str, 15, "%d mm", prop->value);
-		prop->str[15] = '\0';
 		break;
 
 	/*
@@ -501,8 +499,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	case EXIF_T_VERSION:
 		/* These contortions are to make 0220 = 2.20. */
-		if (!(prop->str = (char *)malloc(8)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, 8);
 
 		/* Platform byte order affects this... */
 
@@ -512,7 +509,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		else
 			for (i = 0; i < 4; i++)
 				buf[i] = ((const char *)&prop->value)[3 - i];
-		buf[4] = prop->str[7] = '\0';
+		buf[4] = '\0';
 		t->exifmin = (short)atoi(buf + 2);
 		buf[2] = '\0';
 		t->exifmaj = (short)atoi(buf);
@@ -613,10 +610,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 			while (d > c && isspace((int)*(d - 1))) --d;
 
-			if (!(prop->str = (char *)malloc(d - c + 1)))
-				exifdie((const char *)strerror(errno));
+			exifstralloc(&prop->str, d - c + 1);
 			strncpy(prop->str, c, d - c);
-			prop->str[d - c] = '\0';
 			prop->lvl = prop->str[0] ? ED_IMG : ED_VRB;
 			return;
 		}
@@ -642,11 +637,9 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	if (prop->type == TIFF_ASCII &&
 	    (prop->value + prop->count <= (u_int32_t)(t->etiff - t->btiff))) {
-		if (!(prop->str = (char *)malloc(prop->count + 1)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, prop->count + 1);
 		strncpy(prop->str, (const char *)(t->btiff + prop->value),
 		    prop->count);
-		prop->str[prop->count] = '\0';
 		return;
 	}
 
@@ -659,8 +652,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	    (prop->value + prop->count * 8 <=
 	    (u_int32_t)(t->etiff - t->btiff))) {
 
-		if (!(prop->str = (char *)malloc(32)))
-			exifdie((const char *)strerror(errno));
+		exifstralloc(&prop->str, 32);
 
 		if (prop->type == TIFF_RTNL) {
 			un = exif4byte(t->btiff + prop->value, t->tifforder);
@@ -691,11 +683,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 		if (prop->count > 8)
 			return;
-
 		len = 8 * prop->count + 1;
-		if (!(prop->str = (char *)malloc(len)))
-			exifdie((const char *)strerror(errno));
-		prop->str[0] = '\0';
+		exifstralloc(&prop->str, len);
 
 		for (i = 0; i < prop->count; i++) {
 			if (prop->type == TIFF_SHORT)
