@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.10 2003/02/11 15:32:19 ejohnst Exp $
+ * $Id: olympus.c,v 1.11 2003/08/03 00:50:03 ejohnst Exp $
  */
 
 /*
@@ -94,9 +94,7 @@ static struct exiftag olympus_tags[] = {
 void
 olympus_prop(struct exifprop *prop, struct exiftags *t)
 {
-	int i;
 	u_int32_t a, b;
-	u_int16_t v = (u_int16_t)prop->value;
 	unsigned char *offset;
 	struct exifprop *aprop;
 
@@ -107,26 +105,6 @@ olympus_prop(struct exifprop *prop, struct exiftags *t)
 
 	if (prop->subtag > -2)
 		return;
-
-	/* Lookup the field name (if known). */
-
-	for (i = 0; olympus_tags[i].tag < EXIF_T_UNKNOWN &&
-	    olympus_tags[i].tag != prop->tag; i++);
-	prop->name = olympus_tags[i].name;
-	prop->descr = olympus_tags[i].descr;
-	prop->lvl = olympus_tags[i].lvl;
-	if (olympus_tags[i].table)
-		prop->str = finddescr(olympus_tags[i].table, v);
-
-	if (debug) {
-		static int once = 0;	/* XXX Breaks on multiple files. */
-
-		if (!once) {
-			printf("Processing Olympus Maker Note\n");
-			once = 1;
-		}
-		dumpprop(prop, NULL);
-	}
 
 	switch (prop->tag) {
 
@@ -207,9 +185,10 @@ olympus_ifd(u_int32_t offset, struct exiftags *t)
 	 */
 
 	if (!strcmp((const char *)(t->btiff + offset), "OLYMP"))
-		readifd(t->btiff + offset + strlen("OLYMP") + 3, &myifd, t);
+		readifd(t->btiff + offset + strlen("OLYMP") + 3, &myifd,
+		    olympus_tags, t);
 	else
-		readifd(t->btiff + offset, &myifd, t);
+		readifd(t->btiff + offset, &myifd, olympus_tags, t);
 
 	return (myifd);
 }

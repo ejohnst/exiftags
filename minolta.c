@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.15 2003/02/11 15:32:19 ejohnst Exp $
+ * $Id: minolta.c,v 1.16 2003/08/03 00:50:03 ejohnst Exp $
  *
  */ 
 
@@ -677,7 +677,6 @@ minolta_naval(struct exifprop *props, u_int16_t tag, int16_t subtag)
 void
 minolta_prop(struct exifprop *prop, struct exiftags *t)
 {
-	int i;
 	struct exiftag *fielddefs;
 	struct exifprop *tmpprop;
 
@@ -688,14 +687,6 @@ minolta_prop(struct exifprop *prop, struct exiftags *t)
 
 	if (prop->subtag > -2)
 		return;
-
-	/* Lookup the field name (if known). */
-
-	for (i = 0; minolta_tags[i].tag < EXIF_T_UNKNOWN &&
-	    minolta_tags[i].tag != prop->tag; i++);
-	prop->name = minolta_tags[i].name;
-	prop->descr = minolta_tags[i].descr;
-	prop->lvl = minolta_tags[i].lvl;
 
 	if (debug) {
 		static int once = 0;	/* XXX Breaks on multiple files. */
@@ -828,5 +819,5 @@ minolta_ifd(u_int32_t offset, struct exiftags *t)
 		return (NULL);
 	}
 
-	return (readifds(offset, t));
+	return (readifds(offset, minolta_tags, t));
 }

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifgps.c,v 1.4 2003/08/02 23:27:23 ejohnst Exp $
+ * $Id: exifgps.c,v 1.5 2003/08/03 00:50:02 ejohnst Exp $
  */
 
 /*
@@ -176,15 +176,6 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 	char fmt[32], buf[16];
 	struct exifprop *tmpprop;
 
-	/* Lookup field description values. */
-
-	for (i = 0; gpstags[i].tag < EXIF_T_UNKNOWN &&
-	    gpstags[i].tag != prop->tag; i++);
-	if (gpstags[i].table)
-		if (gpstags[i].type != TIFF_ASCII)
-			prop->str = finddescr(gpstags[i].table,
-			    (u_int16_t)prop->value);
-
 	switch (prop->tag) {
 
 	/* Version. */
@@ -220,7 +211,14 @@ gpsprop(struct exifprop *prop, struct exiftags *t)
 	case 0x0015:
 	case 0x0017:
 	case 0x0019:
+		/* Clean-up from any earlier processing. */
+
+		free(prop->str);
+
 		byte4exif(prop->value, (unsigned char *)buf, t->tifforder);
+
+		for (i = 0; gpstags[i].tag < EXIF_T_UNKNOWN &&
+		    gpstags[i].tag != prop->tag; i++);
 		if (gpstags[i].table)
 			prop->str = finddescr(gpstags[i].table,
 			    (unsigned char)buf[0]);

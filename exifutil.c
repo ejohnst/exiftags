@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.16 2003/08/02 18:27:00 ejohnst Exp $
+ * $Id: exifutil.c,v 1.17 2003/08/03 00:50:02 ejohnst Exp $
  */
 
 /*
@@ -319,7 +319,8 @@ dumpprop(struct exifprop *prop, struct field *afield)
  * Exif buffer, returns the IFD and an offset to the next IFD.
  */
 u_int32_t
-readifd(unsigned char *b, struct ifd **dir, struct exiftags *t)
+readifd(unsigned char *b, struct ifd **dir, struct exiftag *set,
+    struct exiftags *t)
 {
 	u_int32_t ifdsize;
 
@@ -341,6 +342,7 @@ readifd(unsigned char *b, struct ifd **dir, struct exiftags *t)
 	(*dir)->next = NULL;
 	(*dir)->num = exif2byte(b, t->tifforder);
 	(*dir)->tag = EXIF_T_UNKNOWN;
+	(*dir)->tagset = set;
 	ifdsize = (*dir)->num * sizeof(struct field);
 	b += 2;
 
@@ -377,19 +379,19 @@ readifd(unsigned char *b, struct ifd **dir, struct exiftags *t)
  * node in a chain of IFDs.  Note that it can return NULL.
  */
 struct ifd *
-readifds(u_int32_t offset, struct exiftags *t)
+readifds(u_int32_t offset, struct exiftag *set, struct exiftags *t)
 {
 	struct ifd *firstifd, *curifd;
 
 	/* Fetch our first one. */
 
-	offset = readifd(t->btiff + offset, &firstifd, t);
+	offset = readifd(t->btiff + offset, &firstifd, set, t);
 	curifd = firstifd;
 
 	/* Fetch any remaining ones. */
 
 	while (offset) {
-		offset = readifd(t->btiff + offset, &(curifd->next), t);
+		offset = readifd(t->btiff + offset, &(curifd->next), set, t);
 		curifd = curifd->next;
 	}
 	return (firstifd);

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.30 2003/06/22 02:27:12 ejohnst Exp $
+ * $Id: canon.c,v 1.31 2003/08/03 00:50:02 ejohnst Exp $
  */
 
 /*
@@ -964,14 +964,6 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 	if (prop->subtag > -2)
 		return;
 
-	/* Lookup the field name (if known). */
-
-	for (i = 0; canon_tags[i].tag < EXIF_T_UNKNOWN &&
-	    canon_tags[i].tag != prop->tag; i++);
-	prop->name = canon_tags[i].name;
-	prop->descr = canon_tags[i].descr;
-	prop->lvl = canon_tags[i].lvl;
-
 	if (debug) {
 		static int once = 0;
 
@@ -1102,4 +1094,14 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 			}
 		break;
 	}
+}
+
+
+/*
+ * Try to read Canon maker note IFDs.
+ */
+struct ifd *
+canon_ifd(u_int32_t offset, struct exiftags *t)
+{
+	return(readifds(offset, canon_tags, t));
 }

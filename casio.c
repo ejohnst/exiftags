@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: casio.c,v 1.7 2003/01/25 08:00:51 ejohnst Exp $
+ * $Id: casio.c,v 1.8 2003/08/03 00:50:02 ejohnst Exp $
  */
 
 /*
@@ -190,79 +190,6 @@ static struct exiftag casio_tags1[] = {
 
 
 /*
- * Process older Casio maker note tags.
- */
-static void
-casio_prop0(struct exifprop *prop, struct exiftags *t)
-{
-	int i;
-	u_int16_t v = (u_int16_t)prop->value;
-
-	/* Lookup the field name (if known). */
-
-	for (i = 0; casio_tags0[i].tag < EXIF_T_UNKNOWN &&
-	    casio_tags0[i].tag != prop->tag; i++);
-	prop->name = casio_tags0[i].name;
-	prop->descr = casio_tags0[i].descr;
-	prop->lvl = casio_tags0[i].lvl;
-	if (casio_tags0[i].table)
-		prop->str = finddescr(casio_tags0[i].table, v);
-}
-
-
-/*
- * Process newer Casio maker note tags.
- */
-static void
-casio_prop1(struct exifprop *prop, struct exiftags *t)
-{
-	int i;
-	u_int16_t v = (u_int16_t)prop->value;
-
-	/* Lookup the field name (if known). */
-
-	for (i = 0; casio_tags1[i].tag < EXIF_T_UNKNOWN &&
-	    casio_tags1[i].tag != prop->tag; i++);
-	prop->name = casio_tags1[i].name;
-	prop->descr = casio_tags1[i].descr;
-	prop->lvl = casio_tags1[i].lvl;
-	if (casio_tags1[i].table)
-		prop->str = finddescr(casio_tags1[i].table, v);
-}
-
-
-/*
- * Process Casio maker note tags.
- */
-void
-casio_prop(struct exifprop *prop, struct exiftags *t)
-{
-
-	/*
-	 * XXX This is a rather ugly hack, but we don't really have a way
-	 * to figure out which type of Casio maker note we're dealing with
-	 * (easily).
-	 */
-
-	if (t->mkrinfo)
-		casio_prop1(prop, t);
-	else
-		casio_prop0(prop, t);
-
-	if (debug) {
-		static int once = 0;	/* XXX Breaks on multiple files. */
-
-		if (!once) {
-			printf("Processing Casio Maker Note (%d)\n",
-			    t->mkrinfo);
-			once = 1;
-		}
-		dumpprop(prop, NULL);
-	}
-}
-
-
-/*
  * Try to read a Casio maker note IFD.
  */
 struct ifd *
@@ -277,14 +204,11 @@ casio_ifd(u_int32_t offset, struct exiftags *t)
 	 */
 
 	if (!memcmp("QVC\0\0\0", t->btiff + offset, 6)) {
-
-		/* What a hack.  Indicates we need to use casio_tags1[]. */
-		t->mkrinfo = 1;
-
-		readifd(t->btiff + offset + strlen("QVC") + 3, &myifd, t);
+		readifd(t->btiff + offset + strlen("QVC") + 3, &myifd,
+		    casio_tags1, t);
 		exifwarn("Casio maker note version not supported");
 	} else
-		readifd(t->btiff + offset, &myifd, t);
+		readifd(t->btiff + offset, &myifd, casio_tags0, t);
 
 	return (myifd);
 }

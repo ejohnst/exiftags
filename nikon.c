@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.11 2003/02/11 15:32:19 ejohnst Exp $
+ * $Id: nikon.c,v 1.12 2003/08/03 00:50:03 ejohnst Exp $
  */
 
 /*
@@ -173,16 +173,7 @@ static struct exiftag nikon_tags1[] = {
 static void
 nikon_prop0(struct exifprop *prop, struct exiftags *t)
 {
-	int i;
 	u_int32_t a, b;
-
-	/* Lookup the field name (if known). */
-
-	for (i = 0; nikon_tags0[i].tag < EXIF_T_UNKNOWN &&
-	    nikon_tags0[i].tag != prop->tag; i++);
-	prop->name = nikon_tags0[i].name;
-	prop->descr = nikon_tags0[i].descr;
-	prop->lvl = nikon_tags0[i].lvl;
 
 	switch (prop->tag) {
 
@@ -221,19 +212,7 @@ nikon_prop0(struct exifprop *prop, struct exiftags *t)
 static void
 nikon_prop1(struct exifprop *prop, struct exiftags *t)
 {
-	int i;
 	u_int32_t a, b;
-	u_int16_t v = (u_int16_t)prop->value;
-
-	/* Lookup the field name (if known). */
-
-	for (i = 0; nikon_tags1[i].tag < EXIF_T_UNKNOWN &&
-	    nikon_tags1[i].tag != prop->tag; i++);
-	prop->name = nikon_tags1[i].name;
-	prop->descr = nikon_tags1[i].descr;
-	prop->lvl = nikon_tags1[i].lvl;
-	if (nikon_tags1[i].table)
-		prop->str = finddescr(nikon_tags1[i].table, v);
 
 	switch (prop->tag) {
 
@@ -260,27 +239,10 @@ void
 nikon_prop(struct exifprop *prop, struct exiftags *t)
 {
 
-	/*
-	 * XXX This is a rather ugly hack, but we don't really have a way
-	 * to figure out which type of Nikon maker note we're dealing with
-	 * (easily).
-	 */
-
-	if (t->mkrinfo)
+	if (prop->tagset == nikon_tags1)
 		nikon_prop1(prop, t);
 	else
 		nikon_prop0(prop, t);
-
-	if (debug) {
-		static int once = 0;	/* XXX Breaks on multiple files. */
-
-		if (!once) {
-			printf("Processing Nikon Maker Note (%d)\n",
-			    t->mkrinfo);
-			once = 1;
-		}
-		dumpprop(prop, NULL);
-	}
 }
 
 
@@ -299,14 +261,10 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 	 */
 
 	if (!strcmp((const char *)(t->btiff + offset), "Nikon")) {
-
-		/* What a hack.  Indicates we need to use nikon_tags1[]. */
-		t->mkrinfo = 1;
-
-		readifd(t->btiff + offset + strlen("Nikon") + 3, &myifd, t);
-
+		readifd(t->btiff + offset + strlen("Nikon") + 3, &myifd,
+		    nikon_tags1, t);
 	} else
-		readifd(t->btiff + offset, &myifd, t);
+		readifd(t->btiff + offset, &myifd, nikon_tags0, t);
 
 	return (myifd);
 }

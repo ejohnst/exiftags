@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.29 2003/08/02 23:26:56 ejohnst Exp $
+ * $Id: exif.h,v 1.30 2003/08/03 00:50:02 ejohnst Exp $
  */
 
 /*
@@ -194,7 +194,6 @@ struct exiftags {
 	short exifmaj;		/* Exif version, major. */
 	short exifmin;		/* Exif version, minor. */
 	short mkrval;		/* Maker index (XXX uhh, somewhat opaque). */
-	short mkrinfo;		/* Maker info (XXX uhh, a hack for Nikon). */
 };
 
 

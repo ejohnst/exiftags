@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.51 2003/08/02 23:26:16 ejohnst Exp $
+ * $Id: exif.c,v 1.52 2003/08/03 00:50:02 ejohnst Exp $
  */
 
 /*
@@ -77,7 +77,6 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 {
 	int i, j;
 	struct exifprop *prop, *tmpprop;
-	struct exiftag *taglist;
 
 	prop = newprop();
 
@@ -96,25 +95,15 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 	prop->ifdseq = ifdseq;
 	prop->ifdtag = dir->tag;
-
-	/* Figure out which set of tags to use. */
-
-	switch (prop->ifdtag) {
-	case EXIF_T_GPSIFD:
-		taglist = gpstags;
-		break;
-	default:
-		taglist = tags;
-	}
+	prop->tagset = dir->tagset ? dir->tagset : tags;
 
 	/* Lookup the field name. */
 
-	for (i = 0; taglist[i].tag < EXIF_T_UNKNOWN &&
-	    taglist[i].tag != prop->tag; i++);
-	prop->name = taglist[i].name;
-	prop->descr = taglist[i].descr;
-	prop->lvl = taglist[i].lvl;
-	prop->tagset = taglist;
+	for (i = 0; prop->tagset[i].tag < EXIF_T_UNKNOWN &&
+	    prop->tagset[i].tag != prop->tag; i++);
+	prop->name = prop->tagset[i].name;
+	prop->descr = prop->tagset[i].descr;
+	prop->lvl = prop->tagset[i].lvl;
 
 	/* Lookup and check the field type. */
 
@@ -146,7 +135,7 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 		 * (At least we're able to ID invalid comments...)
 		 */
 
-		if (taglist[i].type && taglist[i].type != prop->type
+		if (prop->tagset[i].type && prop->tagset[i].type != prop->type
 #ifdef WINXP_BUGS
 		    && prop->tag != EXIF_T_USERCOMMENT
 #endif
@@ -155,7 +144,8 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 		/* Check the field count. */
 
-		if (taglist[i].count && taglist[i].count != prop->count)
+		if (prop->tagset[i].count && prop->tagset[i].count !=
+		    prop->count)
 			exifwarn2("field count mismatch", prop->name);
 	}
 
@@ -440,10 +430,10 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 	/* Set description if we have a lookup table. */
 
-	for (i = 0; tags[i].tag < EXIF_T_UNKNOWN &&
-	    tags[i].tag != prop->tag; i++);
-	if (tags[i].table) {
-		prop->str = finddescr(tags[i].table, v);
+	for (i = 0; prop->tagset[i].tag < EXIF_T_UNKNOWN &&
+	    prop->tagset[i].tag != prop->tag; i++);
+	if (prop->tagset[i].table) {
+		prop->str = finddescr(prop->tagset[i].table, v);
 		return (TRUE);
 	}
 
@@ -464,10 +454,13 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		 */
 #ifdef OLYMPUS_BUGS
 		if (prop->tag == EXIF_T_EXIFIFD)
-			readifd(t->btiff + prop->value, &dir->next, t);
+			readifd(t->btiff + prop->value, &dir->next, tags, t);
 		else
 #endif
-			dir->next = readifds(prop->value, t);
+			if (prop->tag == EXIF_T_GPSIFD)
+				dir->next = readifds(prop->value, gpstags, t);
+			else
+				dir->next = readifds(prop->value, NULL, t);
 
 		if (!dir->next) {
 
@@ -785,7 +778,7 @@ exifscan(unsigned char *b, int len, int domkr)
 	/* Get the 0th IFD, where all of the good stuff should start. */
 
 	ifdoff = exif4byte(b, t->tifforder);
-	curifd = readifds(ifdoff, t);
+	curifd = readifds(ifdoff, tags, t);
 	if (!curifd) {
 		exifwarn("invalid Exif format (couldn't read IFD0)");
 		exiffree(t);

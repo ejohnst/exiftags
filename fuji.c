@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.8 2003/02/11 15:32:19 ejohnst Exp $
+ * $Id: fuji.c,v 1.9 2003/08/03 00:50:03 ejohnst Exp $
  */
 
 /*
@@ -200,28 +200,6 @@ static struct exiftag fuji_tags[] = {
 void
 fuji_prop(struct exifprop *prop, struct exiftags *t)
 {
-	int i;
-	u_int16_t v = (u_int16_t)prop->value;
-
-	/* Lookup the field name (if known). */
-
-	for (i = 0; fuji_tags[i].tag < EXIF_T_UNKNOWN &&
-	    fuji_tags[i].tag != prop->tag; i++);
-	prop->name = fuji_tags[i].name;
-	prop->descr = fuji_tags[i].descr;
-	prop->lvl = fuji_tags[i].lvl;
-	if (fuji_tags[i].table)
-		prop->str = finddescr(fuji_tags[i].table, v);
-
-	if (debug) {
-		static int once = 0;	/* XXX Breaks on multiple files. */
-
-		if (!once) {
-			printf("Processing Fuji Maker Note\n");
-			once = 1;
-		}
-		dumpprop(prop, NULL);
-	}
 
 	switch (prop->tag) {
 
@@ -264,9 +242,9 @@ fuji_ifd(u_int32_t offset, struct exiftags *t)
 
 	if (!strncmp((const char *)(t->btiff + offset), "FUJIFILM", fujilen)) {
 		fujioff = exif2byte(t->btiff + offset + fujilen, LITTLE);
-		readifd(t->btiff + offset + fujioff, &myifd, &fujit);
+		readifd(t->btiff + offset + fujioff, &myifd, fuji_tags, &fujit);
 	} else
-		readifd(t->btiff + offset, &myifd, t);
+		readifd(t->btiff + offset, &myifd, NULL, t);
 
 	return (myifd);
 }

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.19 2003/08/02 18:27:00 ejohnst Exp $
+ * $Id: exifint.h,v 1.20 2003/08/03 00:50:02 ejohnst Exp $
  */
 
 /*
@@ -103,6 +103,7 @@ struct ifd {
 	u_int16_t tag;		/* Associated tag. */
 	u_int16_t num;		/* Number of fields. */
 	struct field *fields;	/* Array of fields. */
+	struct exiftag *tagset;	/* Tag definitions. */
 	struct ifd *next;
 };
 
@@ -152,9 +153,10 @@ extern struct exifprop *newprop(void);
 extern struct exifprop *childprop(struct exifprop *parent);
 extern void hexprint(unsigned char *b, int len);
 extern void dumpprop(struct exifprop *prop, struct field *afield);
-extern struct ifd *readifds(u_int32_t offset, struct exiftags *t);
-extern u_int32_t readifd(unsigned char *b, struct ifd **dir,
+extern struct ifd *readifds(u_int32_t offset, struct exiftag *set,
     struct exiftags *t);
+extern u_int32_t readifd(unsigned char *b, struct ifd **dir,
+    struct exiftag *set, struct exiftags *t);
 extern u_int32_t gcd(u_int32_t a, u_int32_t b);
 
 /* Interface to exifgps.c. */
