@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: asahi.c,v 1.3 2004/04/04 21:08:41 ejohnst Exp $
+ * $Id: asahi.c,v 1.4 2004/04/08 04:12:29 ejohnst Exp $
  */
 
 /*
@@ -161,8 +161,6 @@ asahi_prop(struct exifprop *prop, struct exiftags *t)
 struct ifd *
 asahi_ifd(u_int32_t offset, struct tiffmeta *md)
 {
-	int num;
-	struct ifd *myifd;
 	struct tiffmeta mkrmd;
 
 	mkrmd = *md;

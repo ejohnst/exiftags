@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.39 2004/04/03 22:04:23 ejohnst Exp $
+ * $Id: canon.c,v 1.40 2004/04/08 04:12:29 ejohnst Exp $
  */
 
 /*
@@ -831,7 +831,6 @@ static int
 canon_prop04(struct exifprop *aprop, struct exifprop *prop,
     unsigned char *off, struct exiftags *t)
 {
-	struct exiftag *model;
 	struct exifprop *tmpprop;
 	u_int16_t v = (u_int16_t)aprop->value;
 	int d;
