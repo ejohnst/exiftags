@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.22 2004/12/28 06:38:53 ejohnst Exp $
+ * $Id: nikon.c,v 1.23 2004/12/28 07:12:00 ejohnst Exp $
  */
 
 /*
@@ -318,7 +318,11 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 
 	switch (prop->tag) {
 
-	/* Nikon maker note version.  (XXX Dup from EXIF_T_VERSION code.) */
+	/*
+	 * Nikon maker note version.
+	 * XXX Semi-duplicate from EXIF_T_VERSION code.  Note that earlier
+	 * versions aren't ASCII, and that we don't handle them yet.
+	 */
 
 	case 0x0001:
 		exifstralloc(&prop->str, 8);
