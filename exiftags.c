@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.5 2002/07/01 08:40:11 ejohnst Exp $
+ * $Id: exiftags.c,v 1.6 2002/07/11 23:49:15 ejohnst Exp $
  */
 
 /*
@@ -49,7 +49,7 @@
 
 
 int debug, quiet;
-static char *version = "0.9";
+static char *version = "0.91";
 static const char *progname;
 static int fnum;
 
