@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.9 2002/07/11 02:05:30 ejohnst Exp $
+ * $Id: exif.c,v 1.10 2002/07/11 04:04:55 ejohnst Exp $
  */
 
 /*
@@ -246,9 +246,13 @@ postprop(struct exifprop *prop, struct exiftags *t)
 
 	/* Process maker note tags specially... */
 
-	if (prop->ifdtag == EXIF_T_MAKERNOTE && makers[t->mkrval].propfun) {
-		makers[t->mkrval].propfun(prop, t);
-		return;
+	if (prop->ifdtag == EXIF_T_MAKERNOTE) {
+		if (makers[t->mkrval].propfun) {
+			makers[t->mkrval].propfun(prop, t);
+			return;
+		} else
+			exifwarn2("no maker note support for",
+			    t->btiff + prop->value);
 	}
 
 	switch (prop->tag) {
@@ -438,8 +442,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t)
 				break;
 
 		if (!makers[i].propfun)
-			exifwarn2("no maker note support for",
-			    t->btiff + prop->value);
+			t->mkrval = EXIF_MKR_UNKNOWN;
 		else
 			t->mkrval = i;
 
