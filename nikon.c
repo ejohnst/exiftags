@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.1 2002/07/11 02:07:21 ejohnst Exp $
+ * $Id: nikon.c,v 1.2 2002/07/11 07:17:22 ejohnst Exp $
  */
 
 /*
@@ -79,24 +79,22 @@ static struct exiftag nikon_tags0[] = {
 };
 
 
-/* XXX Haven't seen a sample yet. */
-
 static struct exiftag nikon_tags1[] = {
 	{ 0x0003, TIFF_SHORT, 1, ED_UNK, "NikonQuality",
 	  "Image Quality" },
-	{ 0x0004, TIFF_SHORT, 1, ED_UNK, "NikonColor",
+	{ 0x0004, TIFF_SHORT, 1, ED_IMG, "NikonColor",
 	  "Color Mode" },
-	{ 0x0005, TIFF_SHORT, 1, ED_UNK, "NikonImgAdjust",
+	{ 0x0005, TIFF_SHORT, 1, ED_IMG, "NikonImgAdjust",
 	  "Image Adjustment" },
-	{ 0x0006, TIFF_SHORT, 1, ED_UNK, "NikonCCDSensitive",
+	{ 0x0006, TIFF_SHORT, 1, ED_IMG, "NikonCCDSensitive",
 	  "CCD Sensitivity" },
-	{ 0x0007, TIFF_SHORT, 1, ED_UNK, "NikonWhiteBal",
+	{ 0x0007, TIFF_SHORT, 1, ED_IMG, "NikonWhiteBal",
 	  "White Balance" },
 	{ 0x0008, TIFF_RTNL, 1, ED_UNK, "NikonFocus",
 	  "Focus" },
-	{ 0x000a, TIFF_RTNL, 1, ED_UNK, "NikonDigiZoom",
+	{ 0x000a, TIFF_RTNL, 1, ED_IMG, "NikonDigiZoom",
 	  "Digital Zoom" },
-	{ 0x000b, TIFF_SHORT, 1, ED_UNK, "NikonAdapter",
+	{ 0x000b, TIFF_SHORT, 1, ED_IMG, "NikonAdapter",
 	  "Lens Adapter" },
 	{ 0xffff, TIFF_UNKN, 0, ED_UNK, "Unknown",
 	  "Nikon Unknown" },
@@ -238,6 +236,7 @@ void
 nikon_prop1(struct exifprop *prop, struct exiftags *t)
 {
 	int i;
+	u_int32_t a, b;
 
 	/* Lookup the field name (if known). */
 
@@ -281,6 +280,19 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 	case 0x000b:
 		prop->str = finddescr(nikon_convert, prop->value);
 		break;
+
+	/* Digital zoom. */
+
+	case 0x000a:
+		a = exif4byte(t->btiff + prop->value, t->tifforder);
+		b = exif4byte(t->btiff + prop->value + 4, t->tifforder);
+
+		if (!a) {
+			snprintf(prop->str, 31, "None");
+			prop->lvl = ED_VRB;
+		} else
+			snprintf(prop->str, 31, "x%.1f", (float)a / (float)b);
+		break;
 	}
 }
 
@@ -322,15 +334,15 @@ nikon_ifd(u_int32_t offset, struct exiftags *t)
 	/*
 	 * Seems that some Nikon maker notes start with an ID string.
 	 * Therefore, * try reading the IFD starting at offset + 8
-	 * ("NIKON" + 3).
+	 * ("Nikon" + 3).
 	 */
 
-	if (!strcmp(t->btiff + offset, "NIKON")) {
+	if (!strcmp(t->btiff + offset, "Nikon")) {
 
 		/* What a hack.  Indicates we need to use nikon_tags1[]. */
 		t->mkrinfo = 1;
 
-		readifd(t->btiff + offset + strlen("NIKON") + 3, &myifd, t);
+		readifd(t->btiff + offset + strlen("Nikon") + 3, &myifd, t);
 
 	} else
 		readifd(t->btiff + offset, &myifd, t);
