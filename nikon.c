@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2005, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: nikon.c,v 1.25 2005/01/04 20:43:59 ejohnst Exp $
+ * $Id: nikon.c,v 1.26 2005/01/04 21:32:38 ejohnst Exp $
  */
 
 /*
@@ -320,25 +320,18 @@ nikon_prop1(struct exifprop *prop, struct exiftags *t)
 
 	/*
 	 * Nikon maker note version.
-	 * XXX Semi-duplicate from EXIF_T_VERSION code.  Note that earlier
-	 * versions aren't ASCII, and that we don't handle them yet.
+	 * XXX Note that earlier versions aren't ASCII, and that we
+	 * don't handle them yet.
 	 */
 
 	case 0x0001:
-		exifstralloc(&prop->str, 8);
-
-		/* Platform byte order affects this... */
-
-		i = 1;
-		if (*(char *)&i == 1 && t->mkrmd.order == BIG) {
-			for (i = 0; i < 4; i++)
-				buf[i] = ((const char *)&prop->value)[3 - i];
-		} else
-			strncpy(buf, (const char *)&prop->value, 4);
+		byte4exif(prop->value, buf, t->mkrmd.order);
 		buf[4] = '\0';
 		v[1] = atoi(buf + 2);
 		buf[2] = '\0';
 		v[0] = atoi(buf);
+
+		exifstralloc(&prop->str, 8);
 		snprintf(prop->str, 7, "%d.%d", v[0], v[1]);
 		break;
 
