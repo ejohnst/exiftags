@@ -29,12 +29,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sigma.c,v 1.2 2004/09/29 03:53:03 ejohnst Exp $
+ * $Id: sigma.c,v 1.3 2004/10/10 03:38:56 ejohnst Exp $
  */
 
 /*
  * Exif tag definitions for Sigma/Foveon maker notes.
  * Developed from http://www.x3f.info/technotes/FileDocs/MakerNoteDoc.html.
+ *
  */
 
 #include <stdio.h>
