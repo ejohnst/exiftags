@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.14 2002/10/15 03:36:39 ejohnst Exp $
+ * $Id: exiftags.c,v 1.15 2002/11/04 07:24:55 ejohnst Exp $
  */
 
 /*
@@ -57,7 +57,7 @@ int getopt(int, char * const [], const char *);
 
 
 int quiet;
-static char *version = "0.95";
+static char *version = "0.96";
 static int fnum;
 
 
@@ -226,7 +226,6 @@ main(int argc, char **argv)
 			pas = FALSE;
 			break;
 		case 'd':
-			dumplvl |= ED_UNK;
 			debug = TRUE;
 			break;
 		case 'q':
@@ -239,7 +238,7 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	if (!dumplvl)
+	if (!dumplvl && !debug)
 		dumplvl |= (ED_CAM | ED_IMG);
 
 	if (*argv) {
