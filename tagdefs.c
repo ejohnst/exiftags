@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.3 2002/06/30 08:57:35 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.4 2002/07/10 18:04:05 ejohnst Exp $
  */
 
 /*
@@ -41,13 +41,16 @@
  * (http://www.pima.net/standards/it10/PIMA15740/Exif_2-1.PDF)
  */
 
-#include "exiftags.h"
+#include <string.h>
+
 #include "exif.h"
+#include "exifint.h"
+#include "makers.h"
 
 
 /* TIFF 6.0 field types. */
 
-struct fieldtype types[] = {
+struct fieldtype ftypes[] = {
 	{ TIFF_BYTE,	"byte",		1 },
 	{ TIFF_ASCII,	"ascii",	1 },
 	{ TIFF_SHORT,	"short",	2 },
@@ -247,6 +250,7 @@ struct exiftag tags[] = {
 struct makerfun makers[] = {
 	{ EXIF_MKR_CANON, "Canon", canon_prop, NULL },
 	{ EXIF_MKR_OLYMPUS, "Olympus", olympus_prop, olympus_ifd },
+	{ EXIF_MKR_FUJI, "Fujifilm", fuji_prop, fuji_ifd },
 	{ EXIF_MKR_UNKNOWN, "Unknown", NULL, NULL },
 };
 
