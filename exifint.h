@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.2 2002/07/11 02:04:34 ejohnst Exp $
+ * $Id: exifint.h,v 1.3 2002/07/12 21:16:17 ejohnst Exp $
  */
 
 /*
@@ -46,8 +46,6 @@
 
 #ifndef _EXIFINT_H
 #define _EXIFINT_H
-
-#include <sys/types.h>
 
 #include "exif.h"
 
