@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.15 2004/04/04 08:05:10 ejohnst Exp $
+ * $Id: makers.h,v 1.16 2004/04/04 21:09:15 ejohnst Exp $
  */
 
 /*
@@ -95,6 +95,7 @@ extern struct ifd *minolta_ifd(u_int32_t offset, struct tiffmeta *md);
 extern void sanyo_prop(struct exifprop *prop, struct exiftags *t);
 extern struct ifd *sanyo_ifd(u_int32_t offset, struct tiffmeta *t);
 
+extern void asahi_prop(struct exifprop *prop, struct exiftags *t);
 extern struct ifd *asahi_ifd(u_int32_t offset, struct tiffmeta *md);
 
 extern void leica_prop(struct exifprop *prop, struct exiftags *t);
