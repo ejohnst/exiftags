@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.23 2003/01/25 09:27:36 ejohnst Exp $
+ * $Id: canon.c,v 1.24 2003/01/28 22:34:40 ejohnst Exp $
  */
 
 /*
@@ -359,7 +359,7 @@ static struct exiftag canon_tags04[] = {
 /* Fields under tag 0x00a0 (EOS 1D, 1Ds). */
 
 static struct exiftag canon_tagsA0[] = {
-	{ 9,  TIFF_SHORT, 0, ED_VRB, "CanonColorTemp",
+	{ 9,  TIFF_SHORT, 0, ED_IMG, "CanonColorTemp",
 	  "Color Temperature", NULL },
 	{ 0xffff, TIFF_SHORT, 0, ED_UNK, "CanonUnknown",
 	  "Canon TagA0 Unknown", NULL },
@@ -936,12 +936,12 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 		if (!canon_subval(prop, t, canon_tagsA0, canon_propA0))
 			break;
 
-		/* Show color temp if white balance is manual. */
+		/* Color temp is bad if white balance isn't manual. */
 
 		if ((tmpprop = findsprop(t->props, 0x0004, 7)))
-			if (tmpprop->value == 9) {
+			if (tmpprop->value != 9) {
 				if ((tmpprop = findsprop(prop, 0x00a0, 9)))
-					tmpprop->lvl = ED_IMG;
+					tmpprop->lvl = ED_BAD;
 		}
 		break;
 

@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.25 2003/01/25 09:28:17 ejohnst Exp $
+ * $Id: exif.h,v 1.26 2003/01/28 22:34:40 ejohnst Exp $
  */
 
 /*
@@ -99,6 +99,7 @@ typedef __int32 int32_t;
 #define ED_VRB	0x08	/* Verbose info. */
 #define ED_PAS	0x10	/* Point-and-shoot info. */
 #define ED_OVR	0x20	/* Overridden info. */
+#define ED_BAD	0x40	/* 'Bad' or incorrect info (given other values). */
 
 
 /* Interesting tags. */

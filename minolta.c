@@ -30,7 +30,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: minolta.c,v 1.12 2003/01/25 09:27:36 ejohnst Exp $
+ * $Id: minolta.c,v 1.13 2003/01/28 22:34:40 ejohnst Exp $
  *
  */ 
 
@@ -665,7 +665,7 @@ minolta_naval(struct exifprop *props, u_int16_t tag, int16_t subtag)
 	if (!(prop->str = (char *)malloc(strlen(na) + 1)))
 		exifdie((const char *)strerror(errno));
 	strcpy(prop->str, na);
-	prop->lvl = ED_VRB;
+	prop->lvl = ED_BAD;
 }
 
 
