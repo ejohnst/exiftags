@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2004, 2005, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sigma.c,v 1.5 2005/01/04 20:44:00 ejohnst Exp $
+ * $Id: sigma.c,v 1.6 2005/01/04 23:37:57 ejohnst Exp $
  */
 
 /*
@@ -116,7 +116,6 @@ sigma_deprefix(char *str, const char *prefix)
 void
 sigma_prop(struct exifprop *prop, struct exiftags *t)
 {
-	u_int16_t i;
 
 	/* Couldn't grok the value somewhere upstream, so nevermind. */
 
@@ -124,24 +123,8 @@ sigma_prop(struct exifprop *prop, struct exiftags *t)
 		return;
 
 	/*
-	 * For some reason, offsets to ASCII values are occasionally bad
-	 * (SD10).  So, just make sure that all the bytes are printable...
-	 * (We're assured that prop->str, when it exists, is at least
-	 * count + 1 long from parsetag(); strlen(prop->str) should be
-	 * count - 1.)
-	 */
-	if (prop->type == TIFF_ASCII && prop->count)
-		for (i = 0; i < (prop->count - 1); i++)
-			if ((unsigned char)prop->str[i] < ' ') {
-				prop->lvl = ED_VRB;
-				return;
-			}
-
-	/*
 	 * For these, I suppose it's safe to assume that the value prefix
-	 * will always be the same.  However, the Sigma maker note
-	 * implementation seems screwy enough already that I'm not willing
-	 * to chance it...
+	 * will always be the same.  But, for safety's sake...
 	 */
 	switch (prop->tag) {
 
