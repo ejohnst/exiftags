@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.3 2002/06/30 09:00:54 ejohnst Exp $
+ * $Id: exifutil.c,v 1.4 2002/07/01 08:27:19 ejohnst Exp $
  */
 
 /*
@@ -41,17 +41,18 @@
 #include <string.h>
 #include <errno.h>
 
-#include "exiftags.h"
+#include "exiftags.h"			/* XXX For exifdie(). */
 #include "exif.h"
+#include "exifint.h"
 
 
 /*
  * Read an unsigned 2-byte int from the buffer.
  */
 u_int16_t
-exif2byte(unsigned char *b)
+exif2byte(unsigned char *b, enum order o)
 {
-	if (tifforder == BIG)
+	if (o == BIG)
 		return ((b[0] << 8) | b[1]);
 	else
 		return ((b[1] << 8) | b[0]);
@@ -62,9 +63,9 @@ exif2byte(unsigned char *b)
  * Read an unsigned 4-byte int from the buffer.  (XXX Endian test...)
  */
 u_int32_t
-exif4byte(unsigned char *b)
+exif4byte(unsigned char *b, enum order o)
 {
-	if (tifforder == BIG)
+	if (o == BIG)
 		return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
 	else
 		return ((b[3] << 24) | (b[2] << 16) | (b[1] << 8) | b[0]);
@@ -75,9 +76,9 @@ exif4byte(unsigned char *b)
  * Read a signed 4-byte int from the buffer.  (XXX Endian test...)
  */
 int32_t
-exif4sbyte(unsigned char *b)
+exif4sbyte(unsigned char *b, enum order o)
 {
-	if (tifforder == BIG)
+	if (o == BIG)
 		return ((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
 	else
 		return ((b[3] << 24) | (b[2] << 16) | (b[1] << 8) | b[0]);
@@ -158,7 +159,7 @@ childprop(struct exifprop *parent)
  * Exif buffer, returns the IFD and an offset to the next IFD.
  */
 u_int32_t
-readifd(unsigned char *b, struct ifd **dir)
+readifd(unsigned char *b, struct ifd **dir, struct exiftags *t)
 {
 	u_int32_t ifdsize;
 
@@ -168,7 +169,7 @@ readifd(unsigned char *b, struct ifd **dir)
 	 * (Number of directory entries is in the first 2 bytes.)
 	 */
 
-	if (b + 2 > etiff) {
+	if (b + 2 > t->etiff) {
 		*dir = NULL;
 		return (0);
 	}
@@ -178,14 +179,14 @@ readifd(unsigned char *b, struct ifd **dir)
 		exifdie((const char *)strerror(errno));
 
 	(*dir)->next = NULL;
-	(*dir)->num = exif2byte(b);
+	(*dir)->num = exif2byte(b, t->tifforder);
 	(*dir)->tag = EXIF_T_UNKNOWN;
 	ifdsize = (*dir)->num * sizeof(struct field);
 	b += 2;
 
 	/* Sanity check our sizes. */
 
-	if (b + ifdsize > etiff) {
+	if (b + ifdsize > t->etiff) {
 		free(*dir);
 		*dir = NULL;
 		return (0);
@@ -206,7 +207,8 @@ readifd(unsigned char *b, struct ifd **dir)
 	 * standard IFDs.
 	 */
 
-	return ((b + ifdsize + 4 > etiff) ? 0 : exif4byte(b + ifdsize));
+	return ((b + ifdsize + 4 > t->etiff) ? 0 :
+	    exif4byte(b + ifdsize, t->tifforder));
 }
 
 
@@ -215,19 +217,19 @@ readifd(unsigned char *b, struct ifd **dir)
  * node in a chain of IFDs.  Note that it can return NULL.
  */
 struct ifd *
-readifds(u_int32_t offset)
+readifds(u_int32_t offset, struct exiftags *t)
 {
 	struct ifd *firstifd, *curifd;
 
 	/* Fetch our first one. */
 
-	offset = readifd(btiff + offset, &firstifd);
+	offset = readifd(t->btiff + offset, &firstifd, t);
 	curifd = firstifd;
 
 	/* Fetch any remaining ones. */
 
 	while (offset) {
-		offset = readifd(btiff + offset, &(curifd->next));
+		offset = readifd(t->btiff + offset, &(curifd->next), t);
 		curifd = curifd->next;
 	}
 	return (firstifd);
