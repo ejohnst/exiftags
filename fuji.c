@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: fuji.c,v 1.1 2002/07/10 18:04:46 ejohnst Exp $
+ * $Id: fuji.c,v 1.2 2002/07/11 07:12:32 ejohnst Exp $
  */
 
 /*
@@ -296,9 +296,18 @@ struct ifd *
 fuji_ifd(u_int32_t offset, struct exiftags *t)
 {
 	struct ifd *myifd;
+	struct exiftags fujit;
 	int fujilen, fujioff;
 
 	fujilen = strlen("FUJIFILM");
+
+	/*
+	 * The Fuji maker note appears to be in Intel byte order
+	 * regardless of the rest of the file (!).
+	 */
+
+	fujit = *t;
+	fujit.tifforder = LITTLE;
 
 	/*
 	 * Seems that Fuji maker notes start with an ID string, followed by
@@ -306,8 +315,8 @@ fuji_ifd(u_int32_t offset, struct exiftags *t)
 	 */
 
 	if (!strncmp(t->btiff + offset, "FUJIFILM", fujilen)) {
-		fujioff = exif2byte(t->btiff + offset + fujilen, t->tifforder);
-		readifd(t->btiff + offset + fujioff, &myifd, t);
+		fujioff = exif2byte(t->btiff + offset + fujilen, LITTLE);
+		readifd(t->btiff + offset + fujioff, &myifd, &fujit);
 	} else
 		readifd(t->btiff + offset, &myifd, t);
 
