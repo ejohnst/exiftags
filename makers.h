@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: makers.h,v 1.13 2004/02/27 19:16:57 ejohnst Exp $
+ * $Id: makers.h,v 1.14 2004/04/03 11:38:37 ejohnst Exp $
  */
 
 /*
@@ -68,6 +68,7 @@ extern struct makerfun makers[];
 #define EXIF_MKR_MINOLTA	6
 #define EXIF_MKR_SANYO		7
 #define EXIF_MKR_ASAHI		8
+#define EXIF_MKR_LEICA		9
 #define EXIF_MKR_UNKNOWN	-1
 
 
@@ -94,5 +95,8 @@ extern void sanyo_prop(struct exifprop *prop, struct exiftags *t);
 extern struct ifd *sanyo_ifd(u_int32_t offset, struct tiffmeta *t);
 
 extern struct ifd *asahi_ifd(u_int32_t offset, struct tiffmeta *md);
+
+extern void leica_prop(struct exifprop *prop, struct exiftags *t);
+extern struct ifd *leica_ifd(u_int32_t offset, struct tiffmeta *md);
 
 #endif
