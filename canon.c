@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.13 2002/10/06 18:31:03 ejohnst Exp $
+ * $Id: canon.c,v 1.14 2002/10/06 19:38:11 ejohnst Exp $
  */
 
 /*
@@ -647,11 +647,12 @@ canon_custom(struct exifprop *prop, char *off, struct exiftags *t)
 
 	/*
 	 * Determine what kind of camera we've got.  Only support D30
-	 * right now...
+	 * right now...  (Is this correct for D60 too?)
 	 */
 
 	tmpprop = findprop(t->props, EXIF_T_MODEL);
-	if (tmpprop && tmpprop->str && !strcmp(tmpprop->str, "Canon EOS D60"))
+	if (tmpprop && tmpprop->str && (!strcmp(tmpprop->str, "Canon EOS D30")
+	    || !strcmp(tmpprop->str, "Canon EOS D60")))
 		table = canon_d30custom;
 
 	for (i = 0; i < (int)prop->count; i++) {
