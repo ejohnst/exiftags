@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.33 2003/08/06 02:26:42 ejohnst Exp $
+ * $Id: exif.h,v 1.34 2004/04/03 22:34:14 ejohnst Exp $
  */
 
 /*
@@ -37,7 +37,7 @@
  *
  * Developed using the TIFF 6.0 specification
  * (http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf)
- * and the EXIF 2.2 standard: (http://tsc.jeita.or.jp/avs/data/cp3451.pdf)
+ * and the EXIF 2.21 standard: (http://tsc.jeita.or.jp/avs/data/cp3451_1.pdf).
  *
  */
 

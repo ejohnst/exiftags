@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: tagdefs.c,v 1.20 2003/01/20 21:37:41 ejohnst Exp $
+ * $Id: tagdefs.c,v 1.21 2004/04/03 22:34:14 ejohnst Exp $
  */
 
 /*
@@ -37,7 +37,7 @@
  *
  * Developed using the TIFF 6.0 specification:
  * (http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf)
- * and the EXIF 2.2 standard: (http://tsc.jeita.or.jp/avs/data/cp3451.pdf)
+ * and the EXIF 2.21 standard: (http://tsc.jeita.or.jp/avs/data/cp3451_1.pdf).
  *
  */
 
@@ -284,7 +284,10 @@ struct descrip imgsensors[] = {
 /* File sources */
 
 struct descrip filesrcs[] = {
-	{ 3,	"DSC" },
+	{ 0,	"Other" },
+	{ 1,	"Scanner (Transparent)" },
+	{ 2,	"Scanner (Reflex)" },
+	{ 3,	"Digital Still Camera" },
 	{ -1,	"Unknown" },
 };
 
@@ -557,7 +560,7 @@ struct exiftag tags[] = {
 	    "ExposureMode", "Exposure Mode", expmode },
 	{ 0xa403, TIFF_SHORT, 1,  ED_IMG,
 	    "WhiteBalance", "White Balance", whitebal },
-	{ 0xa404, TIFF_RTNL, 1,  ED_IMG,
+	{ 0xa404, TIFF_RTNL,  1,  ED_IMG,
 	    "DigitalZoomRatio", "Digital Zoom Ratio", NULL },
 	{ 0xa405, TIFF_SHORT, 1,  ED_PAS,		/* mm */
 	    "FocalLenIn35mmFilm", "Focal Length (35mm Equiv)", NULL },
@@ -575,8 +578,10 @@ struct exiftag tags[] = {
 	    "DeviceSettingDescr", "Device Settings", NULL },
 	{ 0xa40c, TIFF_SHORT, 1,  ED_IMG,
 	    "SubjectDistRange", "Subject Distance Range", subjdist },
-	{ 0xa420, TIFF_ASCII, 33,  ED_IMG,
+	{ 0xa420, TIFF_ASCII, 33, ED_IMG,
 	    "ImageUniqueID", "Unique Image ID", NULL },
+	{ 0xa500, TIFF_RTNL,  1,  ED_UNK,
+	    "GammaCoefficient", "Gamma Coefficient", NULL },
 	{ 0xffff, TIFF_UNKN,  0,  ED_UNK,
 	    "Unknown", NULL, NULL },
 };
