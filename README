@@ -1,0 +1,34 @@
+exiftags-0.91
+20020711
+Eric M. Johnston, emj@postal.net
+
+Spits out Exif tags from a digital camera JPEG file.  See the included
+man page for usage and more information.  If you want to read the
+man page before installing it, just do:
+
+    nroff -man exiftags.1
+
+To build the program, type:
+
+    make
+
+To install it (defaults to a prefix of /usr/local):
+
+    make install
+
+It should build fine on FreeBSD and Linux.  If it breaks, please let me
+know.  One of these days I'll get around to making it compile under WIN32.
+
+Feel free to use the source within the confines of its BSD license.  Note
+that I do not wish it to be relicensed under some other Open Source
+license (e.g., GPL).  I would be interested to know if you use parts of
+this program in your own and any thoughts you might have on its
+improvement.
+
+If you know how to decode unsupported maker note data or are able to
+procure definitive information from a manufacturer, I'd love to hear
+from you.
+
+Please report bugs, incompatibilities, successes, etc. to
+emj@postal.net.  The latest version of this software will be posted
+at http://emj.postal.net/software/exifdump/.
