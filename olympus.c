@@ -29,11 +29,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: olympus.c,v 1.1 2002/06/30 09:01:41 ejohnst Exp $
+ * $Id: olympus.c,v 1.2 2002/07/01 01:56:09 ejohnst Exp $
  */
 
 /*
  * Exif tag definitions for Olympus maker notes.
+ * XXX Support here is somewhat mediocre -- my example image doesn't seem
+ * to have proper values for most tags.
  *
  */
 
@@ -50,9 +52,9 @@
 static struct exiftag olympus_tags[] = {
 	{ 0x0200, TIFF_LONG, 3,  ED_UNK, "OlympusShootMode",
 	  "Shooting Mode" },
-	{ 0x0201, TIFF_SHORT, 1,  ED_UNK, "OlympusQuality",
+	{ 0x0201, TIFF_SHORT, 1,  ED_IMG, "OlympusQuality",
 	  "Compression Setting" },
-	{ 0x0203, TIFF_SHORT, 1, ED_UNK, "OlympusMacroMode",
+	{ 0x0202, TIFF_SHORT, 1, ED_IMG, "OlympusMacroMode",
 	  "Macro Mode" },
 	{ 0x0204, TIFF_RTNL, 1, ED_UNK, "OlympusDigiZoom",
 	  "Digital Zoom" },
@@ -85,103 +87,6 @@ static struct descrip olympus_quality[] = {
 	{ -1,	"Unknown" },
 };
 
-#if 0
-/*
- * Process maker note tag 0x0001 values.
- */
-
-static void
-canon_prop1(struct exifprop *prop, char *off)
-{
-	int i, j;
-	u_int16_t v;
-	struct exifprop *aprop;
-
-	for (i = 0; i < (int)prop->count; i++) {
-		v = exif2byte(off + i * 2);
-
-		aprop = childprop(prop);
-		aprop->value = (u_int32_t)v;
-
-		/* Lookup property name and description. */
-
-		for (j = 0; canon_tags1[j].tag < EXIF_T_UNKNOWN &&
-		    canon_tags1[j].tag != i; j++);
-		aprop->name = canon_tags1[j].name;
-		aprop->descr = canon_tags1[j].descr;
-		aprop->lvl = canon_tags1[j].lvl;
-
-		/* Further process known properties. */
-
-		switch (i) {
-		case 1:
-			aprop->str = finddescr(canon_macro, v);
-			break;
-		case 2:
-			aprop->lvl = v ? ED_IMG : ED_VRB;
-			if (!(aprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
-			snprintf(aprop->str, 31, "%d sec", v / 10);
-			aprop->str[31] = '\0';
-			break;
-		case 3:
-			aprop->str = finddescr(canon_quality, v);
-			break;
-		case 4:
-			aprop->str = finddescr(canon_flash, v);
-			break;
-		case 5:
-			aprop->str = finddescr(canon_drive, v);
-
-			/* Change "Single" to "Timed" if #2 > 0. */
-
-			if (!v && exif2byte(off + 2 * 2))
-				strcpy(aprop->str, "Timed");
-			break;
-		case 7:
-			aprop->str = finddescr(canon_focus1, v);
-			break;
-		case 10:
-			aprop->str = finddescr(canon_imagesz, v);
-			break;
-		case 11:
-			aprop->str = finddescr(canon_shoot, v);
-			break;
-		case 12:
-			aprop->lvl = v ? ED_IMG : ED_VRB;
-
-			/*
-			 * Looks like we can calculate zoom level when value
-			 * is 3 (ref S110).  Calculation is (2 * #37 / #36).
-			 */
-
-			if (v == 3 && prop->count > 37) {
-				if (!(aprop->str = (char *)malloc(32)))
-					exifdie((const char *)strerror(errno));
-				snprintf(aprop->str, 31, "x%.1f", 2 *
-				    (float)exif2byte(off + 37 * 2) /
-				    (float)exif2byte(off + 36 * 2));
-				aprop->str[31] = '\0';
-			} else
-				aprop->str = finddescr(canon_dzoom, v);
-			break;
-		case 18:
-			aprop->str = finddescr(canon_focustype, v);
-			break;
-		default:
-			if (aprop->lvl != ED_UNK)
-				break;
-
-			if (!(aprop->str = (char *)malloc(32)))
-				exifdie((const char *)strerror(errno));
-			snprintf(aprop->str, 31,
-			    "num %02d, val 0x%04X", i, v);
-			aprop->str[31] = '\0';
-			break;
-		}
-	}
-}
-#endif
 
 /* Process Olympus maker note tags. */
 
@@ -227,13 +132,46 @@ olympus_prop(struct exifprop *prop)
 
 	case 0x0200:
 		offset = btiff + prop->value;
-		printf("Shoot mode: %d, %d, %d\n", exif4byte(offset),
-exif4byte(offset+4), exif4byte(offset+8));
+
+		/*
+		 * XXX Would be helpful to test this with a panoramic.
+		 * According to Peter Esherick these values are unsigned
+		 * longs; however, it appears they may be shorts.  Need to
+		 * experiment.
+		 */
+
+		/* Picture taking mode. */
+
+		aprop = childprop(prop);
+		aprop->value = exif4byte(offset);
+		aprop->name = "OlympusPicMode";
+		aprop->descr = "Picture Mode";
+		aprop->lvl = ED_UNK;
+
+		/* Sequence number. */
+
+		aprop = childprop(prop);
+		aprop->value = exif4byte(offset + 4);
+		aprop->name = "OlympusSeqNum";
+		aprop->descr = "Sequence Number";
+		aprop->lvl = ED_UNK;
+
+		/* Panorama direction. */
+
+		aprop = childprop(prop);
+		aprop->value = exif4byte(offset + 8);
+		aprop->name = "OlympusPanDir";
+		aprop->descr = "Panoramic Direction";
+		aprop->lvl = ED_UNK;
 
 		break;
 
 	case 0x0201:
 		prop->str = finddescr(olympus_quality, prop->value);
+		break;
+
+	case 0x0202:
+		prop->str = finddescr(olympus_macro, prop->value);
 		break;
 
 	/* Image number. */
