@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.49 2004/12/28 07:12:48 ejohnst Exp $
+ * $Id: canon.c,v 1.50 2004/12/29 07:37:55 ejohnst Exp $
  */
 
 /*
@@ -50,14 +50,16 @@
 
 /*
  * Calculate and format an exposure value ("-n.nn EV").
- * 1/3 and 2/3 values seem to be a bit off.  We make a slight adjustment
- * to bring them in line with what we expect.
  */
 static float
 calcev(char **c, int16_t v)
 {
 	int16_t n;
 
+	/*
+	 * XXX 1/3 and 2/3 values seem to be a bit off.  This makes a
+	 * slight adjustment; may want to revisit.
+	 */
 	n = (abs(v) - 32) * (v & 0x8000 ? -1 : 1);
 	if (n == 20 || n == -12) v++;
 	else if (n == -20 || n == 12) v--;
