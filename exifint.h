@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.30 2007/12/15 20:57:52 ejohnst Exp $
+ * $Id: exifint.h,v 1.31 2007/12/15 23:51:50 ejohnst Exp $
  */
 
 /*
@@ -85,6 +85,14 @@ struct ifd {
 	struct exiftag *tagset;	/* Tag definitions. */
 	struct tiffmeta md;	/* Metadata. */
 	struct ifd *next;
+};
+
+
+/* List of IFD offsets, to detect loops. */
+
+struct ifdoff {
+	u_int32_t offset;	/* Offset to IFD. */
+	struct ifdoff *next;	/* Next IFD in list. */
 };
 
 
