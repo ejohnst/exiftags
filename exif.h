@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.36 2004/12/23 20:38:52 ejohnst Exp $
+ * $Id: exif.h,v 1.37 2007/12/15 23:51:10 ejohnst Exp $
  */
 
 /*
@@ -219,6 +219,7 @@ struct tiffmeta {
 	enum byteorder order;	/* Endianness of IFD. */
 	unsigned char *btiff;	/* Beginning of TIFF (offset base). */
 	unsigned char *etiff;	/* End of TIFF. */
+	void *ifdoffs;		/* List of IFD offsets (internal only). */
 };
 
 
