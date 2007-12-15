@@ -1,6 +1,6 @@
 .TH EXIFTAGS 1
 .\"
-.\" Copyright (c) 2001-2005, Eric M. Johnston <emj@postal.net>
+.\" Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $Id: exiftags.1,v 1.27 2005/01/05 00:31:03 ejohnst Exp $
+.\" $Id: exiftags.1,v 1.28 2007/12/15 20:56:06 ejohnst Exp $
 .\"
 .SH NAME
 .B exiftags
@@ -77,7 +77,8 @@ Separate field name and value with the string
 .IR delim  .
 The default is ': '.
 .IP -u
-Output unknown or unsupported properties contained in the file.
+Output unknown or unsupported properties contained in the file.  Also,
+output invalid properties when debugging information is requested.
 .IP -v
 Output verbose properties contained in the file.
 .SH MAKER NOTES
@@ -148,6 +149,7 @@ contributed by Tom Hughes <tom@compton.nu>.
 .PP
 Special thanks to the following folks for submitting sample camera files:
 Bradley Bailey, Kirk Bauer, Marcy Brown, Frank Fortunato, Per Kristian Hove,
-Stan Jirman, Kaye Kirsch, Kevin Layer, Henrik Levkowetz, Jamie Mayberry,
-Jason Montojo, Nick Reid, Michael Shostak, Nathan Treadway, Mathieu Vanasse, 
-Mark Westling, Phillip Wherry, and Christian Zuckschwerdt.
+Stan Jirman, Kaye Kirsch, Meder Kydyraliev, Kevin Layer, Henrik Levkowetz,
+Jamie Mayberry, Jason Montojo, Nick Reid, Christian Schmid, Michael Shostak,
+Nathan Treadway, Mathieu Vanasse, Mark Westling, Phillip Wherry, and
+Christian Zuckschwerdt.
