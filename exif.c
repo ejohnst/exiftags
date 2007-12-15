@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.75 2007/12/15 20:51:04 ejohnst Exp $
+ * $Id: exif.c,v 1.76 2007/12/15 23:48:33 ejohnst Exp $
  */
 
 /*
@@ -136,12 +136,12 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 		 * (At least we're able to ID invalid comments...)
 		 */
 
-		if (prop->tagset[i].type && prop->tagset[i].type != prop->type
+		if (prop->tagset[i].type && prop->tagset[i].type !=
+		    prop->type) {
 #ifdef WINXP_BUGS
-		    && prop->tag != EXIF_T_USERCOMMENT
+			if (prop->tag != EXIF_T_USERCOMMENT)
 #endif
-		    ) {
-			exifwarn2("field type mismatch", prop->name);
+				exifwarn2("field type mismatch", prop->name);
 			prop->lvl = ED_BAD;
 		}
 
@@ -793,12 +793,13 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 
 /*
- * Delete dynamic Exif property memory.
+ * Delete dynamic Exif property and IFD memory.
  */
 void
 exiffree(struct exiftags *t)
 {
 	struct exifprop *tmpprop;
+	struct ifdoff *tmpoff;
 
 	if (!t) return;
 
@@ -806,6 +807,10 @@ exiffree(struct exiftags *t)
 		if (t->props->str) free(t->props->str);
 		t->props = t->props->next;
 		free(tmpprop);
+	}
+	while ((tmpoff = (struct ifdoff *)(t->md.ifdoffs))) {
+		t->md.ifdoffs = (void *)tmpoff->next;
+		free(tmpoff);
 	}
 	free(t);
 }
