@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.26 2005/01/27 07:15:00 ejohnst Exp $
+ * $Id: exiftags.c,v 1.27 2007/12/15 20:51:58 ejohnst Exp $
  */
 
 /*
@@ -87,6 +87,9 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 		case ED_VRB:
 			printf("Other Properties:\n\n");
 			break;
+		case ED_BAD:
+			printf("Invalid Properties:\n\n");
+			break;
 		}
 	}
 
@@ -97,9 +100,9 @@ printprops(struct exifprop *list, unsigned short lvl, int pas)
 		if (list->lvl == ED_PAS)
 			list->lvl = pas ? ED_CAM : ED_IMG;
 
-		/* For now, just treat overridden & bad values as verbose. */
+		/* For now, just treat overridden values as verbose. */
 
-		if (list->lvl == ED_OVR || list->lvl == ED_BAD)
+		if (list->lvl == ED_OVR)
 			list->lvl = ED_VRB;
 
 		if (list->lvl == lvl) {
@@ -159,6 +162,8 @@ doit(FILE *fp, int dumplvl, int pas)
 				printprops(t->props, ED_VRB, pas);
 			if (dumplvl & ED_UNK)
 				printprops(t->props, ED_UNK, pas);
+			if (dumplvl & ED_BAD)
+				printprops(t->props, ED_BAD, pas);
 		}
 		exiffree(t);
 		free(exifbuf);
@@ -185,7 +190,8 @@ void usage()
 	fprintf(stderr, "  -c\tDisplay camera-specific properties.\n");
 	fprintf(stderr, "  -i\tDisplay image-specific properties.\n");
 	fprintf(stderr, "  -v\tDisplay verbose properties.\n");
-	fprintf(stderr, "  -u\tDisplay unknown/unsupported properties.\n");
+	fprintf(stderr, "  -u\tDisplay unknown/unsupported properties (also "
+	    "invalid props w/debug).\n");
 	fprintf(stderr, "  -l\tCamera has a removable lens.\n");
 	fprintf(stderr, "  -d\tDisplay parse debug information.\n");
 	fprintf(stderr, "  -q\tSuppress section headers.\n");
@@ -252,6 +258,9 @@ main(int argc, char **argv)
 
 	if (!dumplvl && !debug)
 		dumplvl |= (ED_CAM | ED_IMG);
+
+	if (debug && (dumplvl & ED_UNK))
+		dumplvl |= ED_BAD;
 
 	if (*argv) {
 		for (fnum = 0; *argv; ++argv) {
