@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.26 2004/11/06 18:36:46 ejohnst Exp $
+ * $Id: exifutil.c,v 1.27 2007/12/15 21:00:08 ejohnst Exp $
  */
 
 /*
@@ -77,6 +77,59 @@ exifwarn2(const char *msg1, const char *msg2)
 {
 
 	fprintf(stderr, "%s: %s (%s)\n", progname, msg1, msg2);
+}
+
+
+/*
+ * Sanity check a tag's count & value when used as an offset within
+ * the TIFF.  Checks for overflows.  Returns 0 if OK; !0 if not OK.
+ */
+int
+offsanity(struct exifprop *prop, u_int16_t size, struct ifd *dir)
+{
+	u_int32_t tifflen;
+	const char *name;
+
+	tifflen = dir->md.etiff - dir->md.btiff;
+	if (prop->name)
+		name = prop->name;
+	else
+		name = "Unknown";
+
+	if (!prop->count) {
+		if (prop->value > tifflen) {
+			exifwarn2("invalid field offset", name);
+			prop->lvl = ED_BAD;
+			return (1);
+		}
+		return (0);
+	}
+
+	/* Does count * size overflow? */
+
+	if (size > (u_int32_t)(-1) / prop->count) {
+		exifwarn2("invalid field count", name);
+		prop->lvl = ED_BAD;
+		return (1);
+	}
+
+	/* Does count * size + value overflow? */
+
+	if ((u_int32_t)(-1) - prop->value < prop->count * size) {
+		exifwarn2("invalid field offset", name);
+		prop->lvl = ED_BAD;
+		return (1);
+	}
+
+	/* Is the offset valid? */
+
+	if (prop->value + prop->count * size > tifflen) {
+		exifwarn2("invalid field offset", name);
+		prop->lvl = ED_BAD;
+		return (1);
+	}
+
+	return (0);
 }
 
 
@@ -206,8 +259,8 @@ struct exifprop *
 findprop(struct exifprop *prop, struct exiftag *tagset, u_int16_t tag)
 {
 
-	for (; prop && (prop->tagset != tagset || prop->tag != tag);
-	    prop = prop->next);
+	for (; prop && (prop->tagset != tagset || prop->tag != tag ||
+	    prop->lvl == ED_BAD); prop = prop->next);
 	return (prop);
 }
 
@@ -300,7 +353,7 @@ dumpprop(struct exifprop *prop, struct field *afield)
 
 	for (i = 0; ftypes[i].type && ftypes[i].type != prop->type; i++);
 	if (afield) {
-		printf("   %s (0x%04X): %s, %d; %d\n", prop->name,
+		printf("   %s (0x%04X): %s, %u; %u\n", prop->name,
 		    prop->tag, ftypes[i].name, prop->count,
 		    prop->value);
 		printf("      ");
@@ -338,7 +391,8 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 	 * (Number of directory entries is in the first 2 bytes.)
 	 */
 
-	if (b + offset + 2 > md->etiff) {
+	if ((u_int32_t)(-1) - offset < (u_int32_t)(b + 2) ||
+	    b + offset + 2 > md->etiff) {
 		*dir = NULL;
 		return (0);
 	}
