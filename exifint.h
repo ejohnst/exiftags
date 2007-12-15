@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifint.h,v 1.29 2004/08/20 22:31:45 ejohnst Exp $
+ * $Id: exifint.h,v 1.30 2007/12/15 20:57:52 ejohnst Exp $
  */
 
 /*
@@ -119,6 +119,7 @@ extern struct descrip filesrcs[];
 
 /* Utility functions from exifutil.c. */
 
+extern int offsanity(struct exifprop *prop, u_int16_t size, struct ifd *dir);
 extern u_int16_t exif2byte(unsigned char *b, enum byteorder o);
 extern int16_t exif2sbyte(unsigned char *b, enum byteorder o);
 extern u_int32_t exif4byte(unsigned char *b, enum byteorder o);
