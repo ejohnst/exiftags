@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.74 2005/01/04 23:28:25 ejohnst Exp $
+ * $Id: exif.c,v 1.75 2007/12/15 20:51:04 ejohnst Exp $
  */
 
 /*
@@ -140,8 +140,10 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 #ifdef WINXP_BUGS
 		    && prop->tag != EXIF_T_USERCOMMENT
 #endif
-		    )
+		    ) {
 			exifwarn2("field type mismatch", prop->name);
+			prop->lvl = ED_BAD;
+		}
 
 		/*
 		 * Check the field count.
@@ -151,11 +153,16 @@ readtag(struct field *afield, int ifdseq, struct ifd *dir, struct exiftags *t,
 
 		if (prop->tagset[i].count && prop->tagset[i].count !=
 #ifdef SIGMA_BUGS
-		    prop->count && prop->tag != EXIF_T_FILESRC)
+		    prop->count && prop->tag != EXIF_T_FILESRC) {
 #else
-		    prop->count)
+		    prop->count) {
 #endif
 			exifwarn2("field count mismatch", prop->name);
+
+			/* Let's be forgiving with ASCII fields. */
+			if (prop->type != TIFF_ASCII)
+				prop->lvl = ED_BAD;
+		}
 	}
 
 	/* Debuggage. */
@@ -230,6 +237,11 @@ postprop(struct exifprop *prop, struct exiftags *t)
 	float fval;
 	enum byteorder o = t->md.order;
 	struct exifprop *h = t->props;
+
+	/* Skip bad properties. */
+
+	if (prop->lvl == ED_BAD)
+		return;
 
 	/*
 	 * Process tags from special IFDs.
@@ -480,6 +492,11 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	unsigned char *btiff = dir->md.btiff;
 	enum byteorder o = dir->md.order;
 
+	/* If the tag's already marked as bad, no sense in continuing. */
+
+	if (prop->lvl == ED_BAD)
+		return;
+
 	/* Set description if we have a lookup table. */
 
 	for (i = 0; prop->tagset[i].tag < EXIF_T_UNKNOWN &&
@@ -582,9 +599,11 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		 * the manufacturer tag first to figure out makerifd().
 		 */
 
-		if (makers[t->mkrval].ifdfun)
-			dir->next = makers[t->mkrval].ifdfun(prop->value, md);
-		else
+		if (makers[t->mkrval].ifdfun) {
+			if (!offsanity(prop, 1, dir))
+				dir->next =
+				    makers[t->mkrval].ifdfun(prop->value, md);
+		} else
 			exifwarn("maker note not supported");
 
 		if (!dir->next)
@@ -600,11 +619,8 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 		/* Sanity check the offset. */
 
-		if (prop->value + prop->count >
-		    (u_int32_t)(dir->md.etiff - btiff)) {
-			exifwarn2("invalid field offset", prop->name);
-			break;
-		}
+		if (offsanity(prop, 1, dir))
+			return;
 
 		strncpy(buf, (const char *)(btiff + prop->value), sizeof(buf));
 		buf[sizeof(buf) - 1] = '\0';
@@ -641,9 +657,14 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 
 		/* Check for a comment type and sane offset. */
 
-		if (prop->count < 8 || (prop->value + prop->count >
-		    (u_int32_t)(dir->md.etiff - btiff)))
-			break;
+		if (prop->count < 8) {
+			exifwarn("invalid user comment length");
+			prop->lvl = ED_BAD;
+			return;
+		}
+
+		if (offsanity(prop, 1, dir))
+			return;
 
 		/* Ignore the 'comments' WinXP creates when rotating. */
 #ifdef WINXP_BUGS
@@ -700,13 +721,12 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 		}
 
 		/* Sanity check the offset. */
-		if ((prop->value + prop->count <=
-		    (u_int32_t)(dir->md.etiff - btiff))) {
+		if (!offsanity(prop, 1, dir)) {
 			exifstralloc(&prop->str, prop->count + 1);
 			strncpy(prop->str, (const char *)(btiff + prop->value),
 			    prop->count);
-			return;
 		}
+		return;
 	}
 
 	/*
@@ -717,8 +737,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	if ((prop->type == TIFF_RTNL || prop->type == TIFF_SRTNL) &&
-	    (prop->value + prop->count * 8 <=
-	    (u_int32_t)(dir->md.etiff - btiff))) {
+	    !offsanity(prop, 8, dir)) {
 
 		exifstralloc(&prop->str, 32);
 
@@ -747,8 +766,7 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	 */
 
 	if ((prop->type == TIFF_SHORT || prop->type == TIFF_SSHORT) &&
-	    prop->count > 2 && (prop->value + prop->count * 2 <=
-	    (u_int32_t)(dir->md.etiff - btiff))) {
+	    prop->count > 2 && !offsanity(prop, 2, dir)) {
 
 		if (prop->count > 8)
 			return;
