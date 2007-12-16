@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.c,v 1.76 2007/12/15 23:48:33 ejohnst Exp $
+ * $Id: exif.c,v 1.77 2007/12/16 00:25:08 ejohnst Exp $
  */
 
 /*
@@ -515,15 +515,6 @@ parsetag(struct exifprop *prop, struct ifd *dir, struct exiftags *t, int domkr)
 	case EXIF_T_EXIFIFD:
 	case EXIF_T_GPSIFD:
 	case EXIF_T_INTEROP:
-		/*
-		 * Prevent looping when the tag refers to its own IFD...
-		 * (Occurs in a screwed-up Agfa example.)
-		 */
-		if (prop->par && prop->tag == prop->par->tag) {
-			exifwarn2("IFD tag refers to itself", prop->name);
-			break;
-		}
-
 		md = &dir->md;
 		while (dir->next)
 			dir = dir->next;
