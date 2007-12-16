@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, 2005, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2004-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftime.c,v 1.12 2005/01/27 07:15:01 ejohnst Exp $
+ * $Id: exiftime.c,v 1.13 2007/12/16 02:18:51 ejohnst Exp $
  */
 
 /*
@@ -63,7 +63,7 @@ struct linfo {
 	time_t ts;
 };
 
-static const char *version = "1.00";
+static const char *version = "1.01";
 static int iflag, lflag, qflag, wflag, ttags;
 static const char *delim = ": ";
 static const char *fname;
@@ -91,8 +91,9 @@ void usage()
 	fprintf(stderr, "Available options:\n");
 	fprintf(stderr, "  -f\tAnswer 'yes' to any confirmation prompts.\n");
 	fprintf(stderr, "  -i\tConfirm overwrites (default).\n");
-	fprintf(stderr, "  -l\tList files ordered by image created timestamp; "
-	    "overrides -t, -v, -w.\n");
+	fprintf(stderr, "  -l\tList files ordered by timestamp, using image "
+	    "created by default;\n\toverrides -v, -w.  Use -t to change "
+	    "timestamp preference.\n");
 	fprintf(stderr, "  -q\tBe quiet when writing timestamps.\n");
 	fprintf(stderr, "  -s\tSet delimiter to provided string "
 	    "(default: \": \").\n");
@@ -146,26 +147,24 @@ etstrptm(const char *buf, struct tm *tp)
 
 
 /*
- * Grab the timestamps for listing.  Doesn't modify the file.
+ * Grab the timestamps for listing in the specified order of preference.
+ * Doesn't modify the file.
  */
 static int
-listts(struct exiftags *t, struct linfo *li)
+listts(struct exiftags *t, struct linfo *li, u_int16_t *tpref)
 {
 	struct exifprop *p;
 	struct tm tv;
 
-	/*
-	 * Try for DateTime, DateTimeOriginal, then DateTimeDigitized.
-	 * If none found, print error and list first.
-	 */
+	/* If no timestamp is found, print error and list first. */
 
-	p = findprop(t->props, tags, EXIF_T_DATETIME);
+	p = findprop(t->props, tags, tpref[0]);
 
 	if (!p || !p->str || etstrptm(p->str, &tv)) {
-		p = findprop(t->props, tags, EXIF_T_DATETIMEORIG);
+		p = findprop(t->props, tags, tpref[1]);
 
 		if (!p || !p->str || etstrptm(p->str, &tv)) {
-			p = findprop(t->props, tags, EXIF_T_DATETIMEDIGI);
+			p = findprop(t->props, tags, tpref[2]);
 
 			if (!p || !p->str || etstrptm(p->str, &tv)) {
 				exifwarn("no timestamp available");
@@ -356,7 +355,7 @@ procall(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf)
  * Scan the JPEG file for Exif data and parse it.
  */
 static int
-doit(FILE *fp, int n)
+doit(FILE *fp, int n, u_int16_t *tpref)
 {
 	int mark, gotapp1, first, rc;
 	unsigned int len, rlen;
@@ -395,7 +394,7 @@ doit(FILE *fp, int n)
 		if (t && t->props) {
 			gotapp1 = TRUE;
 			if (lflag)
-				rc = listts(t, &lorder[n]);
+				rc = listts(t, &lorder[n], tpref);
 			else
 				rc = procall(fp, app1, t, exifbuf);
 		}
@@ -412,6 +411,34 @@ doit(FILE *fp, int n)
 }
 
 
+/*
+ * Fill in array of timestamps in order of preference.
+ */
+void
+settpref(u_int16_t *tpref, u_int16_t tag)
+{
+	int i;
+
+	/* Recursively fill in the remaining timestamps. */
+
+	if (tag == EXIF_T_UNKNOWN) {
+		settpref(tpref, EXIF_T_DATETIME);
+		settpref(tpref, EXIF_T_DATETIMEORIG);
+		settpref(tpref, EXIF_T_DATETIMEDIGI);
+		return;
+	}
+
+	for (i = 0; i < 3; i++) {
+		if (tpref[i] == tag)
+			break;
+		if (tpref[i] == EXIF_T_UNKNOWN) {
+			tpref[i] = tag;
+			break;
+		}
+	}
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -419,6 +446,7 @@ main(int argc, char **argv)
 	int eval, fnum, wantall;
 	char *rmode, *wmode;
 	FILE *fp;
+	u_int16_t tpref[3];
 
 	progname = argv[0];
 	debug = FALSE;
@@ -426,6 +454,7 @@ main(int argc, char **argv)
 	lflag = qflag = wflag = FALSE;
 	iflag = TRUE;
 	v = NULL;
+	tpref[0] = tpref[1] = tpref[2] = EXIF_T_UNKNOWN;
 #ifdef WIN32
 	rmode = "rb";
 	wmode = "r+b";
@@ -455,12 +484,15 @@ main(int argc, char **argv)
 			while (*optarg) {
 				switch (*optarg) {
 				case 'c':
+					settpref(tpref, EXIF_T_DATETIME);
 					ttags |= ET_CREATE;
 					break;
 				case 'd':
+					settpref(tpref, EXIF_T_DATETIMEDIGI);
 					ttags |= ET_DIGI;
 					break;
 				case 'g':
+					settpref(tpref, EXIF_T_DATETIMEORIG);
 					ttags |= ET_GEN;
 					break;
 				case 'a':
@@ -488,6 +520,10 @@ main(int argc, char **argv)
 
 	if (!*argv)
 		usage();
+
+	/* Finish up timestamp preferences. */
+
+	settpref(tpref, EXIF_T_UNKNOWN);
 
 	/* Don't be quiet if we're not writing. */
 
@@ -525,7 +561,7 @@ main(int argc, char **argv)
 		if (lflag)
 			lorder[fnum].fn = fname;
 
-		if (doit(fp, fnum))
+		if (doit(fp, fnum, tpref))
 			eval = 1;
 		fclose(fp);
 	}
