@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2005, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exiftags.c,v 1.27 2007/12/15 20:51:58 ejohnst Exp $
+ * $Id: exiftags.c,v 1.28 2007/12/16 02:12:01 ejohnst Exp $
  */
 
 /*
@@ -57,7 +57,7 @@ int getopt(int, char * const [], const char *);
 
 
 int quiet;
-static const char *version = "1.00";
+static const char *version = "1.01";
 static int fnum;
 static const char *delim = ": ";
 
