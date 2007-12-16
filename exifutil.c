@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.30 2007/12/16 00:47:53 ejohnst Exp $
+ * $Id: exifutil.c,v 1.31 2007/12/16 01:14:26 ejohnst Exp $
  */
 
 /*
@@ -90,6 +90,7 @@ offsanity(struct exifprop *prop, u_int16_t size, struct ifd *dir)
 	u_int32_t tifflen;
 	const char *name;
 
+	/* XXX Hrm.  Should be OK with 64-bit addresses. */
 	tifflen = dir->md.etiff - dir->md.btiff;
 	if (prop->name)
 		name = prop->name;
@@ -380,10 +381,11 @@ u_int32_t
 readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
     struct tiffmeta *md)
 {
-	u_int32_t ifdsize;
+	u_int32_t ifdsize, tifflen;
 	unsigned char *b;
 	struct ifdoff *ifdoffs, *lastoff;
 
+	tifflen = md->etiff - md->btiff;
 	b = md->btiff;
 	ifdoffs = (struct ifdoff *)(md->ifdoffs);
 	lastoff = NULL;
@@ -425,10 +427,8 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 	 * (Number of directory entries is in the first 2 bytes.)
 	 */
 
-	if ((u_int32_t)(-1) - offset < (u_int32_t)(b + 2) ||
-	    b + offset + 2 > md->etiff) {
+	if ((u_int32_t)(-1) - offset < 2 || offset + 2 > tifflen)
 		return (0);
-	}
 
 	*dir = (struct ifd *)malloc(sizeof(struct ifd));
 	if (!*dir) {
@@ -455,10 +455,10 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 	ifdsize = (*dir)->num * sizeof(struct field);
 	b += offset + 2;
 
-	/* Sanity check our sizes (& check for overflow). */
+	/* Sanity check our size (and check for overflows). */
 
-	if ((u_int32_t)(-1) - ifdsize < (u_int32_t)(b) ||
-	    b + ifdsize > md->etiff) {
+	if ((u_int32_t)(-1) - (offset + 2) < ifdsize ||
+	    offset + 2 + ifdsize > tifflen) {
 		free(*dir);
 		*dir = NULL;
 		return (0);
