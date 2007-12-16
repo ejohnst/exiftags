@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.28 2007/12/16 00:00:10 ejohnst Exp $
+ * $Id: exifutil.c,v 1.29 2007/12/16 00:25:51 ejohnst Exp $
  */
 
 /*
@@ -399,7 +399,8 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 		ifdoffs = ifdoffs->next;
 	}
 	if (ifdoffs) {
-		exifwarn("loop in IFD reference");
+		/* We'll only complain if debugging. */
+		if (debug) exifwarn("loop in IFD reference");
 		return (0);
 	}
 
