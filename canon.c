@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2004, Eric M. Johnston <emj@postal.net>
+ * Copyright (c) 2001-2007, Eric M. Johnston <emj@postal.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: canon.c,v 1.52 2005/01/11 20:12:35 ejohnst Exp $
+ * $Id: canon.c,v 1.53 2007/12/16 00:22:42 ejohnst Exp $
  */
 
 /*
@@ -1376,8 +1376,6 @@ canon_prop(struct exifprop *prop, struct exiftags *t)
 struct ifd *
 canon_ifd(u_int32_t offset, struct tiffmeta *md)
 {
-	struct ifd *myifd;
 
-	readifd(offset, &myifd, canon_tags, md);
-	return(myifd);
+	return (readifds(offset, canon_tags, md));
 }
