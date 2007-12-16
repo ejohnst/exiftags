@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.27 2007/12/15 21:00:08 ejohnst Exp $
+ * $Id: exifutil.c,v 1.28 2007/12/16 00:00:10 ejohnst Exp $
  */
 
 /*
@@ -382,8 +382,41 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 {
 	u_int32_t ifdsize;
 	unsigned char *b;
+	struct ifdoff *ifdoffs, *lastoff;
 
 	b = md->btiff;
+	ifdoffs = (struct ifdoff *)(md->ifdoffs);
+	lastoff = NULL;
+	*dir = NULL;
+
+	/*
+	 * Check to see if we've already visited this offset.  Otherwise
+	 * we could loop...
+	 */
+
+	while (ifdoffs && ifdoffs->offset != offset) {
+		lastoff = ifdoffs;
+		ifdoffs = ifdoffs->next;
+	}
+	if (ifdoffs) {
+		exifwarn("loop in IFD reference");
+		return (0);
+	}
+
+	ifdoffs = (struct ifdoff *)malloc(sizeof(struct ifdoff));
+	if (!ifdoffs) {
+		exifwarn2("can't allocate IFD offset record",
+		    (const char *)strerror(errno));
+		return (0);
+	}
+	ifdoffs->offset = offset;
+	ifdoffs->next = NULL;
+
+	/* The 0th (first) IFD establishes our list on the master tiffmeta. */
+	if (lastoff)
+		lastoff->next = ifdoffs;
+	else
+		md->ifdoffs = (void *)ifdoffs;
 
 	/*
 	 * Verify that we have a valid offset.  Some maker note IFDs prepend
@@ -393,13 +426,15 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 
 	if ((u_int32_t)(-1) - offset < (u_int32_t)(b + 2) ||
 	    b + offset + 2 > md->etiff) {
-		*dir = NULL;
 		return (0);
 	}
 
 	*dir = (struct ifd *)malloc(sizeof(struct ifd));
-	if (!*dir)
-		exifdie((const char *)strerror(errno));
+	if (!*dir) {
+		exifwarn2("can't allocate IFD record",
+		    (const char *)strerror(errno));
+		return (0);
+	}
 
 	(*dir)->num = exif2byte(b + offset, md->order);
 	(*dir)->par = NULL;
@@ -407,12 +442,22 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 	(*dir)->md = *md;
 	(*dir)->next = NULL;
 
+	/* Make sure ifdsize doesn't overflow. */
+
+	if ((*dir)->num &&
+	    sizeof(struct field) > (u_int32_t)(-1) / (*dir)->num) {
+		free(*dir);
+		*dir = NULL;
+		return (0);
+	}
+
 	ifdsize = (*dir)->num * sizeof(struct field);
 	b += offset + 2;
 
-	/* Sanity check our sizes. */
+	/* Sanity check our sizes (& check for overflow). */
 
-	if (b + ifdsize > md->etiff) {
+	if ((u_int32_t)(-1) - ifdsize < (u_int32_t)(b) ||
+	    b + ifdsize > md->etiff) {
 		free(*dir);
 		*dir = NULL;
 		return (0);
@@ -447,11 +492,6 @@ readifds(u_int32_t offset, struct exiftag *tagset, struct tiffmeta *md)
 {
 	struct ifd *firstifd, *curifd;
 
-	/*
-	 * XXX Note: we really should be checking to see if this IFD
-	 * has already been visited...
-	 */
-	
 	/* Fetch our first one. */
 
 	offset = readifd(offset, &firstifd, tagset, md);
