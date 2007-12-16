@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exif.h,v 1.37 2007/12/15 23:51:10 ejohnst Exp $
+ * $Id: exif.h,v 1.38 2007/12/16 03:44:32 ejohnst Exp $
  */
 
 /*
@@ -48,13 +48,18 @@
 
 
 /*
- * XXX Only checking for Solaris & Windows now.  Other platforms will
+ * XXX Only checking for Solaris, HP, & Windows now.  Other platforms will
  * probably need something similar if they don't have u_int16_t or u_int32_t.
  */
 
 #if (defined(sun) && (defined(__svr4__) || defined(__SVR4)))
 typedef unsigned short u_int16_t;
 typedef unsigned int u_int32_t;
+#endif
+
+#if (defined(__hpux))
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
 #endif
 
 #ifdef WIN32
