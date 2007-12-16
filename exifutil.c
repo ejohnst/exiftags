@@ -29,7 +29,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: exifutil.c,v 1.29 2007/12/16 00:25:51 ejohnst Exp $
+ * $Id: exifutil.c,v 1.30 2007/12/16 00:47:53 ejohnst Exp $
  */
 
 /*
@@ -391,10 +391,10 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 
 	/*
 	 * Check to see if we've already visited this offset.  Otherwise
-	 * we could loop...
+	 * we could loop.  (Need to add in TIFF start for Nikon makernotes.)
 	 */
 
-	while (ifdoffs && ifdoffs->offset != offset) {
+	while (ifdoffs && ifdoffs->offset != b + offset) {
 		lastoff = ifdoffs;
 		ifdoffs = ifdoffs->next;
 	}
@@ -410,7 +410,7 @@ readifd(u_int32_t offset, struct ifd **dir, struct exiftag *tagset,
 		    (const char *)strerror(errno));
 		return (0);
 	}
-	ifdoffs->offset = offset;
+	ifdoffs->offset = offset + b;
 	ifdoffs->next = NULL;
 
 	/* The 0th (first) IFD establishes our list on the master tiffmeta. */
