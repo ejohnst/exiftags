@@ -1,4 +1,5 @@
 20071215 version: exiftags 1.01
+20071215 fixed to compile on HP-UX
 20071215 added Canon EOS-5D custom function support (thanks: Albert Max Lai)
 20071215 custom timestamp prefs in exiftime listing (thanks: Stuart Scharf)
 20071215 suppress warnings on invalid user comments
@@ -108,4 +109,4 @@
 20020216 version: exifdump 0.90
 20020120 version: exifdump 0.80
 
-$Id: CHANGES,v 1.22 2007/12/16 03:07:25 ejohnst Exp $
+$Id: CHANGES,v 1.23 2007/12/16 03:45:59 ejohnst Exp $
