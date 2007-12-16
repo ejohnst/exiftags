@@ -1,6 +1,6 @@
 .TH EXIFTIME 1
 .\"
-.\" Copyright (c) 2004, Eric M. Johnston <emj@postal.net>
+.\" Copyright (c) 2004-2007, Eric M. Johnston <emj@postal.net>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 .\" THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.\" $Id: exiftime.1,v 1.1 2004/04/10 07:45:04 ejohnst Exp $
+.\" $Id: exiftime.1,v 1.2 2007/12/16 02:19:25 ejohnst Exp $
 .\"
 .SH NAME
 .B exiftime
@@ -103,10 +103,15 @@ or 'Y', the tag is overwritten.  This option is default behavior.
 .IP -l
 List each input
 .I file
-in ascending order by its Image Created tag.  In the absence of
-an Image Created tag, first Image Generated, then Image Digitized are used.
-If no date and time tags are present, the OS's epoch is used.  This flag
-overrides all others.
+in ascending order by timestamp.  By default, it uses the Image Created tag.
+In the absence of an Image Created tag, first Image Generated then Image
+Digitized are used.  Alternatively, the
+.B -t
+flag may be used to specify the timestamp preference for ordering.  If no
+date and time tags are present, the OS's epoch is used.  This flag
+overrides all others but the
+.B -t
+flag.
 .IP -q
 Do not output details of a date and time adjustment to standard out when
 using the
@@ -236,6 +241,16 @@ Image Generated: 2003:09:12 17:05:37 -> 2003:09:17 16:58:37
 example2.jpg:
 Image Generated: 2004:01:22 17:07:02 -> 2004:01:27 17:00:02
 .fi
+.PP
+The command
+.IP
+.nf
+exiftime -l -tdg *.jpg
+.fi
+.PP
+will list all files that match "*.jpg", one per line, in ascending timestamp
+order.  It'll attempt to use the following timestamp values, in order: Image
+Digitized, Image Generated, Image Created, and, finally, the OS's epoch.
 .SH DIAGNOSTICS
 The
 .B exiftime
