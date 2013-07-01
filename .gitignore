@@ -1,0 +1,4 @@
+*.o
+exifcom
+exiftags
+exiftime
