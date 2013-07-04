@@ -1,3 +1,4 @@
+20130704 use file modified time as backup for listing in exiftime
 20130704 added timestamp copy to exiftime
 20071215 version: exiftags 1.01
 20071215 fixed to compile on HP-UX

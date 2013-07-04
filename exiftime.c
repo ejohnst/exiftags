@@ -42,6 +42,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 /* For getopt(). */
 
@@ -153,10 +155,11 @@ etstrptm(const char *buf, struct tm *tp)
  * Doesn't modify the file.
  */
 static int
-listts(struct exiftags *t, struct linfo *li, u_int16_t *tpref)
+listts(FILE *fp, struct exiftags *t, struct linfo *li, u_int16_t *tpref)
 {
 	struct exifprop *p;
 	struct tm tv;
+	struct stat finfo;
 
 	/* If no timestamp is found, print error and list first. */
 
@@ -169,8 +172,9 @@ listts(struct exiftags *t, struct linfo *li, u_int16_t *tpref)
 			p = findprop(t->props, tags, tpref[2]);
 
 			if (!p || !p->str || etstrptm(p->str, &tv)) {
-				exifwarn("no timestamp available");
-				li->ts = 0;
+				exifwarn("no timestamp available; using mtime");
+				fstat(fileno(fp), &finfo);
+				li->ts = finfo.st_mtime;
 				return (1);
 			}
 		}
@@ -484,7 +488,7 @@ doit(FILE *fp, int n, u_int16_t *tpref)
 		if (t && t->props) {
 			gotapp1 = TRUE;
 			if (lflag)
-				rc = listts(t, &lorder[n], tpref);
+				rc = listts(fp, t, &lorder[n], tpref);
 			else
 				rc = procall(fp, app1, t, exifbuf);
 		}
