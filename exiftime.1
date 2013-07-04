@@ -50,8 +50,8 @@ utility displays the Exif date and time tags contained in each input
 .I file
 to the standard output.  Otherwise, depending on the options specified,
 .B exiftime
-will operate on only the chosen tags, will adjust the date and time,
-will write an adjusted time to each
+will operate on only the chosen tags, will copy one tag's time to others,
+will adjust the date and time, will write an adjusted time to each
 .IR file ,
 or will list each
 .I file
@@ -74,7 +74,7 @@ utility cannot add a tag if it does not already exist in
 
 By default,
 .B exiftime
-will simply print out any of the three date and time flags in each input
+will simply print out any of the three date and time tags in each input
 .IR file .
 The
 .B -l
@@ -86,6 +86,14 @@ further image processing (e.g., production of a Web catalog) when filename
 ordering is not useful.
 
 The
+.B -c
+flag may be used to copy one tag's time to other tags you specify.  By default,
+it just prints the copied timestamp, but is written to the file when used
+with the
+.B -w
+flag.
+
+The
 .B -v
 flag may be used to vary, or adjust, dates and times.  When used with the
 .B -w
@@ -94,6 +102,19 @@ flag, which writes the adjusted date and time to each input
 one may, for example, process a batch of files to adjust for a camera's
 incorrectly set clock.
 .SH OPTIONS
+.IP -c
+Select the source date and time tag to copy when followed by one of
+.B c
+(Image Created),
+.B d
+(Image Digitized), or 
+.B g
+(Image Generated). This source tag's value is copied to one or more other tags
+specified using the
+.B -t
+flag. The
+.B -v
+flag cannot be used when copying a tag.
 .IP -f
 Write adjusted date and time tags without prompting for confirmation.
 .IP -i
@@ -177,11 +198,11 @@ daylight savings time considerations are ignored.
 
 Refer to the examples below for further details.
 .IP -w
-Write the adjusted date and time tags.  By default, any of the three date and
-time tags present in the file are adjusted; otherwise, only those specified
-with the
+Write the adjusted or copied date and time tags.  By default, any of the
+three date and time tags present in the file are adjusted; otherwise, only
+those specified with the
 .B -t
-flag are adjusted.
+flag are adjusted or copied.
 .SH EXAMPLES
 The command
 .IP
@@ -208,6 +229,21 @@ will display:
 .nf
 Image Created: 2003:09:12 17:05:37
 Image Digitized: 2003:09:12 17:05:37
+.fi
+.PP
+The command
+.IP
+.nf
+exiftime -cg -tc -w example1.jpg
+.fi
+.PP
+will copy the Image Generated tag's date and time to the Image Created tag and
+write the result, prompting the user to first confirm the operation:
+.IP
+.nf
+adjust time created in example1.jpg from
+  2011:09:29 10:38:11 to 2011:08:27 21:23:50? (y/n [n]) y
+Image Created: 2011:09:29 10:38:11 -> 2011:08:27 21:23:50
 .fi
 .PP
 The command

@@ -63,8 +63,8 @@ struct linfo {
 	time_t ts;
 };
 
-static const char *version = "1.01";
-static int iflag, lflag, qflag, wflag, ttags;
+static const char *version = "1.02";
+static int iflag, lflag, qflag, wflag, ttags, ctags;
 static const char *delim = ": ";
 static const char *fname;
 static struct vary *v;
@@ -104,7 +104,9 @@ void usage()
 	    "digitized.\n");
 	fprintf(stderr, "  -v[+|-]val[ymwdHMS]\n\tAdjust the timestamp(s) by "
 	    "the given amount.\n");
-	fprintf(stderr, "  -w\tWrite adjusted timestamp(s).\n");
+	fprintf(stderr, "  -c[c|d|g]\n\tCopy the timestamp to those "
+	    "specified by -t.\n");
+	fprintf(stderr, "  -w\tWrite adjusted or copied timestamp(s).\n");
 
 	vary_destroy(v);
 	exit(1);
@@ -309,6 +311,72 @@ procts(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf,
 
 
 /*
+ * Copy a timestamp to the specified timestamp.
+ * Returns 0 on success, 1 if it had trouble writing or tags weren't found.
+ */
+static int
+copyts(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf,
+    u_int16_t tag, const char *ttype, const char *nts)
+{
+	int rc;
+	struct exifprop *p;
+
+	p = findprop(t->props, tags, tag);
+	if (!p) {
+		fprintf(stderr, "%s: image %s time not available\n",
+		    fname, ttype);
+		return (1);
+	}
+
+	if (wflag)
+		return (writets(fp, pos, t, p, buf, ttype, nts));
+
+	printf("%s%s%s\n", p->descr, delim, nts);
+	return (0);
+}
+
+
+/*
+ * Copy timestamp into specified timestamps.
+ * Returns 0 on success, 1 if it had trouble writing or tags weren't found.
+ */
+static int
+copyallts(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf,
+    u_int16_t tag, const char *ttype)
+{
+	int r, rc;
+	char nts[EXIFTIMELEN];
+	struct exifprop *p;
+
+	p = findprop(t->props, tags, tag);
+	if (ettime(nts, p)) {
+		fprintf(stderr, "%s: image %s time not available\n",
+		    fname, ttype);
+		return (1);
+	}
+
+	if (ttags & ET_CREATE) {
+		r = copyts(fp, pos, t, buf, EXIF_T_DATETIME, "created", nts);
+		if (r > 0) rc = 1;
+	}
+
+	if (ttags & ET_GEN) {
+		r = copyts(fp, pos, t, buf, EXIF_T_DATETIMEORIG,
+		    "generated", nts);
+		if (r > 0) rc = 1;
+	}
+
+	if (ttags & ET_DIGI) {
+		r = copyts(fp, pos, t, buf, EXIF_T_DATETIMEDIGI,
+		    "digitized", nts);
+		if (r > 0) rc = 1;
+	}
+
+	return (rc);
+}
+
+
+/*
  * Process the file's timestamps according to the options chosen.
  */
 static int
@@ -317,6 +385,28 @@ procall(FILE *fp, long pos, struct exiftags *t, const unsigned char *buf)
 	int r, rc, found;
 
 	found = rc = 0;
+
+	if (ctags) {
+		switch (ctags) {
+		case ET_CREATE:
+			rc = copyallts(fp, pos, t, buf, EXIF_T_DATETIME,
+			    "created");
+			break;
+		case ET_GEN:
+			rc = copyallts(fp, pos, t, buf, EXIF_T_DATETIMEORIG,
+			    "generated");
+			break;
+		case ET_DIGI:
+			rc = copyallts(fp, pos, t, buf, EXIF_T_DATETIMEDIGI,
+			    "digitized");
+			break;
+		default:
+			fprintf(stderr, "%s: source timestamp not available\n",
+			    fname);
+			rc = 1;
+		}
+		return (rc);
+	}
 
 	/*
 	 * If ttags = 0, process them all or an error if there are none.
@@ -450,7 +540,7 @@ main(int argc, char **argv)
 
 	progname = argv[0];
 	debug = FALSE;
-	ttags = wantall = eval = 0;
+	ttags = ctags = wantall = eval = 0;
 	lflag = qflag = wflag = FALSE;
 	iflag = TRUE;
 	v = NULL;
@@ -463,7 +553,7 @@ main(int argc, char **argv)
 	wmode = "r+";
 #endif
 
-	while ((ch = getopt(argc, argv, "filqs:t:v:w")) != -1)
+	while ((ch = getopt(argc, argv, "filqs:t:c:v:w")) != -1)
 		switch (ch) {
 		case 'f':
 			iflag = FALSE;
@@ -479,6 +569,26 @@ main(int argc, char **argv)
 			break;
 		case 's':
 			delim = optarg;
+			break;
+		case 'c':
+			if (strlen(optarg) != 1) {
+				exifwarn("can only copy from one timestamp");
+				usage();
+			}
+			switch (*optarg) {
+			case 'c':
+				ctags = ET_CREATE;
+				break;
+			case 'd':
+				ctags = ET_DIGI;
+				break;
+			case 'g':
+				ctags = ET_GEN;
+				break;
+			default:
+				exifwarn("invalid timestamp for copy");
+				usage();
+			}
 			break;
 		case 't':
 			while (*optarg) {
@@ -499,6 +609,7 @@ main(int argc, char **argv)
 					wantall = 1;
 					break;
 				default:
+					exifwarn("invalid timestamp");
 					usage();
 				}
 				optarg++;
@@ -520,6 +631,21 @@ main(int argc, char **argv)
 
 	if (!*argv)
 		usage();
+
+	if (v && ctags) {
+		exifwarn("timestamp vary and copy are mutally exclusive");
+		usage();
+	}
+
+	if (ctags & ttags) {
+		exifwarn("can't copy timestamp to itself");
+		usage();
+	}
+
+	if (ctags && !ttags) {
+		exifwarn("need destination timestamp(s) to copy");
+		usage();
+	}
 
 	/* Finish up timestamp preferences. */
 
